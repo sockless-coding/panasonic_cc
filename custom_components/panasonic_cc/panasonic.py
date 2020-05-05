@@ -62,7 +62,6 @@ class PanasonicApiDevice:
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        info = self.device.values
         return {
             "identifieres": self.id,
             "manufacturer": "Panasonic",
