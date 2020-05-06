@@ -190,7 +190,7 @@ class PanasonicApiDevice:
         else:
             automode = self.constants.AirSwingAutoMode["Disabled"]
 
-        _LOGGER.debug("Set %s swing mode %s", self.name, swing_mode, automode)
+        _LOGGER.debug("Set %s swing mode %s", self.name, swing_mode)
 
         self._api.set_device(
             self.id,
@@ -207,6 +207,6 @@ class PanasonicApiDevice:
 
         self._api.set_device(
             self.id,
-            nanoe = nanoe_mode
+            nanoe = self.constants.NanoeMode[nanoe_mode]
         )
         self.do_update()
