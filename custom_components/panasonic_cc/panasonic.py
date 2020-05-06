@@ -69,6 +69,7 @@ class PanasonicApiDevice:
             "name": self.name,
         }
 
+    @property
     def is_on(self):
         return bool( self.data['parameters']['power'].value )
 
