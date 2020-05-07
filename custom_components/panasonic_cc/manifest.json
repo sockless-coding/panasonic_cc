@@ -1,7 +1,7 @@
 {
     "domain": "panasonic_cc",
     "name": "Panasonic Comfort Cloud",
-    "documentation": "https://sockless.tech/panasonic_cc/",
+    "documentation": "https://github.com/sockless-coding/panasonic_cc/",
     "dependencies": [],
     "codeowners": ["Sockless"]
   }
