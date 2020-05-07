@@ -3,6 +3,6 @@
     "name": "Panasonic Comfort Cloud",
     "documentation": "https://github.com/sockless-coding/panasonic_cc/",
     "dependencies": [],
-    "codeowners": ["Sockless"]
+    "codeowners": ["sockless-coding"]
   }
   
