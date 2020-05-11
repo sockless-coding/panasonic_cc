@@ -42,7 +42,7 @@ COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
 def setup(hass, config):
     """Establish connection with Comfort Cloud."""
-    from .lib.pcomfortcloud import pcomfortcloud
+    import pcomfortcloud
     
 
     if DOMAIN not in config:

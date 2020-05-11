@@ -24,7 +24,7 @@ def api_call_login(func):
 class PanasonicApiDevice:
 
     def __init__(self, api, device):
-        from .lib.pcomfortcloud.pcomfortcloud import constants
+        from pcomfortcloud import constants
         self._api = api
         self.device = device
         self.id = device['id']
