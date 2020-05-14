@@ -18,7 +18,7 @@ This is a custom component to allow control of Panasonic Comfort Cloud devices i
 # Configuration
 
 The Panasonic Comfort Cloud integration can be configured in two ways
-1. Via the Home Assistant integration interface where it will let you enter your Panasonic ID and Password.
+1. Via the Home Assistant integration interface where it will let you enter your Panasonic ID and Password.<br/>
 
     ![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/setup_dlg.png)
 
