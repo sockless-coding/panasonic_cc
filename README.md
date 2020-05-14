@@ -15,7 +15,10 @@ This is a custom component to allow control of Panasonic Comfort Cloud devices i
 
 # Configuration
 
-1. Enable the component by editing the configuration.yaml file (within the config directory as well).
+The Panasonic Comfort Cloud integration can be configured in two ways
+1. Via the Home Assistant integration interface where it will let you enter your Panasonic ID and Password.
+
+2. Enable the component by editing the configuration.yaml file (within the config directory as well).
 Edit it by adding the following lines:
     ```
     # Example configuration.yaml entry
