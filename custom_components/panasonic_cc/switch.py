@@ -14,6 +14,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devices.append(PanasonicNanoeSwitch(device))
     add_entities(devices)
 
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    pass
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    devices = []
+    for device in hass.data[PANASONIC_DEVICES]:
+        devices.append(PanasonicNanoeSwitch(device))
+    async_add_entities(devices)
+
 class PanasonicNanoeSwitch(ToggleEntity):
     """Representation of a zone."""
 
@@ -46,14 +55,14 @@ class PanasonicNanoeSwitch(ToggleEntity):
         """Return a device description for device registry."""
         return self._api.device_info
 
-    def update(self):
+    async def async_update(self):
         """Retrieve latest state."""
-        self._api.update()
+        await self._api.update()
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn on nanoe."""
-        self._api.set_nanoe_mode(self._api.constants.NanoeMode.On.name)
+        await self._api.set_nanoe_mode(self._api.constants.NanoeMode.On.name)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off nanoe."""
-        self._api.set_nanoe_mode(self._api.constants.NanoeMode.Off.name)
+        await self._api.set_nanoe_mode(self._api.constants.NanoeMode.Off.name)

@@ -5,6 +5,7 @@ import logging
 from typing import Any, Dict, Optional, List
 from homeassistant.util import Throttle
 from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import PRESET_LIST, OPERATION_LIST
 
@@ -23,8 +24,9 @@ def api_call_login(func):
 
 class PanasonicApiDevice:
 
-    def __init__(self, api, device):
+    def __init__(self, hass: HomeAssistantType, api, device):
         from pcomfortcloud import constants
+        self.hass = hass
         self._api = api
         self.device = device
         self.id = device['id']
@@ -36,12 +38,12 @@ class PanasonicApiDevice:
         
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
-        self.do_update()
+    async def update(self, **kwargs):
+        await self.do_update()
 
-    def do_update(self):
+    async def do_update(self):
         try:
-            data= self._api.get_device(self.id)
+            data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device))
             self._api.login()
@@ -63,7 +65,7 @@ class PanasonicApiDevice:
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            "identifieres": self.id,
+            "identifiers": { ("panasonic_cc", self.id) },
             "manufacturer": "Panasonic",
             "model": self.device['model'],
             "name": self.name,
@@ -118,35 +120,33 @@ class PanasonicApiDevice:
             return p['nanoe']
         return None
 
-    @api_call_login
-    def turn_off(self):
-        self._api.set_device(
-            self.id,
-            power = self.constants.Power.Off
+    
+    async def turn_off(self):
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { "power": self.constants.Power.Off }
         )
-        self.do_update()
+        await self.do_update()
 
-    @api_call_login
-    def turn_on(self):
-        self._api.set_device(
-            self.id,
-            power = self.constants.Power.On
+    async def turn_on(self):
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { "power": self.constants.Power.On }
         )
-        self.do_update()
-
-    @api_call_login
-    def set_preset_mode(self, preset_mode: str) -> None:
+        await self.do_update()
+        
+    async def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         _LOGGER.debug("Set %s ecomode %s", self.name, preset_mode)
-        self._api.set_device(
-            self.id,
-            power = self.constants.Power.On,
-            eco = self.constants.EcoMode[ PRESET_LIST[preset_mode] ]
-        )
-        self.do_update()
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { 
+                "power": self.constants.Power.On,
+                "eco": self.constants.EcoMode[ PRESET_LIST[preset_mode] ]
+            })
+        await self.do_update()
 
-    @api_call_login
-    def set_temperature(self, **kwargs):
+    async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         if target_temp is None:
@@ -154,36 +154,37 @@ class PanasonicApiDevice:
 
         _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
 
-        self._api.set_device(
-            self.id,
-            temperature = target_temp
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { "temperature": target_temp }
         )
-        self.do_update()
+        await self.do_update()
+        
 
-    @api_call_login
-    def set_fan_mode(self, fan_mode):
+    async def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
         _LOGGER.debug("Set %s focus mode %s", self.name, fan_mode)
 
-        self._api.set_device(
-            self.id,
-            fanSpeed = self.constants.FanSpeed[fan_mode]
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { "fanSpeed": self.constants.FanSpeed[fan_mode] }
         )
-        self.do_update()
-
-    @api_call_login
-    def set_hvac_mode(self, hvac_mode):
+        await self.do_update()
+    
+    async def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
         _LOGGER.debug("Set %s mode %s", self.name, hvac_mode)
-        self._api.set_device(
-            self.id,
-            power = self.constants.Power.On,
-            mode = self.constants.OperationMode[OPERATION_LIST[hvac_mode]]
-        )
-        self.do_update()
 
-    @api_call_login
-    def set_swing_mode(self, swing_mode):
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { 
+                "power": self.constants.Power.On,
+                "mode": self.constants.OperationMode[OPERATION_LIST[hvac_mode]] 
+            })
+
+        await self.do_update()
+
+    async def set_swing_mode(self, swing_mode):
         """Set swing mode."""
         _LOGGER.debug("Set %s swing mode %s", self.name, swing_mode)
         if swing_mode == 'Auto':
@@ -193,21 +194,28 @@ class PanasonicApiDevice:
 
         _LOGGER.debug("Set %s swing mode %s", self.name, swing_mode)
 
-        self._api.set_device(
-            self.id,
-            power = self.constants.Power.On,
-            airSwingVertical = self.constants.AirSwingUD[swing_mode],
-            fanAutoMode = automode
-        )
-        self.do_update()
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { 
+                "power": self.constants.Power.On,
+                "airSwingVertical": self.constants.AirSwingUD[swing_mode],
+                "fanAutoMode": automode
+            })
+        await self.do_update()
 
-    @api_call_login
-    def set_nanoe_mode(self, nanoe_mode):
+    async def set_nanoe_mode(self, nanoe_mode):
         """Set new nanoe mode."""
         _LOGGER.debug("Set %s nanoe mode %s", self.name, nanoe_mode)
 
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { "nanoe": self.constants.NanoeMode[nanoe_mode] }
+        )
+        await self.do_update()
+
+    @api_call_login
+    def set_device(self, args):
         self._api.set_device(
             self.id,
-            nanoe = self.constants.NanoeMode[nanoe_mode]
+            **args
         )
-        self.do_update()

@@ -14,6 +14,8 @@ ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
 
+KEY_DOMAIN = "domain"
+
 TIMEOUT = 60
 
 SENSOR_TYPE_TEMPERATURE = "temperature"

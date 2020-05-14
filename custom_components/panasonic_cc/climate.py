@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Panasonic climate"""
+    
     if discovery_info is None:
         return
     add_devices(
@@ -29,6 +30,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ]
     )
 
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    pass
+
+async def async_setup_entry(hass, entry, async_add_entities):
+
+    async_add_entities(
+        [
+            PanasonicClimateDevice(device)
+            for device in hass.data[PANASONIC_DEVICES]
+        ]
+    )
 
 class PanasonicClimateDevice(ClimateDevice):
 
@@ -37,11 +49,16 @@ class PanasonicClimateDevice(ClimateDevice):
 
         self._api = api
 
-    def turn_off(self):
-        self._api.turn_off()
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._api.id}-climate"
 
-    def turn_on(self):
-        self._api.turn_on()
+    async def async_turn_off(self):
+        await self._api.turn_off()
+
+    async def async_turn_on(self):
+        await self._api.turn_on()
 
     @property
     def supported_features(self):
@@ -67,9 +84,9 @@ class PanasonicClimateDevice(ClimateDevice):
     def target_temperature(self):
         return self._api.target_temperature
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        self._api.set_temperature(**kwargs)
+        await self._api.set_temperature(**kwargs)
 
     @property
     def hvac_mode(self):
@@ -86,21 +103,21 @@ class PanasonicClimateDevice(ClimateDevice):
         """Return the list of available operation modes."""
         return list(OPERATION_LIST.keys())
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
         if hvac_mode == HVAC_MODE_OFF:
-            self._api.turn_off()
+            await self._api.turn_off()
         else:
-            self._api.set_hvac_mode(hvac_mode)
+            await self._api.set_hvac_mode(hvac_mode)
 
     @property
     def fan_mode(self):
         """Return the fan setting."""
         return self._api.fan_mode
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        self._api.set_fan_mode(fan_mode)
+        await self._api.set_fan_mode(fan_mode)
 
     @property
     def fan_modes(self):
@@ -112,9 +129,9 @@ class PanasonicClimateDevice(ClimateDevice):
         """Return the fan setting."""
         return self._api.swing_mode
 
-    def set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode):
         """Set new target temperature."""
-        self.set_swing_mode(swing_mode)
+        await self.set_swing_mode(swing_mode)
 
     @property
     def swing_modes(self):
@@ -137,9 +154,9 @@ class PanasonicClimateDevice(ClimateDevice):
                 _LOGGER.debug("Preset mode is {0}".format(key))
                 return key
 
-    def set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
-        self._api.set_preset_mode(preset_mode)
+        await self._api.set_preset_mode(preset_mode)
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
@@ -164,9 +181,13 @@ class PanasonicClimateDevice(ClimateDevice):
         """Return the temperature step."""
         return 0.5
 
-    def update(self):
+    async def async_update(self):
         """Retrieve latest state."""
-        self._api.update()
+        await self._api.update()
 
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return self._api.device_info
     
 

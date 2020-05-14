@@ -1,11 +1,14 @@
 """Platform for the Panasonic Comfort Cloud."""
 from datetime import timedelta
 import logging
+from typing import Any, Dict
 
+import asyncio
 from async_timeout import timeout
 
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD)
@@ -41,30 +44,48 @@ PANASONIC_DEVICES = "panasonic_devices"
 COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
 def setup(hass, config):
+   pass
+
+async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+    """Set up the Garo Wallbox component."""
+    hass.data.setdefault(DOMAIN, {})
+    return True
+
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with Comfort Cloud."""
     import pcomfortcloud
     
-
-    if DOMAIN not in config:
-        return True
-
+    conf = entry.data
     if PANASONIC_DEVICES not in hass.data:
         hass.data[PANASONIC_DEVICES] = []
 
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
 
     api = pcomfortcloud.Session(username, password, verifySsl=False)
-    for device in api.get_devices():
-        api_device = PanasonicApiDevice(api, device)
-        api_device.update()
+    devices = await hass.async_add_executor_job(api.get_devices)
+    for device in devices:
+        api_device = PanasonicApiDevice(hass, api, device)
+        await api_device.update()
         hass.data[PANASONIC_DEVICES].append(api_device)
-
+    
     if hass.data[PANASONIC_DEVICES]:
         for component in COMPONENT_TYPES:
-            discovery.load_platform(hass, component, DOMAIN, {}, config)
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, component)
+            )
     return True
 
 
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    await asyncio.wait(
+        [
+            hass.config_entries.async_forward_entry_unload(config_entry, component)
+            for component in COMPONENT_TYPES
+        ]
+    )
+    hass.data.pop(PANASONIC_DEVICES)
+    return True
 
 

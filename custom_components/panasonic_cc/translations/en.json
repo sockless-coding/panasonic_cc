@@ -1,0 +1,17 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Panasonic Comfort Cloud",
+          "description": "Enter your Panasonic ID and password",
+          "data": { "username": "Panasonic ID", "password": "Password" }
+        }
+      },
+      "abort": {
+        "device_timeout": "Timeout connecting to the device.",
+        "device_fail": "Unexpected error creating device.",
+        "already_configured": "Device is already configured"
+      }
+    }
+  }
+  

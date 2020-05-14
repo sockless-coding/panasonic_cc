@@ -17,6 +17,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensors.append(ATTR_OUTSIDE_TEMPERATURE)
         add_entities([PanasonicClimateSensor(device, sensor) for sensor in sensors])
 
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    pass
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    for device in hass.data[PANASONIC_DEVICES]:
+        sensors = [ATTR_INSIDE_TEMPERATURE]
+        if device.support_outside_temperature:
+            sensors.append(ATTR_OUTSIDE_TEMPERATURE)
+        async_add_entities([PanasonicClimateSensor(device, sensor) for sensor in sensors])
+
 
 class PanasonicClimateSensor(Entity):
     """Representation of a Sensor."""
@@ -57,9 +67,9 @@ class PanasonicClimateSensor(Entity):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
-    def update(self):
+    async def async_update(self):
         """Retrieve latest state."""
-        self._api.update()
+        await self._api.update()
 
     @property
     def device_info(self):
