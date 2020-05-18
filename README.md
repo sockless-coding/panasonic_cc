@@ -1,5 +1,10 @@
 # Panasonic Comfort Cloud - HomeAssistant Component
 
+[![GitHub Release][releases-shield]][releases]
+[![License][license-shield]](LICENSE)
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
+
 This is a custom component to allow control of Panasonic Comfort Cloud devices in [HomeAssistant](https://home-assistant.io).
 
 ![Example entities](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/entities.png)
@@ -29,3 +34,7 @@ Edit it by adding the following lines:
         username: !secret panasonic_username
         password: !secret panasonic_password
     ```
+
+[license-shield]: https://img.shields.io/github/license/sockless-coding/panasonic_cc.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/sockless-coding/panasonic_cc.svg?style=for-the-badge
+[releases]: https://github.com/sockless-coding/panasonic_cc/releases
