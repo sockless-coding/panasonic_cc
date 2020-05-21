@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 from typing import Any, Dict, Optional, List
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import HVAC_MODE_OFF, SUPPORT_PRESET_MODE
 
 from homeassistant.const import (
@@ -42,7 +42,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         ]
     )
 
-class PanasonicClimateDevice(ClimateDevice):
+class PanasonicClimateDevice(ClimateEntity):
 
     def __init__(self, api):
         """Initialize the climate device."""
