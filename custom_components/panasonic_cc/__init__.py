@@ -65,9 +65,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     api = pcomfortcloud.Session(username, password, verifySsl=False)
     devices = await hass.async_add_executor_job(api.get_devices)
     for device in devices:
-        api_device = PanasonicApiDevice(hass, api, device)
-        await api_device.update()
-        hass.data[PANASONIC_DEVICES].append(api_device)
+        try:
+            api_device = PanasonicApiDevice(hass, api, device)
+            await api_device.update()
+            hass.data[PANASONIC_DEVICES].append(api_device)
+        except:
+            _LOGGER.warning(f"Failed to setup device: {device['name']}")
     
     if hass.data[PANASONIC_DEVICES]:
         for component in COMPONENT_TYPES:
