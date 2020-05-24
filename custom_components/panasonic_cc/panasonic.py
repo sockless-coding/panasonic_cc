@@ -77,7 +77,13 @@ class PanasonicApiDevice:
 
     @property
     def inside_temperature(self):
-        return self.data['parameters']['temperatureInside']
+        if self.data['parameters']['temperatureInside'] != 126:
+            return self.data['parameters']['temperatureInside']
+        return None
+
+    @property
+    def support_inside_temperature(self):
+        return self.inside_temperature != 126
 
     @property
     def outside_temperature(self):

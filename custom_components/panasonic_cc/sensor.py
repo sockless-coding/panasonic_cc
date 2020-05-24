@@ -12,7 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     
     for device in hass.data[PANASONIC_DEVICES]:
-        sensors = [ATTR_INSIDE_TEMPERATURE]
+        sensors = []
+        if device.support_inside_temperature:
+            sensors.append(ATTR_INSIDE_TEMPERATURE)
         if device.support_outside_temperature:
             sensors.append(ATTR_OUTSIDE_TEMPERATURE)
         add_entities([PanasonicClimateSensor(device, sensor) for sensor in sensors])
