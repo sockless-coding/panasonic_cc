@@ -131,7 +131,7 @@ class PanasonicClimateDevice(ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target temperature."""
-        await self.set_swing_mode(swing_mode)
+        await self._api.set_swing_mode(swing_mode)
 
     @property
     def swing_modes(self):
