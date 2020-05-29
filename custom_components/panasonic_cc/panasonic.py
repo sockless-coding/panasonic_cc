@@ -46,8 +46,8 @@ class PanasonicApiDevice:
             data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device))
-            self._api.login()
-            data = self._api.get_device(self.id)
+            await self.hass.async_add_executor_job(self._api.login)
+            data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
 
         if data is None:
             self._available = False
