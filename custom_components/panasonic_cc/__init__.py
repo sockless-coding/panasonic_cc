@@ -69,8 +69,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             api_device = PanasonicApiDevice(hass, api, device)
             await api_device.update()
             hass.data[PANASONIC_DEVICES].append(api_device)
-        except:
-            _LOGGER.warning(f"Failed to setup device: {device['name']}")
+        except Exception as e:
+            _LOGGER.warning(f"Failed to setup device: {device['name']} ({e})")
     
     if hass.data[PANASONIC_DEVICES]:
         for component in COMPONENT_TYPES:
