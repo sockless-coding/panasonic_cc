@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional, List
 from homeassistant.util import Throttle
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.components.climate.const import ATTR_HVAC_MODE
 
 from .const import PRESET_LIST, OPERATION_LIST
 
@@ -126,7 +127,6 @@ class PanasonicApiDevice:
             return p['nanoe']
         return None
 
-    
     async def turn_off(self):
         await self.hass.async_add_executor_job(
             self.set_device,
@@ -158,11 +158,18 @@ class PanasonicApiDevice:
         if target_temp is None:
             return
 
+        new_values = { "temperature": target_temp }
+
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None:
+            new_values['power'] = self.constants.Power.On
+            new_values['mode'] = self.constants.OperationMode[OPERATION_LIST[hvac_mode]]
+
         _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
 
         await self.hass.async_add_executor_job(
             self.set_device,
-            { "temperature": target_temp }
+            new_values
         )
         await self.do_update()
         
