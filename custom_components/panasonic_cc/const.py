@@ -18,6 +18,9 @@ KEY_DOMAIN = "domain"
 
 TIMEOUT = 60
 
+CONF_FORCE_OUTSIDE_SENSOR = "force_outside_sensor"
+DEFAULT_FORCE_OUTSIDE_SENSOR = False
+
 SENSOR_TYPE_TEMPERATURE = "temperature"
 
 SENSOR_TYPES = {

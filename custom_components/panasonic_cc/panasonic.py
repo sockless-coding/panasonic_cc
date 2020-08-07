@@ -25,11 +25,12 @@ def api_call_login(func):
 
 class PanasonicApiDevice:
 
-    def __init__(self, hass: HomeAssistantType, api, device):
+    def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor):
         from pcomfortcloud import constants
         self.hass = hass
         self._api = api
         self.device = device
+        self.force_outside_sensor = force_outside_sensor
         self.id = device['id']
         self.name = device['name']
         self.group = device['group']
@@ -88,10 +89,15 @@ class PanasonicApiDevice:
 
     @property
     def outside_temperature(self):
-        return self.data['parameters']['temperatureOutside']
+        temp = self.data['parameters']['temperatureOutside']
+        if temp != 126:
+            return temp
+        return None
 
     @property
     def support_outside_temperature(self):
+        if self.force_outside_sensor:
+            return True
         return self.outside_temperature != 126
 
     @property

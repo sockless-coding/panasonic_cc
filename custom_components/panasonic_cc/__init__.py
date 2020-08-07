@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from homeassistant.helpers import discovery
 
-from .const import TIMEOUT
+from .const import TIMEOUT, CONF_FORCE_OUTSIDE_SENSOR, DEFAULT_FORCE_OUTSIDE_SENSOR
 
 from .panasonic import PanasonicApiDevice
 
@@ -32,6 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_FORCE_OUTSIDE_SENSOR, default=DEFAULT_FORCE_OUTSIDE_SENSOR): cv.boolean,
             }
         )
     },
@@ -61,12 +62,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
+    force_outside_sensor = False
+    if CONF_FORCE_OUTSIDE_SENSOR in conf:
+        force_outside_sensor = conf[CONF_FORCE_OUTSIDE_SENSOR]
 
     api = pcomfortcloud.Session(username, password, verifySsl=False)
     devices = await hass.async_add_executor_job(api.get_devices)
     for device in devices:
         try:
-            api_device = PanasonicApiDevice(hass, api, device)
+            api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor)
             await api_device.update()
             hass.data[PANASONIC_DEVICES].append(api_device)
         except Exception as e:

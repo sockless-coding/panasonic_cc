@@ -1,5 +1,6 @@
 """Config flow for the Panasonic Comfort Cloud platform."""
 import asyncio
+from typing import Any, Dict, Optional
 import logging
 
 from aiohttp import ClientError
@@ -8,12 +9,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.core import callback
 
 from . import DOMAIN as PANASONIC_DOMAIN
 
 from .panasonic import PanasonicApiDevice
 
-from .const import KEY_DOMAIN, TIMEOUT
+from .const import KEY_DOMAIN, TIMEOUT, CONF_FORCE_OUTSIDE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +26,12 @@ class FlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return PanasonicOptionsFlowHandler(config_entry)
+
     async def _create_entry(self, username, password):
         """Register new entry."""
         # Check if ip already is registered
@@ -31,7 +39,7 @@ class FlowHandler(config_entries.ConfigFlow):
             if entry.data[KEY_DOMAIN] == PANASONIC_DOMAIN:
                 return self.async_abort(reason="already_configured")
 
-        return self.async_create_entry(title="", data={CONF_USERNAME: username, CONF_PASSWORD: password})
+        return self.async_create_entry(title="", data={CONF_USERNAME: username, CONF_PASSWORD: password, CONF_FORCE_OUTSIDE_SENSOR: False})
 
     async def _create_device(self, username, password):
         """Create device."""
@@ -71,4 +79,30 @@ class FlowHandler(config_entries.ConfigFlow):
             return await self.async_step_user()
         return await self._create_device(username, user_input[CONF_PASSWORD])
 
-    
+class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Panasonic options."""
+
+    def __init__(self, config_entry):
+        """Initialize Panasonic options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Manage Panasonic options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_FORCE_OUTSIDE_SENSOR,
+                        default=self.config_entry.options.get(
+                            CONF_FORCE_OUTSIDE_SENSOR, False
+                        ),
+                    ): bool,
+                }
+            ),
+        )
