@@ -5,6 +5,6 @@
     "documentation": "https://github.com/sockless-coding/panasonic_cc/",
     "dependencies": [],
     "codeowners": ["sockless-coding"],
-    "requirements": ["pcomfortcloud==0.0.15"]
+    "requirements": ["pcomfortcloud==0.0.16"]
   }
   
