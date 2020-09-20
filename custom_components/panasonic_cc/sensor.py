@@ -17,7 +17,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensors.append(ATTR_INSIDE_TEMPERATURE)
         if device.support_outside_temperature:
             sensors.append(ATTR_OUTSIDE_TEMPERATURE)
-        add_entities([PanasonicClimateSensor(device, sensor) for sensor in sensors])
+        entities = [PanasonicClimateSensor(device, sensor) for sensor in sensors]
+        if device.energy_sensor_enabled:
+            entities.append(PanasonicEnergySensor(device))
+        add_entities(entities)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     pass
@@ -27,7 +30,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors = [ATTR_INSIDE_TEMPERATURE]
         if device.support_outside_temperature:
             sensors.append(ATTR_OUTSIDE_TEMPERATURE)
-        async_add_entities([PanasonicClimateSensor(device, sensor) for sensor in sensors])
+        entities = [PanasonicClimateSensor(device, sensor) for sensor in sensors]
+        if device.energy_sensor_enabled:
+            entities.append(PanasonicEnergySensor(device))
+        async_add_entities(entities)
 
 
 class PanasonicClimateSensor(Entity):
@@ -72,6 +78,49 @@ class PanasonicClimateSensor(Entity):
     async def async_update(self):
         """Retrieve latest state."""
         await self._api.update()
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return self._api.device_info
+
+class PanasonicEnergySensor(Entity):
+    """Representation of a Sensor."""
+
+    def __init__(self, api) -> None:
+        """Initialize the sensor."""
+        self._api = api
+        
+        self._name = f"{api.name} Daily Energy"
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._api.id}-daily_energy_sensor"
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:flash"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._api.daily_energy
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "kWh"
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        await self._api.update_energy()
 
     @property
     def device_info(self):

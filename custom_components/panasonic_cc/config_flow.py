@@ -15,7 +15,12 @@ from . import DOMAIN as PANASONIC_DOMAIN
 
 from .panasonic import PanasonicApiDevice
 
-from .const import KEY_DOMAIN, TIMEOUT, CONF_FORCE_OUTSIDE_SENSOR
+from .const import (
+    KEY_DOMAIN, 
+    TIMEOUT, 
+    CONF_FORCE_OUTSIDE_SENSOR, 
+    CONF_ENABLE_DAILY_ENERGY_SENSOR, 
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +44,12 @@ class FlowHandler(config_entries.ConfigFlow):
             if entry.data[KEY_DOMAIN] == PANASONIC_DOMAIN:
                 return self.async_abort(reason="already_configured")
 
-        return self.async_create_entry(title="", data={CONF_USERNAME: username, CONF_PASSWORD: password, CONF_FORCE_OUTSIDE_SENSOR: False})
+        return self.async_create_entry(title="", data={
+            CONF_USERNAME: username, 
+            CONF_PASSWORD: password, 
+            CONF_FORCE_OUTSIDE_SENSOR: False,
+            CONF_ENABLE_DAILY_ENERGY_SENSOR: DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+            })
 
     async def _create_device(self, username, password):
         """Create device."""
@@ -101,6 +111,12 @@ class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_FORCE_OUTSIDE_SENSOR,
                         default=self.config_entry.options.get(
                             CONF_FORCE_OUTSIDE_SENSOR, False
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_ENABLE_DAILY_ENERGY_SENSOR,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
                         ),
                     ): bool,
                 }

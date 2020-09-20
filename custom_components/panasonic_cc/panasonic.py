@@ -1,6 +1,7 @@
 
 from datetime import timedelta
 import logging
+from datetime import datetime
 
 from typing import Any, Dict, Optional, List
 from homeassistant.util import Throttle
@@ -25,16 +26,18 @@ def api_call_login(func):
 
 class PanasonicApiDevice:
 
-    def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor):
+    def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor, enable_energy_sensor):
         from pcomfortcloud import constants
         self.hass = hass
         self._api = api
         self.device = device
         self.force_outside_sensor = force_outside_sensor
+        self.enable_energy_sensor = enable_energy_sensor
         self.id = device['id']
         self.name = device['name']
         self.group = device['group']
         self.data = None
+        self.energy_data = None
         self._available = True
         self.constants = constants
         
@@ -42,6 +45,10 @@ class PanasonicApiDevice:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self, **kwargs):
         await self.do_update()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def update_energy(self, **kwargs):
+        await self.do_update_energy()
 
     async def do_update(self):
         try:
@@ -57,6 +64,19 @@ class PanasonicApiDevice:
             return
         self._available = True
         self.data = data
+
+    async def do_update_energy(self):
+        try:
+            data= await self.hass.async_add_executor_job(self._api.history,self.id,"Day",datetime.now().strftime("%Y%m%d"))
+        except:
+            _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device))
+            await self.hass.async_add_executor_job(self._api.login)
+            data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+
+        if data is None:
+            _LOGGER.debug("Received no energy data for device {id}".format(**self.device))
+            return
+        self.energy_data = data
 
     @property
     def available(self) -> bool:
@@ -131,6 +151,18 @@ class PanasonicApiDevice:
         p = self.data['parameters']
         if 'nanoe' in p:
             return p['nanoe']
+        return None
+
+    @property
+    def energy_sensor_enabled(self):
+        return self.enable_energy_sensor
+
+    @property
+    def daily_energy(self):
+        if not self.enable_energy_sensor:
+            return None
+        if self.energy_data is not None:
+            return self.energy_data['parameters']['energyConsumption']
         return None
 
     async def turn_off(self):
