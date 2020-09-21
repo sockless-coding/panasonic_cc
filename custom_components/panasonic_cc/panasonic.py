@@ -38,6 +38,10 @@ class PanasonicApiDevice:
         self.group = device['group']
         self.data = None
         self.energy_data = None
+        self.last_energy_reading = 0
+        self.last_energy_reading_time = None
+        self.current_power_value = 0
+        self.current_power_counter = 0
         self._available = True
         self.constants = constants
         
@@ -68,6 +72,7 @@ class PanasonicApiDevice:
     async def do_update_energy(self):
         try:
             data= await self.hass.async_add_executor_job(self._api.history,self.id,"Day",datetime.now().strftime("%Y%m%d"))
+            
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device))
             await self.hass.async_add_executor_job(self._api.login)
@@ -76,6 +81,24 @@ class PanasonicApiDevice:
         if data is None:
             _LOGGER.debug("Received no energy data for device {id}".format(**self.device))
             return
+        t1 = datetime.now()
+        c_energy = data['parameters']['energyConsumption']
+        if self.last_energy_reading_time is not None:
+            if c_energy != self.last_energy_reading:                
+                d = (t1 - self.last_energy_reading_time).total_seconds() / 60 / 60
+                p = round((c_energy - self.last_energy_reading)*1000 / d)
+                self.last_energy_reading = c_energy
+                self.last_energy_reading_time = t1
+                if p >= 0:
+                    self.current_power_value = p
+                self.current_power_counter = 0
+            else:
+                self.current_power_counter += 1
+                if self.current_power_counter > 30:
+                    self.current_power_value = 0
+        else:
+            self.last_energy_reading = c_energy
+            self.last_energy_reading_time = t1
         self.energy_data = data
 
     @property
@@ -164,6 +187,12 @@ class PanasonicApiDevice:
         if self.energy_data is not None:
             return self.energy_data['parameters']['energyConsumption']
         return None
+
+    @property
+    def current_power(self):
+        if not self.enable_energy_sensor:
+            return None
+        return self.current_power_value
 
     async def turn_off(self):
         await self.hass.async_add_executor_job(

@@ -1,11 +1,19 @@
 """Support for Panasonic sensors."""
 import logging
 
-from homeassistant.const import CONF_ICON, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_ICON, CONF_NAME, TEMP_CELSIUS, CONF_TYPE
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
-from .const import ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, SENSOR_TYPES
+from .const import (
+    ATTR_INSIDE_TEMPERATURE, 
+    ATTR_OUTSIDE_TEMPERATURE, 
+    SENSOR_TYPES, 
+    
+    ATTR_DAILY_ENERGY,
+    ATTR_CURRENT_POWER,
+    ENERGY_SENSOR_TYPES
+    )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +27,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensors.append(ATTR_OUTSIDE_TEMPERATURE)
         entities = [PanasonicClimateSensor(device, sensor) for sensor in sensors]
         if device.energy_sensor_enabled:
-            entities.append(PanasonicEnergySensor(device))
+            entities.append(PanasonicEnergySensor(device, ATTR_DAILY_ENERGY))
+            entities.append(PanasonicEnergySensor(device, ATTR_CURRENT_POWER))
         add_entities(entities)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -32,7 +41,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
             sensors.append(ATTR_OUTSIDE_TEMPERATURE)
         entities = [PanasonicClimateSensor(device, sensor) for sensor in sensors]
         if device.energy_sensor_enabled:
-            entities.append(PanasonicEnergySensor(device))
+            entities.append(PanasonicEnergySensor(device, ATTR_DAILY_ENERGY))
+            entities.append(PanasonicEnergySensor(device, ATTR_CURRENT_POWER))
         async_add_entities(entities)
 
 
@@ -87,21 +97,24 @@ class PanasonicClimateSensor(Entity):
 class PanasonicEnergySensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, api) -> None:
+    def __init__(self, api, monitored_state) -> None:
         """Initialize the sensor."""
         self._api = api
-        
-        self._name = f"{api.name} Daily Energy"
+        self._sensor = ENERGY_SENSOR_TYPES[monitored_state]
+        self._name = f"{api.name} {self._sensor[CONF_NAME]}"
+        self._device_attribute = monitored_state
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.id}-daily_energy_sensor"
+        if self._device_attribute == ATTR_DAILY_ENERGY:
+            return f"{self._api.id}-daily_energy_sensor"
+        return f"{self._api.id}-{self._device_attribute}"
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return "mdi:flash"
+        return self._sensor[CONF_ICON]
 
     @property
     def name(self):
@@ -111,12 +124,16 @@ class PanasonicEnergySensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._api.daily_energy
+        if self._device_attribute == ATTR_DAILY_ENERGY:
+            return self._api.daily_energy
+        if self._device_attribute == ATTR_CURRENT_POWER:
+            return self._api.current_power
+        return None
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "kWh"
+        return self._sensor[CONF_TYPE]
 
     async def async_update(self):
         """Retrieve latest state."""

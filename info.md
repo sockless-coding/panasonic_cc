@@ -14,6 +14,7 @@ This is a custom component to allow control of Panasonic Comfort Cloud devices i
 * Sensors for inside and outside temperature (where available)
 * Switch for toggling Nanoe
 * Daily energy sensor (optional)
+* Current Power sensor (Calculated from energy reading)
 
 
 # Configuration

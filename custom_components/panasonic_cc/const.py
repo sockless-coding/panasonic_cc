@@ -10,6 +10,8 @@ from homeassistant.components.climate.const import (
 ATTR_TARGET_TEMPERATURE = "target_temperature"
 ATTR_INSIDE_TEMPERATURE = "inside_temperature"
 ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
+ATTR_DAILY_ENERGY = "daily_energy"
+ATTR_CURRENT_POWER = "current_power"
 
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
@@ -35,6 +37,18 @@ SENSOR_TYPES = {
         CONF_NAME: "Outside Temperature",
         CONF_ICON: "mdi:thermometer",
         CONF_TYPE: SENSOR_TYPE_TEMPERATURE,
+    },
+}
+ENERGY_SENSOR_TYPES = {
+    ATTR_DAILY_ENERGY: {
+        CONF_NAME: "Daily Energy",
+        CONF_ICON: "mdi:flash",
+        CONF_TYPE: "kWh",
+    },
+    ATTR_CURRENT_POWER: {
+        CONF_NAME: "Current Power",
+        CONF_ICON: "mdi:flash",
+        CONF_TYPE: "W",
     },
 }
 
