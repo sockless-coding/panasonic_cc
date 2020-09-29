@@ -161,6 +161,10 @@ class PanasonicApiDevice:
         return self.data['parameters']['airSwingVertical'].name
 
     @property
+    def swing_lr_mode(self):
+        return self.data['parameters']['airSwingHorizontal'].name
+
+    @property
     def hvac_mode(self):
         """Return the current operation."""
         return self.data['parameters']['mode'].name
@@ -279,6 +283,25 @@ class PanasonicApiDevice:
             { 
                 "power": self.constants.Power.On,
                 "airSwingVertical": self.constants.AirSwingUD[swing_mode],
+                "fanAutoMode": automode
+            })
+        await self.do_update()
+
+    async def set_swing_lr_mode(self, swing_mode):
+        """Set swing mode."""
+        _LOGGER.debug("Set %s horizontal swing mode %s", self.name, swing_mode)
+        if swing_mode == 'Auto':
+            automode = self.constants.AirSwingAutoMode["AirSwingLR"]
+        else:
+            automode = self.constants.AirSwingAutoMode["Disabled"]
+
+        _LOGGER.debug("Set %s horizontal swing mode %s", self.name, swing_mode)
+
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            { 
+                "power": self.constants.Power.On,
+                "airSwingHorizontal": self.constants.AirSwingLR[swing_mode],
                 "fanAutoMode": automode
             })
         await self.do_update()

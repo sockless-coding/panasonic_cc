@@ -6,13 +6,20 @@ from typing import Any, Dict, Optional, List
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import HVAC_MODE_OFF, SUPPORT_PRESET_MODE
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE)
 
 from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
 
-from .const import SUPPORT_FLAGS, OPERATION_LIST, PRESET_LIST
+from .const import (
+    SUPPORT_FLAGS, 
+    OPERATION_LIST, 
+    PRESET_LIST,
+    ATTR_SWING_LR_MODE,
+    ATTR_SWING_LR_MODES,
+    SERVICE_SET_SWING_LR_MODE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +47,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
             PanasonicClimateDevice(device)
             for device in hass.data[PANASONIC_DEVICES]
         ]
+    )
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_SWING_LR_MODE,
+        {
+            vol.Required('swing_mode'): cv.string,
+        },
+        "async_set_horizontal_swing_mode",
     )
 
 class PanasonicClimateDevice(ClimateEntity):
@@ -134,9 +151,22 @@ class PanasonicClimateDevice(ClimateEntity):
         await self._api.set_swing_mode(swing_mode)
 
     @property
+    def swing_lr_mode(self):
+        return self._api.swing_lr_mode
+
+    async def async_set_horizontal_swing_mode(self, swing_mode):
+        await self._api.set_swing_lr_mode(swing_mode)
+
+
+    @property
     def swing_modes(self):
         """Return the list of available swing modes."""
         return [f.name for f in self._api.constants.AirSwingUD ]
+
+    @property
+    def swing_lr_modes(self):
+        """Return the list of available swing modes."""
+        return [f.name for f in self._api.constants.AirSwingLR ]
 
     @property
     def current_temperature(self):
@@ -190,4 +220,13 @@ class PanasonicClimateDevice(ClimateEntity):
         """Return a device description for device registry."""
         return self._api.device_info
     
+    @property
+    def device_state_attributes(self):
+        attrs = {}
+        try:
+            attrs[ATTR_SWING_LR_MODE] = self.swing_lr_mode
+            attrs[ATTR_SWING_LR_MODES] = self.swing_lr_modes
+        except KeyError:
+            pass
+        return attrs
 

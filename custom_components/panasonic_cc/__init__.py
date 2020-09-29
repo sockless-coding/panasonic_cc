@@ -18,7 +18,12 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from homeassistant.helpers import discovery
 
-from .const import TIMEOUT, CONF_FORCE_OUTSIDE_SENSOR, DEFAULT_FORCE_OUTSIDE_SENSOR, CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+from .const import (
+    TIMEOUT, 
+    CONF_FORCE_OUTSIDE_SENSOR, 
+    DEFAULT_FORCE_OUTSIDE_SENSOR, 
+    CONF_ENABLE_DAILY_ENERGY_SENSOR, 
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
 
 from .panasonic import PanasonicApiDevice
 
@@ -87,6 +92,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
             )
+
+    
     return True
 
 

@@ -13,8 +13,13 @@ ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
 ATTR_DAILY_ENERGY = "daily_energy"
 ATTR_CURRENT_POWER = "current_power"
 
+ATTR_SWING_LR_MODE = "horizontal_swing_mode"
+ATTR_SWING_LR_MODES = "horizontal_swing_modes"
+
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
+
+SERVICE_SET_SWING_LR_MODE = "set_horizontal_swing_mode"
 
 KEY_DOMAIN = "domain"
 
