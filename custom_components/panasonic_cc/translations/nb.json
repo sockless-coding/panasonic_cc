@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Skriv inn Panasonic ID og passord",
+        "data": { "brukernavn": "Panasonic ID", "password": "Passord" }
+      }
+    },
+    "abort": {
+      "device_timeout": "Tidsavbrudd for tilkobling til enheten.",
+      "device_fail": "Uventet feil under oppretting av enhet.",
+      "already_configured": "Enheten er allerede konfigurert"
+    }
+  },
+  "options": {
+    "step": {
+        "init": {
+            "data": {
+              "force_outside_sensor": "Tving utvendig sensor",
+              "enable_daily_energy_sensor": "Aktiver daglig energisensor (krever omstart)"
+            }
+        }
+    }
+  }
+}
