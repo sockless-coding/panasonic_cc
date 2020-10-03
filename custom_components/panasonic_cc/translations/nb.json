@@ -4,7 +4,7 @@
       "user": {
         "title": "Panasonic Comfort Cloud",
         "description": "Skriv inn Panasonic ID og passord",
-        "data": { "brukernavn": "Panasonic ID", "password": "Passord" }
+        "data": { "username": "Panasonic ID", "password": "Passord" }
       }
     },
     "abort": {
