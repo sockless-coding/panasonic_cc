@@ -127,7 +127,7 @@ class PanasonicEnergySensor(Entity):
         if self._device_attribute == ATTR_DAILY_ENERGY:
             return round(self._api.daily_energy,2)
         if self._device_attribute == ATTR_CURRENT_POWER:
-            return round(self._api.current_power,2)M,|m,
+            return round(self._api.current_power,2)
         return None
 
     @property
