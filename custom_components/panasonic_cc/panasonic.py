@@ -36,14 +36,27 @@ class PanasonicApiDevice:
         self.id = device['id']
         self.name = device['name']
         self.group = device['group']
-        self.data = None
-        self.energy_data = None
+        #self.data = None
+        #self.energy_data = None
         self.last_energy_reading = 0
         self.last_energy_reading_time = None
         self.current_power_value = 0
         self.current_power_counter = 0
         self._available = True
         self.constants = constants
+
+        self._is_on = False
+        self._inside_temperature = None
+        self._outside_temperature = None
+        self._target_temperature = None
+        self._fan_mode = None
+        self._swing_mode = None
+        self._swing_lr_mode = None
+        self._hvac_mode = None
+        self._eco_mode = None
+        self._nanoe_mode = None
+        self._daily_energy = None
+
         
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -55,28 +68,58 @@ class PanasonicApiDevice:
         await self.do_update_energy()
 
     async def do_update(self):
+        #_LOGGER.debug("Requesting data for device {id}".format(**self.device))
         try:
             data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device))
-            await self.hass.async_add_executor_job(self._api.login)
-            data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+            try:
+                await self.hass.async_add_executor_job(self._api.login)
+                data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+            except:
+                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))
+                return
 
         if data is None:
             self._available = False
             _LOGGER.debug("Received no data for device {id}".format(**self.device))
             return
+        try:
+            plst = data['parameters']
+            self._is_on = bool( plst['power'].value )
+            if plst['temperatureInside'] != 126:
+                self._inside_temperature = plst['temperatureInside']
+            if plst['temperatureOutside'] != 126:
+                self._outside_temperature = plst['temperatureOutside']
+            if plst['temperature'] != 126:
+                self._target_temperature = plst['temperature']
+            self._fan_mode = plst['fanSpeed'].name
+            self._swing_mode = plst['airSwingVertical'].name
+            self._swing_lr_mode = plst['airSwingHorizontal'].name
+            self._hvac_mode = plst['mode'].name
+            self._eco_mode = plst['eco'].name
+            if 'nanoe' in plst:
+                self._nanoe_mode = plst['nanoe']
+
+        except Exception as e:
+            _LOGGER.debug("Failed to set data for device {id}".format(**self.device))
+            _LOGGER.debug("Set data Error: {0}".format(e))
         self._available = True
-        self.data = data
+        #self.data = data
 
     async def do_update_energy(self):
+        #_LOGGER.debug("Requesting energy for device {id}".format(**self.device))
         try:
             data= await self.hass.async_add_executor_job(self._api.history,self.id,"Day",datetime.now().strftime("%Y%m%d"))
             
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device))
-            await self.hass.async_add_executor_job(self._api.login)
-            data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+            try:
+                await self.hass.async_add_executor_job(self._api.login)
+                data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+            except:
+                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))
+                return
 
         if data is None:
             _LOGGER.debug("Received no energy data for device {id}".format(**self.device))
@@ -99,7 +142,7 @@ class PanasonicApiDevice:
         else:
             self.last_energy_reading = c_energy
             self.last_energy_reading_time = t1
-        self.energy_data = data
+        self._daily_energy = data['parameters']['energyConsumption']
 
     @property
     def available(self) -> bool:
@@ -118,67 +161,53 @@ class PanasonicApiDevice:
 
     @property
     def is_on(self):
-        return bool( self.data['parameters']['power'].value )
+        return self._is_on
 
     @property
     def inside_temperature(self):
-        if self.data['parameters']['temperatureInside'] != 126:
-            return self.data['parameters']['temperatureInside']
-        return None
+        return self._inside_temperature
 
     @property
     def support_inside_temperature(self):
-        return self.inside_temperature != None
+        return self._inside_temperature != None
 
     @property
     def outside_temperature(self):
-        temp = self.data['parameters']['temperatureOutside']
-        if temp != 126:
-            return temp
-        return None
+        return self._outside_temperature
 
     @property
     def support_outside_temperature(self):
         if self.force_outside_sensor:
             return True
-        return self.outside_temperature != 126
+        return self._outside_temperature != None
 
     @property
     def target_temperature(self):
-        """Return the target temperature."""
-        if self.data['parameters']['temperature'] != 126:
-            return self.data['parameters']['temperature']
-        return None
+        return self._target_temperature
 
     @property
     def fan_mode(self):
-        """Return the fan setting."""
-        return self.data['parameters']['fanSpeed'].name
+        return self._fan_mode
 
     @property
     def swing_mode(self):
-        """Return the fan setting."""
-        return self.data['parameters']['airSwingVertical'].name
+        return self._swing_mode
 
     @property
     def swing_lr_mode(self):
-        return self.data['parameters']['airSwingHorizontal'].name
+        return self._swing_lr_mode
 
     @property
     def hvac_mode(self):
-        """Return the current operation."""
-        return self.data['parameters']['mode'].name
+        return self._hvac_mode
 
     @property
     def eco_mode(self) -> Optional[str]:
-        return self.data['parameters']['eco'].name
+        return self._eco_mode
 
     @property
     def nanoe_mode(self):
-        p = self.data['parameters']
-        if 'nanoe' in p:
-            return p['nanoe']
-        return None
+        self._nanoe_mode
 
     @property
     def energy_sensor_enabled(self):
@@ -186,11 +215,7 @@ class PanasonicApiDevice:
 
     @property
     def daily_energy(self):
-        if not self.enable_energy_sensor:
-            return None
-        if self.energy_data is not None:
-            return self.energy_data['parameters']['energyConsumption']
-        return None
+        return self._daily_energy
 
     @property
     def current_power(self):

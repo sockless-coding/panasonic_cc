@@ -181,7 +181,7 @@ class PanasonicClimateDevice(ClimateEntity):
         eco = self._api.eco_mode
         for key, value in PRESET_LIST.items():
             if value == eco:
-                _LOGGER.debug("Preset mode is {0}".format(key))
+                #_LOGGER.debug("Preset mode is {0}".format(key))
                 return key
 
     async def async_set_preset_mode(self, preset_mode):
@@ -193,7 +193,7 @@ class PanasonicClimateDevice(ClimateEntity):
         """Return a list of available preset modes.
         Requires SUPPORT_PRESET_MODE.
         """
-        _LOGGER.debug("Preset modes are {0}".format(",".join(PRESET_LIST.keys())))
+        #_LOGGER.debug("Preset modes are {0}".format(",".join(PRESET_LIST.keys())))
         return list(PRESET_LIST.keys())
 
     @property
