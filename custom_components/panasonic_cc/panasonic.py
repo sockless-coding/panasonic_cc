@@ -207,7 +207,7 @@ class PanasonicApiDevice:
 
     @property
     def nanoe_mode(self):
-        self._nanoe_mode
+        return self._nanoe_mode
 
     @property
     def energy_sensor_enabled(self):
