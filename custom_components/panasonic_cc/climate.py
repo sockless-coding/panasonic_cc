@@ -1,4 +1,4 @@
-a"""Support for the Panasonic HVAC."""
+"""Support for the Panasonic HVAC."""
 import logging
 
 import voluptuous as vol
