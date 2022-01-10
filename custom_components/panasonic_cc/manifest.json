@@ -1,10 +1,10 @@
 {
     "domain": "panasonic_cc",
     "name": "Panasonic Comfort Cloud",
-    "version": "1.0.30",
+    "version": "1.0.31",
     "config_flow": true,
-    "documentation": "https://github.com/sockless-coding/panasonic_cc/",
+    "documentation": "https://github.com/aceindy/panasonic_cc/",
     "dependencies": [],
-    "codeowners": ["sockless-coding"],
+    "codeowners": ["aceindy"],
     "requirements": ["pcomfortcloud==0.0.22"]
   }
