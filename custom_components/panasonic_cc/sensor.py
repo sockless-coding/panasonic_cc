@@ -136,7 +136,7 @@ class PanasonicEnergySensor(Entity):
         """Return the unit of measurement."""
         return self._sensor[CONF_TYPE]
 
-   @property
+    @property
     def device_class(self):
         """Return device class."""
         return self._sensor[CONF_DEVICE_CLASS]
