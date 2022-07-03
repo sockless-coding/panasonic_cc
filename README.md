@@ -36,16 +36,16 @@ Clone or copy this repository and copy the folder 'custom_components/panasonic_c
 
 Once installed the Panasonic Comfort Cloud integration can be configured via the Home Assistant integration interface where it will let you enter your Panasonic ID and Password.
 
-![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/setup_dlg.png)
+![Setup](https://github.com/aceindy/panasonic_cc/raw/master/doc/setup_dlg.png)
 
 After inital setup additional options are available
 
-![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/options_dlg.png)
+![Setup](https://github.com/aceindy/panasonic_cc/raw/master/doc/options_dlg.png)
 
 ## Known issues
 
 - Setting the Horizontal swing mode to LefMid will break the component and you have to use Comfort Cloud app to change the mode to sometihng else.
 
-[license-shield]: https://img.shields.io/github/license/sockless-coding/panasonic_cc.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/sockless-coding/panasonic_cc.svg?style=for-the-badge
-[releases]: https://github.com/sockless-coding/panasonic_cc/releases
+[license-shield]: https://img.shields.io/github/license/aceindy/panasonic_cc.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/releaseaceindy/panasonic_cc.svg?style=for-the-badge
+[releases]: https://github.com/aceindy/panasonic_cc/releases
