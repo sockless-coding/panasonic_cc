@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with Comfort Cloud."""
-    import pcomfortcloud
+    from . import pcomfortcloud
     
     conf = entry.data
     if PANASONIC_DEVICES not in hass.data:

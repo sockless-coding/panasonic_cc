@@ -3,6 +3,14 @@ import logging
 
 from homeassistant.const import CONF_ICON, CONF_NAME, TEMP_CELSIUS, CONF_TYPE
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    PLATFORM_SCHEMA,
+    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 
 from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
 from .const import (
@@ -94,7 +102,7 @@ class PanasonicClimateSensor(Entity):
         """Return a device description for device registry."""
         return self._api.device_info
 
-class PanasonicEnergySensor(Entity):
+class PanasonicEnergySensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, api, monitored_state) -> None:
@@ -103,6 +111,12 @@ class PanasonicEnergySensor(Entity):
         self._sensor = ENERGY_SENSOR_TYPES[monitored_state]
         self._name = f"{api.name} {self._sensor[CONF_NAME]}"
         self._device_attribute = monitored_state
+        if self._device_attribute == ATTR_DAILY_ENERGY:
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+        else:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_POWER
 
     @property
     def unique_id(self):
@@ -131,8 +145,18 @@ class PanasonicEnergySensor(Entity):
         return None
 
     @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self.state
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
+        return self._sensor[CONF_TYPE]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
         return self._sensor[CONF_TYPE]
 
     async def async_update(self):

@@ -27,7 +27,7 @@ def api_call_login(func):
 class PanasonicApiDevice:
 
     def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor, enable_energy_sensor):
-        from pcomfortcloud import constants
+        from .pcomfortcloud import constants
         self.hass = hass
         self._api = api
         self.device = device
