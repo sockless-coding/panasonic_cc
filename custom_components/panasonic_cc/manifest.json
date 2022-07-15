@@ -3,8 +3,8 @@
     "name": "Panasonic Comfort Cloud",
     "version": "1.0.43",
     "config_flow": true,
-    "documentation": "https://github.com/aceindy/panasonic_cc/",
+    "documentation": "https://github.com/sockless-coding/panasonic_cc/",
     "dependencies": [],
-    "codeowners": ["aceindy"],
+    "codeowners": ["sockless-coding"],
     "requirements": ["pcomfortcloud==0.0.22"]
   }
