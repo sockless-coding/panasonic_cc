@@ -9,10 +9,6 @@ This is a custom component to allow control of Panasonic Comfort Cloud devices i
 
 ![Example entities](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/entities.png)
 
-#### Support Development
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z050HKY)
-
-
 ## Features:
 
 * Climate component for Panasonic airconditioners and heatpumps
