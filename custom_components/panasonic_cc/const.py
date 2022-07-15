@@ -1,6 +1,5 @@
 """Constants for Panasonic Cloud."""
-from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, CONF_DEVICE_CLASS, DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL_INCREASING, CONF_STATE_CLASS
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL,
     HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_OFF,
@@ -50,15 +49,11 @@ ENERGY_SENSOR_TYPES = {
         CONF_NAME: "Daily Energy",
         CONF_ICON: "mdi:flash",
         CONF_TYPE: "kWh",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
     },
     ATTR_CURRENT_POWER: {
         CONF_NAME: "Current Power",
         CONF_ICON: "mdi:flash",
         CONF_TYPE: "W",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
 }
 

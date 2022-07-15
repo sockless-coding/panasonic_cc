@@ -53,16 +53,14 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def _create_device(self, username, password):
         """Create device."""
-        import pcomfortcloud
+        from . import pcomfortcloud
         try:
 
             api = pcomfortcloud.Session(username, password, verifySsl=False)
             devices = await self.hass.async_add_executor_job(api.get_devices)
             if not devices:
-                _LOGGER.warning("No device returned from Panasonic Cloud")
                 return self.async_abort(reason="No devices")
         except asyncio.TimeoutError:
-            _LOGGER.warning("Unable to connect to Panasonic Cloud: timed out")
             return self.async_abort(reason="device_timeout")
         except ClientError:
             _LOGGER.exception("ClientError")

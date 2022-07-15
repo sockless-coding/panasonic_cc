@@ -221,7 +221,7 @@ class PanasonicClimateDevice(ClimateEntity):
         return self._api.device_info
     
     @property
-    def extra_state_attributes(self):
+    def device_state_attributes(self):
         attrs = {}
         try:
             attrs[ATTR_SWING_LR_MODE] = self.swing_lr_mode

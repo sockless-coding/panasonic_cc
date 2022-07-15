@@ -1,8 +1,7 @@
 """Support for Panasonic sensors."""
 import logging
 
-from homeassistant.const import CONF_ICON, CONF_NAME, TEMP_CELSIUS, CONF_TYPE, CONF_DEVICE_CLASS
-from homeassistant.components.sensor import CONF_STATE_CLASS
+from homeassistant.const import CONF_ICON, CONF_NAME, TEMP_CELSIUS, CONF_TYPE
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
@@ -136,16 +135,6 @@ class PanasonicEnergySensor(Entity):
         """Return the unit of measurement."""
         return self._sensor[CONF_TYPE]
 
-    @property
-    def device_class(self):
-        """Return device class."""
-        return self._sensor[CONF_DEVICE_CLASS]
-
-    @property
-    def state_class(self):
-        """Return state class."""
-        return self._sensor[CONF_STATE_CLASS]
-    
     async def async_update(self):
         """Retrieve latest state."""
         await self._api.update_energy()
