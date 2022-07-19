@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 from typing import Any, Dict, Optional, List
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity, HVACAction, HVACMode
 from homeassistant.components.climate.const import HVAC_MODE_OFF, SUPPORT_PRESET_MODE
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 
@@ -65,6 +65,7 @@ class PanasonicClimateDevice(ClimateEntity):
         """Initialize the climate device."""
 
         self._api = api
+        self._attr_hvac_action = HVACAction.IDLE
 
     @property
     def unique_id(self):
@@ -128,6 +129,28 @@ class PanasonicClimateDevice(ClimateEntity):
             await self._api.set_hvac_mode(hvac_mode)
 
     @property
+    def hvac_action(self):
+        if not self._api.is_on:
+            HVACAction.OFF
+        hvac_mode = self.hvac_mode
+        if (
+            (hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.HEAT_COOL)
+            and self._api.target_temperature > self._api.inside_temperature
+        ):
+            return HVACAction.HEATING
+        elif (
+            (hvac_mode == HVACMode.COOL or hvac_mode == HVACMode.HEAT_COOL)
+            and self._api.target_temperature < self._api.inside_temperature
+        ):
+            return HVACAction.COOLING
+        elif hvac_mode == HVACMode.DRY:
+            return HVACAction.DRYING
+        elif hvac_mode == HVACMode.FAN_ONLY:
+            return HVACAction.FAN
+        
+        return HVACAction.IDLE
+
+    @property
     def fan_mode(self):
         """Return the fan setting."""
         return self._api.fan_mode
@@ -161,7 +184,8 @@ class PanasonicClimateDevice(ClimateEntity):
     @property
     def swing_modes(self):
         """Return the list of available swing modes."""
-        return [f.name for f in self._api.constants.AirSwingUD ]
+        supported = lambda x: x != self._api.constants.AirSwingUD.All or (self._api.features is not None and self._api.features['upDownAllSwing'])
+        return [f.name for f in filter(supported, self._api.constants.AirSwingUD) ]
 
     @property
     def swing_lr_modes(self):

@@ -318,7 +318,8 @@ class Session(object):
             _json = json.loads(response.text)
             return {
                 'id': id,
-                'parameters': self._read_parameters(_json['parameters'])
+                'parameters': self._read_parameters(_json['parameters']),
+                'features': self._read_features(_json)
             }
 
         return None
@@ -479,5 +480,25 @@ class Session(object):
                 value['airSwingHorizontal'] = constants.AirSwingLR.Auto
             elif parameters['fanAutoMode'] == constants.AirSwingAutoMode.AirSwingUD.value:
                 value['airSwingVertical'] = constants.AirSwingUD.Auto
+
+        return value
+
+    def _read_features(self, data = {}):
+        value = {
+            'leftRightSwing': 'airSwingLR' in data and data['airSwingLR'],
+            'nanoe': 'nanoe' in data and data['nanoe'],
+            'autoMode': 'autoMode' in data and data['autoMode'],
+            'upDownAllSwing': 'autoSwingUD' in data and data['autoSwingUD'],
+            'ecoNavi': 'ecoNavi' in data and data['ecoNavi'],
+            'iAutoX': 'iAutoX' in data and data['iAutoX'],
+            'quietMode': 'quietMode' in data and data['quietMode'],
+            'powerfulMode': 'powerfulMode' in data and data['powerfulMode'],
+            'fanMode': 'fanMode' in data and data['fanMode'],
+            'coolMode': 'coolMode' in data and data['coolMode'],
+            'dryMode': 'dryMode' in data and data['dryMode'],
+            'nanoeStandAlone': 'nanoeStandAlone' in data and data['nanoeStandAlone'],
+            'heatMode': 'heatMode' in data and data['heatMode']
+        }
+        
 
         return value

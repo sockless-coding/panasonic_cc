@@ -57,6 +57,8 @@ class PanasonicApiDevice:
         self._nanoe_mode = None
         self._daily_energy = None
 
+        self.features = None
+
         
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -85,6 +87,9 @@ class PanasonicApiDevice:
             _LOGGER.debug("Received no data for device {id}".format(**self.device))
             return
         try:
+            if self.features is None:
+                self.features = data['features']
+
             plst = data['parameters']
             self._is_on = bool( plst['power'].value )
             if plst['temperatureInside'] != 126:

@@ -18,6 +18,7 @@ class AirSwingUD(Enum):
     Mid = 2
     DownMid = 4
     Down = 1
+    All = 5
 
 class AirSwingLR(Enum):
     Auto = -1
