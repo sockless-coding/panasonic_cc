@@ -135,12 +135,12 @@ class PanasonicClimateDevice(ClimateEntity):
         hvac_mode = self.hvac_mode
         if (
             (hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.HEAT_COOL)
-            and self._api.target_temperature > self._api.inside_temperature
+            and (self._api.inside_temperature is None or self._api.target_temperature > self._api.inside_temperature)
         ):
             return HVACAction.HEATING
         elif (
             (hvac_mode == HVACMode.COOL or hvac_mode == HVACMode.HEAT_COOL)
-            and self._api.target_temperature < self._api.inside_temperature
+            and (self._api.inside_temperature is None or self._api.target_temperature < self._api.inside_temperature)
         ):
             return HVACAction.COOLING
         elif hvac_mode == HVACMode.DRY:
