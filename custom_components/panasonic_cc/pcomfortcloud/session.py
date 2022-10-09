@@ -209,7 +209,7 @@ class Session(object):
                 else:
                     list = group.get('deviceIdList', [])
 
-                for device in list:
+                for index, device in enumerate(list):
                     if device:
                         id = None
                         if 'deviceHashGuid' in device:
@@ -220,7 +220,7 @@ class Session(object):
                         self._deviceIndexer[id] = device['deviceGuid']
                         self._devices.append({
                             'id': id,
-                            'name': device['deviceName'],
+                            'name': device['deviceName'] if 'deviceName' in device else f"Unnamed Device #{index}",
                             'group': group['groupName'],
                             'model': device['deviceModuleNumber'] if 'deviceModuleNumber' in device else ''
                         })
