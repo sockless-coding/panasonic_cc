@@ -96,6 +96,8 @@ class PanasonicApiDevice:
                 self._inside_temperature = plst['temperatureInside']
             if plst['temperatureOutside'] != 126:
                 self._outside_temperature = plst['temperatureOutside']
+                if self._inside_temperature is None and self._outside_temperature is not None:
+                    self._inside_temperature = self._outside_temperature
             if plst['temperature'] != 126:
                 self._target_temperature = plst['temperature']
             self._fan_mode = plst['fanSpeed'].name
