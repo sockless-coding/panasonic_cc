@@ -62,7 +62,7 @@ class NanoeMode(Enum):
 
 DEFAULT_X_APP_VERSION = "1.15.0"
 
-MAX_VERSION_AGE = 5
+MAX_VERSION_AGE = 3
 
 SETTING_TOKEN = "token"
 SETTING_VERSION = "version"
