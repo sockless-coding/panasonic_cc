@@ -8,6 +8,7 @@ import os
 import urllib3
 import hashlib
 import logging
+import datetime
 
 from . import urls
 from . import constants
@@ -113,10 +114,15 @@ class Session(object):
     def _headers(self):
         if self._settings.version_expired:
             self._updateAppVersion()
+        current_time = datetime.datetime.now()
+        formatted_time = current_time.strftime('%Y-%m-%d %H:%M:%S')        
         return {
             "X-APP-TYPE": "1",
             "X-APP-VERSION": self._appVersion,
             "X-User-Authorization": self._vid,
+            "X-APP-NAME": "Comfort Cloud",
+            "X-APP-TIMESTAMP":formatted_time,
+            "X-CFC-API-KEY":"0",
             "User-Agent": "G-RAC",
             "Accept": "application/json; charset=utf-8",
             "Content-Type": "application/json; charset=utf-8"
