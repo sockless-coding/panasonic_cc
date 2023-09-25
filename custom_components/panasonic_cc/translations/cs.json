@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Zadejte vaše Panasonic ID a heslo",
+        "data": { "username": "Panasonic ID", "password": "Heslo" }
+      }
+    },
+    "abort": {
+      "device_timeout": "Vypršel čas pro připojení k zařízení.",
+      "device_fail": "Neočekávaná chyba při vytváření zařízení.",
+      "already_configured": "Zařízení je již nastavené"
+    }
+  },
+  "options": {
+    "step": {
+        "init": {
+            "data": {
+              "force_outside_sensor": "Vynutit povolení venkovního teploměru",
+              "enable_daily_energy_sensor": "Povolit měření denní energie (vyžaduje restart)"
+            }
+        }
+    }
+  }
+}
+  
