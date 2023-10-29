@@ -14,6 +14,8 @@ from . import urls
 from . import constants
 from .settings import PanasonicSettings
 
+TIMEOUT = 5
+
 def _validate_response(response):
     """ Verify that response is OK """
     if response.status_code == 200:
@@ -132,7 +134,7 @@ class Session(object):
         
         if self._raw: print("--- auto detecting latest app version")
         try:            
-            data = requests.get("https://itunes.apple.com/lookup?id=1348640525").json()
+            data = requests.get("https://itunes.apple.com/lookup?id=1348640525", timeout=TIMEOUT).json()
             version = data['results'][0]['version']
             if version is not None:
                 if self._raw: print("--- found version: {}".format(version))
@@ -159,7 +161,7 @@ class Session(object):
             print("--- Using version: {}".format(self._appVersion))
 
         try:
-            response = requests.post(urls.login(), json=payload, headers=self._headers(), verify=self._verifySsl)
+            response = requests.post(urls.login(), json=payload, headers=self._headers(), verify=self._verifySsl, timeout=TIMEOUT)
             if 2 != response.status_code // 100:
                 raise ResponseError(response.status_code, response.text)
 
@@ -183,7 +185,7 @@ class Session(object):
         response = None
 
         try:
-            response = requests.get(urls.get_groups(),headers=self._headers(), verify=self._verifySsl)
+            response = requests.get(urls.get_groups(),headers=self._headers(), verify=self._verifySsl, timeout=TIMEOUT)
 
             if 2 != response.status_code // 100:
                 raise ResponseError(response.status_code, response.text)
@@ -240,7 +242,7 @@ class Session(object):
             response = None
 
             try:
-                response = requests.get(urls.status(deviceGuid), headers=self._headers(), verify=self._verifySsl)
+                response = requests.get(urls.status(deviceGuid), headers=self._headers(), verify=self._verifySsl, timeout=TIMEOUT)
 
                 if 2 != response.status_code // 100:
                     raise ResponseError(response.status_code, response.text)
@@ -273,7 +275,7 @@ class Session(object):
             print(f'payload: {json.dumps(payload)}')
 
             try:
-                response = requests.post(urls.history(), json=payload, headers=self._headers(), verify=self._verifySsl)
+                response = requests.post(urls.history(), json=payload, headers=self._headers(), verify=self._verifySsl, timeout=TIMEOUT)
 
                 if 2 != response.status_code // 100:
                     raise ResponseError(response.status_code, response.text)
@@ -304,7 +306,7 @@ class Session(object):
             response = None
 
             try:
-                response = requests.get(urls.status(deviceGuid), headers=self._headers(), verify=self._verifySsl)
+                response = requests.get(urls.status(deviceGuid), headers=self._headers(), verify=self._verifySsl, timeout=TIMEOUT)
 
                 if 2 != response.status_code // 100:
                     raise ResponseError(response.status_code, response.text)
@@ -420,7 +422,7 @@ class Session(object):
                 print("--- raw out ending    ---")
 
             try:
-                response = requests.post(urls.control(), json=payload, headers=self._headers(), verify=self._verifySsl)
+                response = requests.post(urls.control(), json=payload, headers=self._headers(), verify=self._verifySsl, timeout=TIMEOUT)
 
                 if 2 != response.status_code // 100:
                     raise ResponseError(response.status_code, response.text)
