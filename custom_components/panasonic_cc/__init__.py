@@ -23,7 +23,9 @@ from .const import (
     CONF_FORCE_OUTSIDE_SENSOR, 
     DEFAULT_FORCE_OUTSIDE_SENSOR, 
     CONF_ENABLE_DAILY_ENERGY_SENSOR, 
-    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+    CONF_ENABLE_AUTO_POWER_ON,
+    DEFAULT_ENABLE_AUTO_POWER_ON)
 
 from .panasonic import PanasonicApiDevice
 
@@ -74,12 +76,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         force_outside_sensor = conf[CONF_FORCE_OUTSIDE_SENSOR]
     enable_daily_energy_sensor = entry.options.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
     
+    enable_auto_power = entry.options.get(CONF_ENABLE_AUTO_POWER_ON, DEFAULT_ENABLE_AUTO_POWER_ON)
+    if CONF_ENABLE_AUTO_POWER_ON in conf:
+        enable_auto_power = conf[CONF_ENABLE_AUTO_POWER_ON]
 
     api = pcomfortcloud.Session(username, password, verifySsl=False)
     devices = await hass.async_add_executor_job(api.get_devices)
     for device in devices:
         try:
-            api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor)
+            api_device = PanasonicApiDevice(
+                hass,
+                api,
+                device,
+                force_outside_sensor,
+                enable_daily_energy_sensor,
+                enable_auto_power)
+
             await api_device.update()
             if enable_daily_energy_sensor:
                 await api_device.update_energy()
@@ -107,5 +119,3 @@ async def async_unload_entry(hass, config_entry):
     )
     hass.data.pop(PANASONIC_DEVICES)
     return True
-
-

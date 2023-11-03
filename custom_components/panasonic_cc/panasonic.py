@@ -26,13 +26,20 @@ def api_call_login(func):
 
 class PanasonicApiDevice:
 
-    def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor, enable_energy_sensor):
+    def __init__(self, 
+                 hass: HomeAssistantType,
+                 api,
+                 device,
+                 force_outside_sensor,
+                 enable_energy_sensor,
+                 enable_auto_power):
         from .pcomfortcloud import constants
         self.hass = hass
         self._api = api
         self.device = device
         self.force_outside_sensor = force_outside_sensor
         self.enable_energy_sensor = enable_energy_sensor
+        self.enable_auto_power = enable_auto_power
         self.id = device['id']
         self.name = device['name']
         self.group = device['group']
@@ -247,12 +254,11 @@ class PanasonicApiDevice:
     async def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         _LOGGER.debug("Set %s ecomode %s", self.name, preset_mode)
+        new_values = {"eco": self.constants.EcoMode[ PRESET_LIST[preset_mode]]}
         await self.hass.async_add_executor_job(
             self.set_device,
-            { 
-                "power": self.constants.Power.On,
-                "eco": self.constants.EcoMode[ PRESET_LIST[preset_mode] ]
-            })
+            self._set_power_on_if_enabled(new_values)
+        )
         await self.do_update()
 
     async def set_temperature(self, **kwargs):
@@ -265,14 +271,13 @@ class PanasonicApiDevice:
 
         hvac_mode = kwargs.get(ATTR_HVAC_MODE)
         if hvac_mode is not None:
-            new_values['power'] = self.constants.Power.On
             new_values['mode'] = self.constants.OperationMode[OPERATION_LIST[hvac_mode]]
 
         _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
 
         await self.hass.async_add_executor_job(
             self.set_device,
-            new_values
+            self._set_power_on_if_enabled(new_values)
         )
         await self.do_update()
         
@@ -280,23 +285,24 @@ class PanasonicApiDevice:
     async def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
         _LOGGER.debug("Set %s focus mode %s", self.name, fan_mode)
-
+        new_values = { "fanSpeed": self.constants.FanSpeed[fan_mode] }
         await self.hass.async_add_executor_job(
             self.set_device,
-            { "fanSpeed": self.constants.FanSpeed[fan_mode] }
+            self._set_power_on_if_enabled(new_values)
         )
         await self.do_update()
     
     async def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
         _LOGGER.debug("Set %s mode %s", self.name, hvac_mode)
-
+        new_values = {
+            "mode": self.constants.OperationMode[OPERATION_LIST[hvac_mode]], 
+            "power": self.constants.Power.On
+        }
         await self.hass.async_add_executor_job(
             self.set_device,
-            { 
-                "power": self.constants.Power.On,
-                "mode": self.constants.OperationMode[OPERATION_LIST[hvac_mode]] 
-            })
+            new_values
+            )
 
         await self.do_update()
 
@@ -309,14 +315,14 @@ class PanasonicApiDevice:
             automode = self.constants.AirSwingAutoMode["Disabled"]
 
         _LOGGER.debug("Set %s swing mode %s", self.name, swing_mode)
-
-        await self.hass.async_add_executor_job(
-            self.set_device,
-            { 
-                "power": self.constants.Power.On,
+        new_values = { 
                 "airSwingVertical": self.constants.AirSwingUD[swing_mode],
                 "fanAutoMode": automode
-            })
+            }
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            self._set_power_on_if_enabled(new_values)
+            )
         await self.do_update()
 
     async def set_swing_lr_mode(self, swing_mode):
@@ -328,20 +334,20 @@ class PanasonicApiDevice:
             automode = self.constants.AirSwingAutoMode["Disabled"]
 
         _LOGGER.debug("Set %s horizontal swing mode %s", self.name, swing_mode)
-
-        await self.hass.async_add_executor_job(
-            self.set_device,
-            { 
-                "power": self.constants.Power.On,
+        new_values = { 
                 "airSwingHorizontal": self.constants.AirSwingLR[swing_mode],
                 "fanAutoMode": automode
-            })
+            }
+        await self.hass.async_add_executor_job(
+            self.set_device,
+            self._set_power_on_if_enabled(new_values)
+            )
         await self.do_update()
 
     async def set_nanoe_mode(self, nanoe_mode):
         """Set new nanoe mode."""
         _LOGGER.debug("Set %s nanoe mode %s", self.name, nanoe_mode)
-
+    
         await self.hass.async_add_executor_job(
             self.set_device,
             { "nanoe": self.constants.NanoeMode[nanoe_mode] }
@@ -354,3 +360,8 @@ class PanasonicApiDevice:
             self.id,
             **args
         )
+
+    def _set_power_on_if_enabled(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        if self.enable_auto_power:
+            return {**params, **{'power': self.constants.Power.On}}
+        return params
