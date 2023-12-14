@@ -149,7 +149,7 @@ class Session(object):
         
         payload = {
             "clientId": self._settings.clientId,
-            "language": "0",
+            "language": 0,
             "loginId": self._username,
             "password": self._password
         }
