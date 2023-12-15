@@ -20,7 +20,9 @@ from .const import (
     TIMEOUT, 
     CONF_FORCE_OUTSIDE_SENSOR, 
     CONF_ENABLE_DAILY_ENERGY_SENSOR, 
-    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+    CONF_ENABLE_AUTO_POWER_ON,
+    DEFAULT_ENABLE_AUTO_POWER_ON)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +121,12 @@ class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
                         ),
                     ): bool,
+                    vol.Optional(
+                        CONF_ENABLE_AUTO_POWER_ON,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_AUTO_POWER_ON, DEFAULT_ENABLE_AUTO_POWER_ON
+                        ),
+                    ): bool
                 }
             ),
         )
