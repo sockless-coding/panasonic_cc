@@ -15,12 +15,13 @@
   },
   "options": {
     "step": {
-        "init": {
-            "data": {
-              "force_outside_sensor": "Tving utvendig sensor",
-              "enable_daily_energy_sensor": "Aktiver daglig energisensor (krever omstart)"
-            }
+      "init": {
+        "data": {
+          "force_outside_sensor": "Tving utvendig sensor",
+          "enable_daily_energy_sensor": "Aktiver daglig energisensor (krever omstart)",
+          "enable_low_temperature": "Aktiver lav temperatur (frysebeskyttelse) 8-10 temperaturområde (krever omstart"
         }
+      }
     }
   }
 }

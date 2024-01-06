@@ -15,12 +15,13 @@
   },
   "options": {
     "step": {
-        "init": {
-            "data": {
-              "force_outside_sensor": "Vynutit povolení venkovního teploměru",
-              "enable_daily_energy_sensor": "Povolit měření denní energie (vyžaduje restart)"
-            }
+      "init": {
+        "data": {
+          "force_outside_sensor": "Vynutit povolení venkovního teploměru",
+          "enable_daily_energy_sensor": "Povolit měření denní energie (vyžaduje restart)",
+          "enable_low_temperature": "Povolit nízkou teplotu (ochrana proti zamrznutí) 8-10 teplotní rozsah (vyžaduje restart)"
         }
+      }
     }
   }
 }

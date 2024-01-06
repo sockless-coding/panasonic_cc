@@ -16,11 +16,13 @@ from . import DOMAIN as PANASONIC_DOMAIN
 from .panasonic import PanasonicApiDevice
 
 from .const import (
-    KEY_DOMAIN, 
-    TIMEOUT, 
-    CONF_FORCE_OUTSIDE_SENSOR, 
-    CONF_ENABLE_DAILY_ENERGY_SENSOR, 
-    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
+    KEY_DOMAIN,
+    TIMEOUT,
+    CONF_FORCE_OUTSIDE_SENSOR,
+    CONF_ENABLE_DAILY_ENERGY_SENSOR,
+    CONF_ENABLE_LOW_TEMPERATURE,
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+    DEFAULT_ENABLE_LOW_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +99,7 @@ class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
+            self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Manage Panasonic options."""
         if user_input is not None:
@@ -117,6 +119,12 @@ class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_ENABLE_DAILY_ENERGY_SENSOR,
                         default=self.config_entry.options.get(
                             CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_ENABLE_LOW_TEMPERATURE,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_LOW_TEMPERATURE, DEFAULT_ENABLE_LOW_TEMPERATURE
                         ),
                     ): bool,
                 }
