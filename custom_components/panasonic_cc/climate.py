@@ -5,11 +5,9 @@ import voluptuous as vol
 from typing import Any, Dict, Optional, List
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity, HVACAction, HVACMode
-from homeassistant.components.climate.const import HVAC_MODE_OFF, SUPPORT_PRESET_MODE
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 
-from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
 
@@ -96,7 +94,7 @@ class PanasonicClimateDevice(ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def target_temperature(self):
@@ -110,7 +108,7 @@ class PanasonicClimateDevice(ClimateEntity):
     def hvac_mode(self):
         """Return the current operation."""
         if not self._api.is_on:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
         hvac_mode = self._api.hvac_mode
         for key, value in OPERATION_LIST.items():
             if value == hvac_mode:
@@ -123,7 +121,7 @@ class PanasonicClimateDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._api.turn_off()
         else:
             await self._api.set_hvac_mode(hvac_mode)
@@ -134,13 +132,13 @@ class PanasonicClimateDevice(ClimateEntity):
             HVACAction.OFF
         hvac_mode = self.hvac_mode
         if (
-            (hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.HEAT_COOL)
-            and (self._api.inside_temperature is None or self._api.target_temperature > self._api.inside_temperature)
+                (hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.HEAT_COOL)
+                and (self._api.inside_temperature is None or self._api.target_temperature > self._api.inside_temperature)
         ):
             return HVACAction.HEATING
         elif (
-            (hvac_mode == HVACMode.COOL or hvac_mode == HVACMode.HEAT_COOL)
-            and (self._api.inside_temperature is None or self._api.target_temperature < self._api.inside_temperature)
+                (hvac_mode == HVACMode.COOL or hvac_mode == HVACMode.HEAT_COOL)
+                and (self._api.inside_temperature is None or self._api.target_temperature < self._api.inside_temperature)
         ):
             return HVACAction.COOLING
         elif hvac_mode == HVACMode.DRY:
