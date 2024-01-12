@@ -247,12 +247,21 @@ class PanasonicApiDevice:
     async def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         _LOGGER.debug("Set %s ecomode %s", self.name, preset_mode)
-        await self.hass.async_add_executor_job(
-            self.set_device,
-            { 
-                "power": self.constants.Power.On,
-                "eco": self.constants.EcoMode[ PRESET_LIST[preset_mode] ]
-            })
+        if preset_mode is "EcoSaving":
+            await self.hass.async_add_executor_job(
+                self.set_device,
+                {
+                    "power": self.constants.Power.On,
+                    "eco": self.constants.ecoFunctionData.On
+                })
+        else:
+            await self.hass.async_add_executor_job(
+                self.set_device,
+                {
+                    "power": self.constants.Power.On,
+                    "eco": self.constants.EcoMode[PRESET_LIST[preset_mode]]
+                })
+
         await self.do_update()
 
     async def set_temperature(self, **kwargs):
