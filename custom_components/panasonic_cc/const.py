@@ -1,10 +1,7 @@
 """Constants for Panasonic Cloud."""
 from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, 
-    SUPPORT_SWING_MODE, SUPPORT_PRESET_MODE,
+    HVACMode, ClimateEntityFeature,
     PRESET_ECO, PRESET_NONE, PRESET_BOOST)
 
 ATTR_TARGET_TEMPERATURE = "target_temperature"
@@ -58,10 +55,10 @@ ENERGY_SENSOR_TYPES = {
 }
 
 SUPPORT_FLAGS = (
-    SUPPORT_TARGET_TEMPERATURE |
-    SUPPORT_FAN_MODE |
-    SUPPORT_PRESET_MODE |
-    SUPPORT_SWING_MODE )
+    ClimateEntityFeature.TARGET_TEMPERATURE |
+    ClimateEntityFeature.FAN_MODE |
+    ClimateEntityFeature.PRESET_MODE |
+    ClimateEntityFeature.SWING_MODE )
 
 PRESET_LIST = {
     PRESET_NONE: 'Auto',
@@ -70,10 +67,10 @@ PRESET_LIST = {
 }
 
 OPERATION_LIST = {
-    HVAC_MODE_OFF: 'Off',
-    HVAC_MODE_HEAT: 'Heat',
-    HVAC_MODE_COOL: 'Cool',
-    HVAC_MODE_HEAT_COOL: 'Auto',
-    HVAC_MODE_DRY: 'Dry',
-    HVAC_MODE_FAN_ONLY: 'Fan'
+    HVACMode.OFF: 'Off',
+    HVACMode.HEAT: 'Heat',
+    HVACMode.COOL: 'Cool',
+    HVACMode.HEAT_COOL: 'Auto',
+    HVACMode.DRY: 'Dry',
+    HVACMode.FAN_ONLY: 'Fan'
     }
