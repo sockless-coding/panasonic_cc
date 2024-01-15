@@ -1,25 +1,20 @@
 """Platform for the Panasonic Comfort Cloud."""
-from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Dict
 
 import asyncio
-from async_timeout import timeout
 
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD)
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from homeassistant.helpers import discovery
 
 from .const import (
-    TIMEOUT, 
     CONF_FORCE_OUTSIDE_SENSOR, 
     DEFAULT_FORCE_OUTSIDE_SENSOR, 
     CONF_ENABLE_DAILY_ENERGY_SENSOR, 
@@ -38,8 +33,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_FORCE_OUTSIDE_SENSOR, default=DEFAULT_FORCE_OUTSIDE_SENSOR): cv.boolean,
-                vol.Optional(CONF_ENABLE_DAILY_ENERGY_SENSOR, default=DEFAULT_ENABLE_DAILY_ENERGY_SENSOR): cv.boolean,
+                vol.Optional(CONF_FORCE_OUTSIDE_SENSOR, default=DEFAULT_FORCE_OUTSIDE_SENSOR): cv.boolean,  # noqa: E501
+                vol.Optional(CONF_ENABLE_DAILY_ENERGY_SENSOR, default=DEFAULT_ENABLE_DAILY_ENERGY_SENSOR): cv.boolean, # noqa: E501
             }
         )
     },

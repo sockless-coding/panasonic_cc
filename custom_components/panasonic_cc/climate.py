@@ -2,16 +2,14 @@
 import logging
 
 import voluptuous as vol
-from typing import Any, Dict, Optional, List
+from typing import Optional, List
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity, HVACAction, HVACMode
-from homeassistant.components.climate.const import HVAC_MODE_OFF, SUPPORT_PRESET_MODE
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.components.climate import ClimateEntity, HVACAction, HVACMode
+from homeassistant.helpers import config_validation as cv, entity_platform
 
-from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE)
+from homeassistant.const import UnitOfTemperature
 
-from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
+from . import PANASONIC_DEVICES
 
 from .const import (
     SUPPORT_FLAGS, 
@@ -96,7 +94,7 @@ class PanasonicClimateDevice(ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def target_temperature(self):
@@ -110,7 +108,7 @@ class PanasonicClimateDevice(ClimateEntity):
     def hvac_mode(self):
         """Return the current operation."""
         if not self._api.is_on:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
         hvac_mode = self._api.hvac_mode
         for key, value in OPERATION_LIST.items():
             if value == hvac_mode:
@@ -123,7 +121,7 @@ class PanasonicClimateDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._api.turn_off()
         else:
             await self._api.set_hvac_mode(hvac_mode)
@@ -184,7 +182,8 @@ class PanasonicClimateDevice(ClimateEntity):
     @property
     def swing_modes(self):
         """Return the list of available swing modes."""
-        supported = lambda x: x != self._api.constants.AirSwingUD.All or (self._api.features is not None and self._api.features['upDownAllSwing'])
+        def supported(x):
+            return x != self._api.constants.AirSwingUD.All or self._api.features is not None and self._api.features['upDownAllSwing']  # noqa: E501
         return [f.name for f in filter(supported, self._api.constants.AirSwingUD) ]
 
     @property
