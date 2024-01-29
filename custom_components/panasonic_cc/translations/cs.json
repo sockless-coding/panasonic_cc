@@ -9,8 +9,7 @@
     },
     "abort": {
       "device_timeout": "Vypršel čas pro připojení k zařízení.",
-      "device_fail": "Neočekávaná chyba při vytváření zařízení.",
-      "already_configured": "Zařízení je již nastavené"
+      "device_fail": "Neočekávaná chyba při vytváření zařízení."
     }
   },
   "options": {
