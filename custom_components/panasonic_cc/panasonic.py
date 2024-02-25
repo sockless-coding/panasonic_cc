@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 from datetime import datetime
 
-from typing import Any, Dict, Optional, List
+from typing import Optional
 from homeassistant.util import Throttle
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.helpers.typing import HomeAssistantType
@@ -19,14 +19,14 @@ def api_call_login(func):
     def wrapper_call(*args, **kwargs):
         try:
             func(*args, **kwargs)
-        except:
+        except:  # noqa: E722
             args[0]._api.login()
             func(*args, **kwargs)
     return wrapper_call
 
 class PanasonicApiDevice:
 
-    def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor, enable_energy_sensor):
+    def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor, enable_energy_sensor): # noqa: E501
         from .pcomfortcloud import constants
         self.hass = hass
         self._api = api
@@ -74,12 +74,12 @@ class PanasonicApiDevice:
         try:
             data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
         except:
-            _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device))
+            _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
                 await self.hass.async_add_executor_job(self._api.login)
                 data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
             except:
-                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))
+                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))  # noqa: E501
                 return
 
         if data is None:
@@ -96,6 +96,8 @@ class PanasonicApiDevice:
                 self._inside_temperature = plst['temperatureInside']
             if plst['temperatureOutside'] != 126:
                 self._outside_temperature = plst['temperatureOutside']
+                if self._inside_temperature is None and self._outside_temperature is not None: # noqa: E501
+                    self._inside_temperature = self._outside_temperature
             if plst['temperature'] != 126:
                 self._target_temperature = plst['temperature']
             self._fan_mode = plst['fanSpeed'].name
@@ -115,19 +117,19 @@ class PanasonicApiDevice:
     async def do_update_energy(self):
         #_LOGGER.debug("Requesting energy for device {id}".format(**self.device))
         try:
-            data= await self.hass.async_add_executor_job(self._api.history,self.id,"Day",datetime.now().strftime("%Y%m%d"))
+            data= await self.hass.async_add_executor_job(self._api.history,self.id,"Day",datetime.now().strftime("%Y%m%d")) # noqa: E501
             
         except:
-            _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device))
+            _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
                 await self.hass.async_add_executor_job(self._api.login)
-                data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+                data= await self.hass.async_add_executor_job(self._api.get_device,self.id) # noqa: E501
             except:
-                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))
+                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device)) # noqa: E501
                 return
 
         if data is None:
-            _LOGGER.debug("Received no energy data for device {id}".format(**self.device))
+            _LOGGER.debug("Received no energy data for device {id}".format(**self.device)) # noqa: E501
             return
         t1 = datetime.now()
         if 'energyConsumption' in data['parameters']:
@@ -135,7 +137,7 @@ class PanasonicApiDevice:
             if c_energy:
                 if self.last_energy_reading_time is not None:
                     if c_energy != self.last_energy_reading:                
-                        d = (t1 - self.last_energy_reading_time).total_seconds() / 60 / 60
+                        d = (t1 - self.last_energy_reading_time).total_seconds() / 60 / 60  # noqa: E501
                         p = round((c_energy - self.last_energy_reading)*1000 / d)
                         self.last_energy_reading = c_energy
                         self.last_energy_reading_time = t1
@@ -176,7 +178,7 @@ class PanasonicApiDevice:
 
     @property
     def support_inside_temperature(self):
-        return self._inside_temperature != None
+        return self._inside_temperature is not None
 
     @property
     def outside_temperature(self):
@@ -186,7 +188,7 @@ class PanasonicApiDevice:
     def support_outside_temperature(self):
         if self.force_outside_sensor:
             return True
-        return self._outside_temperature != None
+        return self._outside_temperature is not None
 
     @property
     def target_temperature(self):

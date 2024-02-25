@@ -1,18 +1,15 @@
 """Support for Panasonic sensors."""
 import logging
 
-from homeassistant.const import CONF_ICON, CONF_NAME, TEMP_CELSIUS, CONF_TYPE
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, UnitOfTemperature
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    PLATFORM_SCHEMA,
-    STATE_CLASS_TOTAL_INCREASING,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorStateClass,
+    SensorDeviceClass
 )
 
-from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
+from . import PANASONIC_DEVICES
 from .const import (
     ATTR_INSIDE_TEMPERATURE, 
     ATTR_OUTSIDE_TEMPERATURE, 
@@ -91,7 +88,7 @@ class PanasonicClimateSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -112,11 +109,11 @@ class PanasonicEnergySensor(SensorEntity):
         self._name = f"{api.name} {self._sensor[CONF_NAME]}"
         self._device_attribute = monitored_state
         if self._device_attribute == ATTR_DAILY_ENERGY:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-            self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._attr_device_class = SensorDeviceClass.ENERGY
         else:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
-            self._attr_device_class = DEVICE_CLASS_POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._attr_device_class = SensorDeviceClass.POWER
 
     @property
     def unique_id(self):
