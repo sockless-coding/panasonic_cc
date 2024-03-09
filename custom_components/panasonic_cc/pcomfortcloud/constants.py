@@ -27,6 +27,7 @@ class AirSwingLR(Enum):
     Mid = 2
     RightMid = 4
     Right = 0
+    All = 6
 
 class EcoMode(Enum):
     Auto = 0
