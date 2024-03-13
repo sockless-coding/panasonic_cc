@@ -1,11 +1,11 @@
-# Panasonic Comfort Cloud - HomeAssistant Component
+# Panasonic Comfort Cloud - Home Assistant Component
 
 [![GitHub Release][releases-shield]][releases]
 [![License][license-shield]](LICENSE)
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-This is a custom component to allow control of Panasonic Comfort Cloud devices in [HomeAssistant](https://home-assistant.io).
+This is a custom component to allow control of Panasonic Comfort Cloud devices in [Home Assistant](https://www.home-assistant.io).
 
 ![Example entities](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/entities.png)
 
@@ -38,7 +38,10 @@ Once installed the Panasonic Comfort Cloud integration can be configured via the
 
 ![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/setup_dlg.png)
 
-After inital setup additional options are available
+After inital setup, additional options are available:
+
+1. Force outside sensor - This makes the outdoor sensor register in HA, even if it's not reporting a valid temperature at startup.
+2. Enable daily energy sensor (requires restart)
 
 ![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/options_dlg.png)
 
