@@ -1,3 +1,7 @@
 {
-    "name": "Panasonic Comfort Cloud"
+	"name": "Panasonic Comfort Cloud",
+	"filename": "panasonic_cc.zip",
+	"hide_default_branch": true,
+	"render_readme": true,
+	"zip_release": true
 }
