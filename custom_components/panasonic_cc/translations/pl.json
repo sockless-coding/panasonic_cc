@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Wprowadź Panasonic ID oraz hasło",
+        "data": { "username": "Panasonic ID", "password": "Hasło" }
+      }
+    },
+    "abort": {
+      "device_timeout": "Przekroczono limit czasu połączenia z urządzeniem.",
+      "device_fail": "Nieoczekiwany błąd podczas tworzenia urządzenia.",
+      "already_configured": "Urządzenie jest już skonfigurowane."
+    }
+  },
+  "options": {
+    "step": {
+        "init": {
+            "data": {
+              "force_outside_sensor": "Wymuś czujnik zewnętrzny",
+              "enable_daily_energy_sensor": "Aktywuj czujnik dziennego zużycia energii (wymaga ponownego uruchomienia)"
+            }
+        }
+    }
+  }
+}
+  
