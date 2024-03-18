@@ -9,8 +9,7 @@
     },
     "abort": {
       "device_timeout": "Tidsavbrudd for tilkobling til enheten.",
-      "device_fail": "Uventet feil under oppretting av enhet.",
-      "already_configured": "Enheten er allerede konfigurert"
+      "device_fail": "Uventet feil under oppretting av enhet."
     }
   },
   "options": {
