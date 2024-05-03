@@ -61,9 +61,9 @@ class PanasonicClimateDevice(ClimateEntity):
 
     def __init__(self, api):
         """Initialize the climate device."""
-
         self._api = api
         self._attr_hvac_action = HVACAction.IDLE
+        self._enable_turn_on_off_backwards_compatibility = False
 
     @property
     def unique_id(self):
@@ -252,4 +252,3 @@ class PanasonicClimateDevice(ClimateEntity):
         except KeyError:
             pass
         return attrs
-
