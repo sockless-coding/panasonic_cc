@@ -11,14 +11,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
-
 
 from .const import (
     CONF_FORCE_OUTSIDE_SENSOR, 
     DEFAULT_FORCE_OUTSIDE_SENSOR, 
     CONF_ENABLE_DAILY_ENERGY_SENSOR, 
-    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+    PANASONIC_DEVICES,
+    COMPONENT_TYPES)
 
 from .panasonic import PanasonicApiDevice
 
@@ -41,11 +41,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-
-PANASONIC_DEVICES = "panasonic_devices"
-COMPONENT_TYPES = ["climate", "sensor", "switch"]
-
 def setup(hass, config):
    pass
 
@@ -54,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     hass.data.setdefault(DOMAIN, {})
     return True
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Establish connection with Comfort Cloud."""
     from . import pcomfortcloud
     
