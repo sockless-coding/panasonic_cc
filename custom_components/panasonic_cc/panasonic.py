@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 from homeassistant.util import Throttle
 from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.components.climate.const import ATTR_HVAC_MODE
 
 from .const import PRESET_LIST, OPERATION_LIST
@@ -26,7 +26,7 @@ def api_call_login(func):
 
 class PanasonicApiDevice:
 
-    def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor, enable_energy_sensor): # noqa: E501
+    def __init__(self, hass: HomeAssistant, api, device, force_outside_sensor, enable_energy_sensor): # noqa: E501
         from .pcomfortcloud import constants
         self.hass = hass
         self._api = api
