@@ -4,6 +4,7 @@ import pcomfortcloud
 
 from enum import Enum
 
+
 def print_result(obj, indent = 0):
     for key in obj:
         value = obj[key]
@@ -21,6 +22,7 @@ def print_result(obj, indent = 0):
         else:
             print(" "*indent + "{0: <{width}}: {1}".format(key, value, width=25-indent))
 
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -28,6 +30,7 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
 
 def main():
     """ Start pcomfortcloud Comfort Cloud command line """
@@ -198,8 +201,13 @@ def main():
 
     args = parser.parse_args()
 
-    session = pcomfortcloud.Session(args.username, args.password, args.token, args.raw, args.skipVerify == False)
+    session = pcomfortcloud.Session(
+        args.username,
+        args.password,
+        args.token,
+        args.raw)
     session.login()
+
     try:
         if args.command == 'list':
             print("list of devices and its device id (1-x)")

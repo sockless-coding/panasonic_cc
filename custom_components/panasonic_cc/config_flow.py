@@ -56,7 +56,7 @@ class FlowHandler(config_entries.ConfigFlow):
         from . import pcomfortcloud
         try:
 
-            api = pcomfortcloud.Session(username, password, verifySsl=False)
+            api = pcomfortcloud.Session(username, password)
             devices = await self.hass.async_add_executor_job(api.get_devices)
             if not devices:
                 return self.async_abort(reason="No devices")
