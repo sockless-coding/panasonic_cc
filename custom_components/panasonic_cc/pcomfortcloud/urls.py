@@ -23,14 +23,14 @@ def get_groups():
 def status(guid):
     return '{base_url}/deviceStatus/{guid}'.format(
         base_url=BASE_URL,
-        guid=re.sub('(?i)\%2f', 'f', quote_plus(guid))
+        guid=re.sub('(?i)%2f', 'f', quote_plus(guid))
     )
 
 
 def status_now(guid):
     return '{base_url}/deviceStatus/now/{guid}'.format(
         base_url=BASE_URL,
-        guid=re.sub('(?i)\%2f', 'f', quote_plus(guid))
+        guid=re.sub('(?i)%2f', 'f', quote_plus(guid))
     )
 
 
