@@ -1,6 +1,6 @@
-'''
+"""
 Panasonic session, using Panasonic Comfort Cloud app api
-'''
+"""
 
 
 from datetime import datetime
@@ -27,22 +27,22 @@ def _validate_response(response):
 
 
 class Error(Exception):
-    ''' Panasonic session error '''
+    """ Panasonic session error """
     pass
 
 
 class RequestError(Error):
-    ''' Wrapped requests.exceptions.RequestException '''
+    """ Wrapped requests.exceptions.RequestException """
     pass
 
 
 class LoginError(Error):
-    ''' Login failed '''
+    """ Login failed """
     pass
 
 
 class ResponseError(Error):
-    ''' Unexcpected response '''
+    """ Unexcpected response """
     def __init__(self, status_code, text):
         super(ResponseError, self).__init__(
             'Invalid response'
@@ -233,7 +233,7 @@ def get_and_save_new_token(username, password, token_file_name):
 
 
 class Session(object):
-    def __init__(self, username, password, tokenFileName='~/.panasonic-token', raw=False):
+    def __init__(self, username: str, password: str, tokenFileName='~/.panasonic-token', raw=False):
         self._username = username
         self._password = password
         self._tokenFileName = os.path.expanduser(tokenFileName)
@@ -244,6 +244,8 @@ class Session(object):
         self._raw = raw
         self._acc_client_id = None
 
+
+    def load_token(self):
         if os.path.exists(self._tokenFileName):
             self._token = load_token_from_file(self._tokenFileName)
             # try:
@@ -255,9 +257,7 @@ class Session(object):
         else:
             self._token = get_and_save_new_token(self._username, self._password, self._tokenFileName)
 
-    # def __enter__(self):
-    #     self.login()
-    #     return self
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.logout()
