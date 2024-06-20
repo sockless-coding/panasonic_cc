@@ -1,4 +1,4 @@
-
+import json
 from datetime import timedelta
 import logging
 from datetime import datetime
@@ -72,12 +72,12 @@ class PanasonicApiDevice:
     async def do_update(self):
         #_LOGGER.debug("Requesting data for device {id}".format(**self.device))
         try:
-            data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+            data = await self.hass.async_add_executor_job(self._api.get_device,self.id)
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
                 await self.hass.async_add_executor_job(self._api.login)
-                data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+                data = await self.hass.async_add_executor_job(self._api.get_device, self.id)
             except:
                 _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))  # noqa: E501
                 return
@@ -87,26 +87,27 @@ class PanasonicApiDevice:
             _LOGGER.debug("Received no data for device {id}".format(**self.device))
             return
         try:
-            if self.features is None:
-                self.features = data['features']
+            _LOGGER.debug("Data: {}".format(json.dumps(data)))
 
-            plst = data['parameters']
-            self._is_on = bool( plst['power'].value )
-            if plst['temperatureInside'] != 126:
-                self._inside_temperature = plst['temperatureInside']
-            if plst['temperatureOutside'] != 126:
-                self._outside_temperature = plst['temperatureOutside']
-                if self._inside_temperature is None and self._outside_temperature is not None: # noqa: E501
+            if self.features is None:
+                self.features = data.get('features', None)
+
+            plst = data.get('parameters')
+            self._is_on = bool(plst.get('power', False).value)
+            if plst.get('temperatureInside') != 126:
+                self._inside_temperature = plst.get('temperatureInside')
+            if plst.get('temperatureOutside') != 126:
+                self._outside_temperature = plst.get('temperatureOutside')
+                if self._inside_temperature is None and self._outside_temperature is not None:
                     self._inside_temperature = self._outside_temperature
-            if plst['temperature'] != 126:
-                self._target_temperature = plst['temperature']
-            self._fan_mode = plst['fanSpeed'].name
-            self._swing_mode = plst['airSwingVertical'].name
-            self._swing_lr_mode = plst['airSwingHorizontal'].name
-            self._hvac_mode = plst['mode'].name
-            self._eco_mode = plst['eco'].name
-            if 'nanoe' in plst:
-                self._nanoe_mode = plst['nanoe']
+            if plst.get('temperature') != 126:
+                self._target_temperature = plst.get('temperature')
+            self._fan_mode = plst.get('fanSpeed').name
+            self._swing_mode = plst.get('airSwingVertical').name
+            self._swing_lr_mode = plst.get('airSwingHorizontal').name
+            self._hvac_mode = plst.get('mode').name
+            self._eco_mode = plst.get('eco').name
+            self._nanoe_mode = plst.get('nanoe', None)
 
         except Exception as e:
             _LOGGER.debug("Failed to set data for device {id}".format(**self.device))
