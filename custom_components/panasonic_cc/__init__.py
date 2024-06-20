@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     api = pcomfortcloud.ApiClient(username, password, client)
     await api.start_session()
 
-    devices = await api.get_devices()
+    devices = api.get_devices()
 
     for device in devices:
         try:

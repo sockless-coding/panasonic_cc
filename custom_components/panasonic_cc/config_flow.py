@@ -54,7 +54,7 @@ class FlowHandler(config_entries.ConfigFlow):
             client = async_get_clientsession(self.hass)
             api = pcomfortcloud.ApiClient(username, password, client)
             await api.start_session()
-            devices = await api.get_devices()
+            devices = api.get_devices()
 
             if not devices:
                 _LOGGER.debug("Not devices found")

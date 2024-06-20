@@ -20,10 +20,10 @@ class CCAppVersion:
     async def _update(self):        
         _LOGGER.debug("Fetching latest app version")
         try:            
-            response = await self._client.get("https://itunes.apple.com/lookup?id=1348640525")
+            response = await self._client.get("https://api.github.com/gists/e886d56531dbcde08aa11c096ab0a219")
             responseText = await response.text()
             data = json.loads(responseText)
-            version = data['results'][0]['version']
+            version = data['files']['comfort-cloud-version']['content']
             if version is not None:
                 _LOGGER.debug(f"Found app version: {version}")
                 self._appVersion = version

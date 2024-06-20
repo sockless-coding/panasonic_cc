@@ -164,3 +164,4 @@ class PanasonicEnergySensor(SensorEntity):
     def device_info(self):
         """Return a device description for device registry."""
         return self._api.device_info
+    
