@@ -130,7 +130,8 @@ class PanasonicClimateDevice(ClimateEntity):
     @property
     def hvac_action(self):
         if not self._api.is_on:
-            HVACAction.OFF
+            return HVACAction.OFF
+
         hvac_mode = self.hvac_mode
         if (
                 (hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.HEAT_COOL)
@@ -186,7 +187,7 @@ class PanasonicClimateDevice(ClimateEntity):
         """Return the list of available swing modes."""
 
         def supported(x):
-            return x != self._api.constants.AirSwingUD.All or self._api.features is not None and self._api.features[
+            return x != self._api.constants.AirSwingUD.Swing or self._api.features is not None and self._api.features[
                 'upDownAllSwing']  # noqa: E501
 
         return [f.name for f in filter(supported, self._api.constants.AirSwingUD)]
