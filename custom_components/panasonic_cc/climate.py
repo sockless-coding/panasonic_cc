@@ -129,8 +129,8 @@ class PanasonicClimateDevice(ClimateEntity):
 
     @property
     def hvac_action(self):
-        if not self._api.is_on:
-            return HVACAction.OFF
+        # if not self._api.is_on:
+        #     HVACAction.OFF
 
         hvac_mode = self.hvac_mode
         if (
