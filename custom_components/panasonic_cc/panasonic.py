@@ -15,14 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-def api_call_login(func):
-    def wrapper_call(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except:  # noqa: E722
-            args[0]._api.login()
-            func(*args, **kwargs)
-    return wrapper_call
+
 
 class PanasonicApiDevice:
 
@@ -343,9 +336,16 @@ class PanasonicApiDevice:
         )
         await self.do_update()
 
-    @api_call_login
-    def set_device(self, args):
-        self._api.set_device(
-            self.id,
-            **args
-        )
+
+    async def set_device(self, args):
+        try:
+            await self._api.set_device(
+                self.id,
+                **args
+            )
+        except:
+            await self._api.start_session()
+            await self._api.set_device(
+                self.id,
+                **args
+            )
