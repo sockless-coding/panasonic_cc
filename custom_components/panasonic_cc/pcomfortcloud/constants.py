@@ -1,8 +1,10 @@
 from enum import Enum
 
+
 class Power(Enum):
     Off = 0
     On = 1
+
 
 class OperationMode(Enum):
     Auto = 0
@@ -11,6 +13,7 @@ class OperationMode(Enum):
     Heat = 3
     Fan = 4
 
+
 class AirSwingUD(Enum):
     Auto = -1
     Up = 0
@@ -18,7 +21,8 @@ class AirSwingUD(Enum):
     Mid = 2
     DownMid = 4
     Down = 1
-    All = 5
+    Swing = 5
+
 
 class AirSwingLR(Enum):
     Auto = -1
@@ -28,16 +32,19 @@ class AirSwingLR(Enum):
     RightMid = 4
     Right = 0
 
+
 class EcoMode(Enum):
     Auto = 0
     Powerful = 1
     Quiet = 2
+
 
 class AirSwingAutoMode(Enum):
     Disabled = 1
     Both = 0
     AirSwingLR = 3
     AirSwingUD = 2
+
 
 class FanSpeed(Enum):
     Auto = 0
@@ -47,11 +54,13 @@ class FanSpeed(Enum):
     HighMid = 4
     High = 5
 
-class dataMode(Enum):
+
+class DataMode(Enum):
     Day = 0
     Week = 1
     Month = 2
     Year = 4
+
 
 class NanoeMode(Enum):
     Unavailable = 0
@@ -60,11 +69,14 @@ class NanoeMode(Enum):
     ModeG = 3
     All = 4
 
-DEFAULT_X_APP_VERSION = "1.15.0"
+DEFAULT_X_APP_VERSION = "1.20.0"
 
 MAX_VERSION_AGE = 5
 
-SETTING_TOKEN = "token"
-SETTING_VERSION = "version"
-SETTING_VERSION_DATE = "versionDate"
+SETTING_ACCESS_TOKEN = "access_token"
+SETTING_ACCESS_TOKEN_EXPIRES = "access_token_expires"
+SETTING_REFRESH_TOKEN = "refresh_token"
+SETTING_SCOPE = "scope"
+SETTING_VERSION = "android_version"
+SETTING_VERSION_DATE = "android_version_date"
 SETTING_CLIENT_ID = "clientId"

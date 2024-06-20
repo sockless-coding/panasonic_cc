@@ -41,6 +41,7 @@ SENSOR_TYPES = {
         CONF_TYPE: SENSOR_TYPE_TEMPERATURE,
     },
 }
+
 ENERGY_SENSOR_TYPES = {
     ATTR_DAILY_ENERGY: {
         CONF_NAME: "Daily Energy",
@@ -58,7 +59,10 @@ SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE |
     ClimateEntityFeature.FAN_MODE |
     ClimateEntityFeature.PRESET_MODE |
-    ClimateEntityFeature.SWING_MODE )
+    ClimateEntityFeature.SWING_MODE | 
+    ClimateEntityFeature.TURN_OFF | 
+    ClimateEntityFeature.TURN_ON
+    )
 
 PRESET_LIST = {
     PRESET_NONE: 'Auto',
@@ -73,4 +77,12 @@ OPERATION_LIST = {
     HVACMode.HEAT_COOL: 'Auto',
     HVACMode.DRY: 'Dry',
     HVACMode.FAN_ONLY: 'Fan'
-    }
+}
+
+PANASONIC_DEVICES = "panasonic_devices"
+
+COMPONENT_TYPES = [
+    "climate", 
+    "sensor", 
+    "switch"
+    ]

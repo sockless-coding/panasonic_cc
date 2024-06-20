@@ -12,8 +12,8 @@ from homeassistant.const import UnitOfTemperature
 from . import PANASONIC_DEVICES
 
 from .const import (
-    SUPPORT_FLAGS, 
-    OPERATION_LIST, 
+    SUPPORT_FLAGS,
+    OPERATION_LIST,
     PRESET_LIST,
     ATTR_SWING_LR_MODE,
     ATTR_SWING_LR_MODES,
@@ -22,10 +22,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Panasonic climate"""
-    
+
     if discovery_info is None:
         return
     add_devices(
@@ -35,11 +34,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ]
     )
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     pass
 
-async def async_setup_entry(hass, entry, async_add_entities):
 
+async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         [
             PanasonicClimateDevice(device)
@@ -57,13 +57,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         "async_set_horizontal_swing_mode",
     )
 
+
 class PanasonicClimateDevice(ClimateEntity):
 
     def __init__(self, api):
         """Initialize the climate device."""
-
         self._api = api
         self._attr_hvac_action = HVACAction.IDLE
+        self._enable_turn_on_off_backwards_compatibility = False
 
     @property
     def unique_id(self):
@@ -128,24 +129,27 @@ class PanasonicClimateDevice(ClimateEntity):
 
     @property
     def hvac_action(self):
-        if not self._api.is_on:
-            HVACAction.OFF
+        # if not self._api.is_on:
+        #     HVACAction.OFF
+
         hvac_mode = self.hvac_mode
         if (
-            (hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.HEAT_COOL)
-            and (self._api.inside_temperature is None or self._api.target_temperature > self._api.inside_temperature)
+                (hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.HEAT_COOL)
+                and (
+                self._api.inside_temperature is None or self._api.target_temperature > self._api.inside_temperature)
         ):
             return HVACAction.HEATING
         elif (
-            (hvac_mode == HVACMode.COOL or hvac_mode == HVACMode.HEAT_COOL)
-            and (self._api.inside_temperature is None or self._api.target_temperature < self._api.inside_temperature)
+                (hvac_mode == HVACMode.COOL or hvac_mode == HVACMode.HEAT_COOL)
+                and (
+                        self._api.inside_temperature is None or self._api.target_temperature < self._api.inside_temperature)
         ):
             return HVACAction.COOLING
         elif hvac_mode == HVACMode.DRY:
             return HVACAction.DRYING
         elif hvac_mode == HVACMode.FAN_ONLY:
             return HVACAction.FAN
-        
+
         return HVACAction.IDLE
 
     @property
@@ -160,7 +164,7 @@ class PanasonicClimateDevice(ClimateEntity):
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
-        return [f.name for f in self._api.constants.FanSpeed ]
+        return [f.name for f in self._api.constants.FanSpeed]
 
     @property
     def swing_mode(self):
@@ -178,24 +182,26 @@ class PanasonicClimateDevice(ClimateEntity):
     async def async_set_horizontal_swing_mode(self, swing_mode):
         await self._api.set_swing_lr_mode(swing_mode)
 
-
     @property
     def swing_modes(self):
         """Return the list of available swing modes."""
+
         def supported(x):
-            return x != self._api.constants.AirSwingUD.All or self._api.features is not None and self._api.features['upDownAllSwing']  # noqa: E501
-        return [f.name for f in filter(supported, self._api.constants.AirSwingUD) ]
+            return x != self._api.constants.AirSwingUD.Swing or self._api.features is not None and self._api.features[
+                'upDownAllSwing']  # noqa: E501
+
+        return [f.name for f in filter(supported, self._api.constants.AirSwingUD)]
 
     @property
     def swing_lr_modes(self):
         """Return the list of available swing modes."""
-        return [f.name for f in self._api.constants.AirSwingLR ]
+        return [f.name for f in self._api.constants.AirSwingLR]
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
         return self._api.inside_temperature
-        
+
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp.
@@ -242,7 +248,7 @@ class PanasonicClimateDevice(ClimateEntity):
     def device_info(self):
         """Return a device description for device registry."""
         return self._api.device_info
-    
+
     @property
     def extra_state_attributes(self):
         attrs = {}
@@ -252,4 +258,3 @@ class PanasonicClimateDevice(ClimateEntity):
         except KeyError:
             pass
         return attrs
-

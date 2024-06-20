@@ -1,4 +1,4 @@
-
+import json
 from datetime import timedelta
 import logging
 from datetime import datetime
@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 from homeassistant.util import Throttle
 from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.components.climate.const import ATTR_HVAC_MODE
 
 from .const import PRESET_LIST, OPERATION_LIST
@@ -26,7 +26,7 @@ def api_call_login(func):
 
 class PanasonicApiDevice:
 
-    def __init__(self, hass: HomeAssistantType, api, device, force_outside_sensor, enable_energy_sensor): # noqa: E501
+    def __init__(self, hass: HomeAssistant, api, device, force_outside_sensor, enable_energy_sensor): # noqa: E501
         from .pcomfortcloud import constants
         self.hass = hass
         self._api = api
@@ -72,12 +72,12 @@ class PanasonicApiDevice:
     async def do_update(self):
         #_LOGGER.debug("Requesting data for device {id}".format(**self.device))
         try:
-            data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+            data = await self._api.get_device(self.id)
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
                 await self.hass.async_add_executor_job(self._api.login)
-                data= await self.hass.async_add_executor_job(self._api.get_device,self.id)
+                data = await self._api.get_device(self.id)
             except:
                 _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))  # noqa: E501
                 return
@@ -87,26 +87,27 @@ class PanasonicApiDevice:
             _LOGGER.debug("Received no data for device {id}".format(**self.device))
             return
         try:
-            if self.features is None:
-                self.features = data['features']
+            _LOGGER.debug("Data: {}".format(data))
 
-            plst = data['parameters']
-            self._is_on = bool( plst['power'].value )
-            if plst['temperatureInside'] != 126:
-                self._inside_temperature = plst['temperatureInside']
-            if plst['temperatureOutside'] != 126:
-                self._outside_temperature = plst['temperatureOutside']
-                if self._inside_temperature is None and self._outside_temperature is not None: # noqa: E501
+            if self.features is None:
+                self.features = data.get('features', None)
+
+            plst = data.get('parameters')
+            self._is_on = bool(plst.get('power').value)
+            if plst.get('temperatureInside') != 126:
+                self._inside_temperature = plst.get('temperatureInside')
+            if plst.get('temperatureOutside') != 126:
+                self._outside_temperature = plst.get('temperatureOutside')
+                if self._inside_temperature is None and self._outside_temperature is not None:
                     self._inside_temperature = self._outside_temperature
-            if plst['temperature'] != 126:
-                self._target_temperature = plst['temperature']
-            self._fan_mode = plst['fanSpeed'].name
-            self._swing_mode = plst['airSwingVertical'].name
-            self._swing_lr_mode = plst['airSwingHorizontal'].name
-            self._hvac_mode = plst['mode'].name
-            self._eco_mode = plst['eco'].name
-            if 'nanoe' in plst:
-                self._nanoe_mode = plst['nanoe']
+            if plst.get('temperature') != 126:
+                self._target_temperature = plst.get('temperature')
+            self._fan_mode = plst.get('fanSpeed').name
+            self._swing_mode = plst.get('airSwingVertical').name
+            self._swing_lr_mode = plst.get('airSwingHorizontal').name
+            self._hvac_mode = plst.get('mode').name
+            self._eco_mode = plst.get('eco').name
+            self._nanoe_mode = plst.get('nanoe', None)
 
         except Exception as e:
             _LOGGER.debug("Failed to set data for device {id}".format(**self.device))
@@ -117,13 +118,13 @@ class PanasonicApiDevice:
     async def do_update_energy(self):
         #_LOGGER.debug("Requesting energy for device {id}".format(**self.device))
         try:
-            data= await self.hass.async_add_executor_job(self._api.history,self.id,"Day",datetime.now().strftime("%Y%m%d")) # noqa: E501
+            data= await self._api.history(self.id,"Day",datetime.now().strftime("%Y%m%d")) # noqa: E501
             
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
                 await self.hass.async_add_executor_job(self._api.login)
-                data= await self.hass.async_add_executor_job(self._api.get_device,self.id) # noqa: E501
+                data= await self._api.get_device(self.id) # noqa: E501
             except:
                 _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device)) # noqa: E501
                 return
@@ -240,8 +241,7 @@ class PanasonicApiDevice:
         await self.do_update()
 
     async def turn_on(self):
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { "power": self.constants.Power.On }
         )
         await self.do_update()
@@ -249,8 +249,7 @@ class PanasonicApiDevice:
     async def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         _LOGGER.debug("Set %s ecomode %s", self.name, preset_mode)
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { 
                 "power": self.constants.Power.On,
                 "eco": self.constants.EcoMode[ PRESET_LIST[preset_mode] ]
@@ -272,8 +271,7 @@ class PanasonicApiDevice:
 
         _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             new_values
         )
         await self.do_update()
@@ -283,8 +281,7 @@ class PanasonicApiDevice:
         """Set new fan mode."""
         _LOGGER.debug("Set %s focus mode %s", self.name, fan_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { "fanSpeed": self.constants.FanSpeed[fan_mode] }
         )
         await self.do_update()
@@ -293,8 +290,7 @@ class PanasonicApiDevice:
         """Set operation mode."""
         _LOGGER.debug("Set %s mode %s", self.name, hvac_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { 
                 "power": self.constants.Power.On,
                 "mode": self.constants.OperationMode[OPERATION_LIST[hvac_mode]] 
@@ -312,8 +308,7 @@ class PanasonicApiDevice:
 
         _LOGGER.debug("Set %s swing mode %s", self.name, swing_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { 
                 "power": self.constants.Power.On,
                 "airSwingVertical": self.constants.AirSwingUD[swing_mode],
@@ -331,8 +326,7 @@ class PanasonicApiDevice:
 
         _LOGGER.debug("Set %s horizontal swing mode %s", self.name, swing_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { 
                 "power": self.constants.Power.On,
                 "airSwingHorizontal": self.constants.AirSwingLR[swing_mode],
@@ -344,8 +338,7 @@ class PanasonicApiDevice:
         """Set new nanoe mode."""
         _LOGGER.debug("Set %s nanoe mode %s", self.name, nanoe_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { "nanoe": self.constants.NanoeMode[nanoe_mode] }
         )
         await self.do_update()
