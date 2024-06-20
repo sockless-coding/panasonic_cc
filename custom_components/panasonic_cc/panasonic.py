@@ -227,8 +227,7 @@ class PanasonicApiDevice:
         return self.current_power_value
 
     async def turn_off(self):
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { "power": self.constants.Power.Off }
         )
         await self.do_update()
