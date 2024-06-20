@@ -3,6 +3,8 @@ import os
 import datetime
 import time
 import base64
+import aiofiles
+import asyncio
 from datetime import date
 from packaging import version
 
@@ -30,14 +32,15 @@ class PanasonicSettings:
         self._refresh_token = None
         self._scope = None
         self._clientId = ""
+        asyncio.ensure_future(self._load())
         
 
-    def _load(self):
+    async def _load(self):
         if not os.path.exists(self._fileName):
             return
         try:
-            with open(self._fileName) as json_file:
-                data = json.load(json_file)
+            async with aiofiles.open(self._fileName) as json_file:
+                data = json.load(await json_file.read())
                 self._version = data[SETTING_VERSION]
                 self._versionDate = date.fromisoformat(data[SETTING_VERSION_DATE])
                 self._access_token = data[SETTING_ACCESS_TOKEN]
@@ -58,8 +61,12 @@ class PanasonicSettings:
         data[SETTING_REFRESH_TOKEN] = self._refresh_token
         data[SETTING_CLIENT_ID] = self._clientId
         data[SETTING_SCOPE] = self._scope
-        with open(self._fileName, 'w') as outfile:
-            json.dump(data, outfile)
+        asyncio.ensure_future(self._do_save(data))
+        
+
+    async def _do_save(self, data):
+        async with aiofiles.open(self._fileName, 'w') as outfile:
+            await outfile.write(json.dumps(data))
 
     @property
     def version(self):
