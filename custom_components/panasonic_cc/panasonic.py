@@ -87,13 +87,13 @@ class PanasonicApiDevice:
             _LOGGER.debug("Received no data for device {id}".format(**self.device))
             return
         try:
-            _LOGGER.debug("Data: {}".format(json.dumps(data)))
+            _LOGGER.debug("Data: {}".format(data))
 
             if self.features is None:
                 self.features = data.get('features', None)
 
             plst = data.get('parameters')
-            self._is_on = bool(plst.get('power', False).value)
+            self._is_on = bool(plst.get('power').value)
             if plst.get('temperatureInside') != 126:
                 self._inside_temperature = plst.get('temperatureInside')
             if plst.get('temperatureOutside') != 126:
