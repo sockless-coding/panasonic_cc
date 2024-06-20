@@ -7,9 +7,11 @@ import random
 import string
 import time
 import urllib
-import requests
 
+import aiofiles
+import requests
 from bs4 import BeautifulSoup
+
 from . import exceptions
 
 
@@ -36,7 +38,7 @@ def get_querystring_parameter_from_header_entry_url(response, header_entry, quer
     return params.get(querystring_parameter, [None])[0]
 
 
-class PanasonicSession():
+class PanasonicSession:
     APP_CLIENT_ID = "Xmy6xIYIitMxngjB2rHvlm6HSDNnaMJx"
     AUTH_0_CLIENT = "eyJuYW1lIjoiQXV0aDAuQW5kcm9pZCIsImVudiI6eyJhbmRyb2lkIjoiMzAifSwidmVyc2lvbiI6IjIuOS4zIn0="
     REDIRECT_URI = "panasonic-iot-cfc://authglb.digital.panasonic.com/android/com.panasonic.ACCsmart/callback"
@@ -53,27 +55,27 @@ class PanasonicSession():
     # - acc_client_id
     # - scope
 
-    def __init__(self, username, password, token_file_name=None, raw=False):
+    def __init__(self, username, password, token_file_name='tokens.json', raw=False):
         self._username = username
         self._password = password
-        # self._token_file_name = os.path.expanduser(token_file_name)
+        self._token_file_name = os.path.expanduser(token_file_name)
         self._token = None
         self._raw = raw
 
     def start_session(self):
-        # if os.path.exists(self._token_file_name):
-        #     # we logged in at least once before
-        #     # check if the token is still ok, if not, get a new one
-        #     self._load_token_from_file()
-        #     if not self._check_token_is_valid():
-        #         self._refresh_token()
-        # else:
-        #     # first login, get a new token
-        self._get_new_token()
+        if os.path.exists(self._token_file_name):
+            # we logged in at least once before
+            # check if the token is still ok, if not, get a new one
+            self._load_token_from_file()
+            if not self._check_token_is_valid():
+                self._refresh_token()
+        else:
+            # first login, get a new token
+            self._get_new_token()
 
-    # def _load_token_from_file(self):
-    #     with open(self._token_file_name, "r") as token_file:
-    #         self._token = json.load(token_file)
+    async def _load_token_from_file(self):
+        async with aiofiles.open(self._token_file_name, "r") as token_file:
+            self._token = json.load(token_file.buffer)
 
     def _check_token_is_valid(self):
         now = datetime.datetime.now()
@@ -275,8 +277,7 @@ class PanasonicSession():
             "scope": token_response["scope"]
         }
 
-        # with open(self._token_file_name, "w") as token_file:
-        #     json.dump(self._token, token_file, indent=4)
+        self._update_token_file()
 
     def stop_session(self):
         response = requests.post(
@@ -287,10 +288,10 @@ class PanasonicSession():
         if json.loads(response.text)["result"] != 0:
             # issue during logout, but do we really care?
             pass
-        # try:
-        #     os.remove(self._token_file_name)
-        # except FileNotFoundError:
-        #     pass
+        try:
+            os.remove(self._token_file_name)
+        except FileNotFoundError:
+            pass
 
     def _refresh_token(self):
         # do before, so that timestamp is older rather than newer
@@ -323,8 +324,11 @@ class PanasonicSession():
             "scope": token_response["scope"]
         }
 
-        # with open(self._token_file_name, "w") as token_file:
-        #     json.dump(self._token, token_file, indent=4)
+        self._update_token_file()
+
+    async def _update_token_file(self):
+        async with aiofiles.open(self._token_file_name, "w") as token_file:
+            json.dump(self._token, token_file, indent=4)
 
     def _get_header_for_api_calls(self):
         now = datetime.datetime.now()
