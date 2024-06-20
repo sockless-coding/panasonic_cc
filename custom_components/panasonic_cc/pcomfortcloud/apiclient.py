@@ -14,7 +14,7 @@ class ApiClient(panasonicsession.PanasonicSession):
     def __init__(self,
                  username,
                  password,
-                 token_file_name='token.json',
+                 token_file_name=None,
                  raw=False):
         super().__init__(username, password, token_file_name, raw)
 
@@ -248,13 +248,13 @@ class ApiClient(panasonicsession.PanasonicSession):
     def _get_device_status_url(self, guid):
         return '{base_url}/deviceStatus/{guid}'.format(
             base_url=panasonicsession.PanasonicSession.BASE_PATH_ACC,
-            guid=re.sub('(?i)\%2f', 'f', quote_plus(guid))
+            guid=re.sub('(?i)2f', 'f', quote_plus(guid))
         )
 
     def _get_device_status_now_url(self, guid):
         return '{base_url}/deviceStatus/now/{guid}'.format(
             base_url=panasonicsession.PanasonicSession.BASE_PATH_ACC,
-            guid=re.sub('(?i)\%2f', 'f', quote_plus(guid))
+            guid=re.sub('(?i)2f', 'f', quote_plus(guid))
         )
 
     def _get_device_status_control_url(self):
