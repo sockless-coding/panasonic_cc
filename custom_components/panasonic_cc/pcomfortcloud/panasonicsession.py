@@ -326,7 +326,7 @@ class PanasonicSession:
 
         self._update_token_file()
 
-    def _update_token_file(self):
+    async def _update_token_file(self):
         async with aiofiles.open(self._token_file_name, "w") as token_file:
             json.dump(self._token, token_file, indent=4)
 
