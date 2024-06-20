@@ -7,11 +7,6 @@ This is a custom component to allow control of Panasonic Comfort Cloud devices i
 ## IMPORTANT
 Before installing this integration, you **must** have **completed** the **2FA** process using the Panasonic Comfort Cloud app.
 
-
-#### Support Development
-- :coffee:&nbsp;&nbsp;[Buy me a coffee](https://www.buymeacoffee.com/sockless)
-
-
 # Features:
 
 * Climate component for Panasonic airconditioners and heatpumps
@@ -30,3 +25,6 @@ The Panasonic Comfort Cloud integration can be configured via the Home Assistant
 After inital setup additional options are available
 
 ![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/options_dlg.png)
+
+#### Support Development
+- :coffee:&nbsp;&nbsp;[Buy me a coffee](https://www.buymeacoffee.com/sockless)

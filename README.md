@@ -12,9 +12,6 @@ This is a custom component to allow control of Panasonic Comfort Cloud devices i
 ## IMPORTANT
 Before installing this integration, you **must** have **completed** the **2FA** process using the Panasonic Comfort Cloud app.
 
-#### Support Development
-- :coffee:&nbsp;&nbsp;[Buy me a coffee](https://www.buymeacoffee.com/sockless)
-
 ## Features
 
 * Climate component for Panasonic airconditioners and heatpumps
@@ -49,6 +46,9 @@ After inital setup, additional options are available
 ## Known issues
 
 - Setting the Horizontal swing mode to LefMid will break the component, you will need to use the Comfort Cloud app to change the mode to something else.
+
+## Support Development
+- :coffee:&nbsp;&nbsp;[Buy me a coffee](https://www.buymeacoffee.com/sockless)
 
 [license-shield]: https://img.shields.io/github/license/sockless-coding/panasonic_cc.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/sockless-coding/panasonic_cc.svg?style=for-the-badge
