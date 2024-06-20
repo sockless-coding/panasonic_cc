@@ -6,15 +6,15 @@ import hashlib
 import re
 from urllib.parse import quote_plus
 
-from . import panasonicsession
 from . import constants
+from . import panasonicsession
 
 
 class ApiClient(panasonicsession.PanasonicSession):
     def __init__(self,
                  username,
                  password,
-                 token_file_name=None,
+                 token_file_name='tokens.json',
                  raw=False):
         super().__init__(username, password, token_file_name, raw)
 
