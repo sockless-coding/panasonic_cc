@@ -1,28 +1,23 @@
 """Config flow for the Panasonic Comfort Cloud platform."""
 import asyncio
-from typing import Any, Dict, Optional
 import logging
+from typing import Any, Dict, Optional
 
-from aiohttp import ClientError
-from async_timeout import timeout
 import voluptuous as vol
-
+from aiohttp import ClientError
 from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import callback
 
 from . import DOMAIN as PANASONIC_DOMAIN
-
-from .panasonic import PanasonicApiDevice
-
 from .const import (
-    KEY_DOMAIN, 
-    TIMEOUT, 
-    CONF_FORCE_OUTSIDE_SENSOR, 
-    CONF_ENABLE_DAILY_ENERGY_SENSOR, 
+    KEY_DOMAIN,
+    CONF_FORCE_OUTSIDE_SENSOR,
+    CONF_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @config_entries.HANDLERS.register("panasonic_cc")
 class FlowHandler(config_entries.ConfigFlow):
@@ -45,28 +40,33 @@ class FlowHandler(config_entries.ConfigFlow):
                 return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(title="", data={
-            CONF_USERNAME: username, 
-            CONF_PASSWORD: password, 
+            CONF_USERNAME: username,
+            CONF_PASSWORD: password,
             CONF_FORCE_OUTSIDE_SENSOR: False,
             CONF_ENABLE_DAILY_ENERGY_SENSOR: DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
-            })
+        })
 
     async def _create_device(self, username, password):
         """Create device."""
         from . import pcomfortcloud
         try:
 
-            api = pcomfortcloud.Session(username, password)
+            api = pcomfortcloud.ApiClient(username, password)
+            await self.hass.async_add_executor_job(api.start_session)
             devices = await self.hass.async_add_executor_job(api.get_devices)
+
             if not devices:
+                _LOGGER.debug("Not devices found")
                 return self.async_abort(reason="No devices")
-        except asyncio.TimeoutError:
+
+        except asyncio.TimeoutError as te:
+            _LOGGER.exception("TimeoutError", te)
             return self.async_abort(reason="device_timeout")
-        except ClientError:
-            _LOGGER.exception("ClientError")
+        except ClientError as ce:
+            _LOGGER.exception("ClientError", ce)
             return self.async_abort(reason="device_fail")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error creating device")
+        except Exception as e:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected error creating device", e)
             return self.async_abort(reason="device_fail")
 
         return await self._create_entry(username, password)
@@ -78,7 +78,7 @@ class FlowHandler(config_entries.ConfigFlow):
                 step_id="user", data_schema=vol.Schema({
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str
-                    })
+                })
             )
         return await self._create_device(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
@@ -89,6 +89,7 @@ class FlowHandler(config_entries.ConfigFlow):
             return await self.async_step_user()
         return await self._create_device(username, user_input[CONF_PASSWORD])
 
+
 class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Panasonic options."""
 
@@ -97,7 +98,7 @@ class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
+            self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Manage Panasonic options."""
         if user_input is not None:

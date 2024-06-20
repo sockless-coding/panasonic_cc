@@ -9,6 +9,9 @@ This is a custom component to allow control of Panasonic Comfort Cloud devices i
 
 ![Example entities](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/entities.png)
 
+## IMPORTANT
+Before installing this integration, you **must** have **completed** the **2FA** process using the Panasonic Comfort Cloud app.
+
 #### Support Development
 - :coffee:&nbsp;&nbsp;[Buy me a coffee](https://www.buymeacoffee.com/sockless)
 
