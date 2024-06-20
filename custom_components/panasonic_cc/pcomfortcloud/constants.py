@@ -55,7 +55,7 @@ class FanSpeed(Enum):
     High = 5
 
 
-class dataMode(Enum):
+class DataMode(Enum):
     Day = 0
     Week = 1
     Month = 2
