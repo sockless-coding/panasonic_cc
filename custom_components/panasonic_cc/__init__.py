@@ -69,9 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     api = pcomfortcloud.ApiClient(username, password)
     await hass.async_add_executor_job(api.start_session)
-    # api = await hass.async_add_executor_job(session.load_token())
 
     devices = await hass.async_add_executor_job(api.get_devices)
+
     for device in devices:
         try:
             api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor)
