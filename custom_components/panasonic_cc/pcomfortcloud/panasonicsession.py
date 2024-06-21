@@ -122,7 +122,7 @@ class PanasonicSession:
         # check if the user can skip the authentication workflows - in that case, 
         # the location is directly pointing to the redirect url with the "code"
         # query parameter included
-        if not location.startsWith(PanasonicSession.REDIRECT_URI):
+        if not location.startswith(PanasonicSession.REDIRECT_URI):
 
             response = await self._client.get(
                 f"{PanasonicSession.BASE_PATH_AUTH}/{location}",
