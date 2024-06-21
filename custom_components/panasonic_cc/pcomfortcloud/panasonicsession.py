@@ -119,77 +119,82 @@ class PanasonicSession:
         state = get_querystring_parameter_from_header_entry_url(
             response, 'Location', 'state')
 
-        response = await self._client.get(
-            f"{PanasonicSession.BASE_PATH_AUTH}/{location}",
-            allow_redirects=False)
-        check_response(response, 'authorize_redirect', 200)
+        # check if the user can skip the authentication workflows - in that case, 
+        # the location is directly pointing to the redirect url with the "code"
+        # query parameter included
+        if not location.startswith(PanasonicSession.REDIRECT_URI):
 
-        # get the "_csrf" cookie
-        csrf = response.cookies['_csrf']
-
-        # -------------------------------------------------------------------
-        # LOGIN
-        # -------------------------------------------------------------------
-
-        response = await self._client.post(
-            f'{PanasonicSession.BASE_PATH_AUTH}/usernamepassword/login',
-            headers={
-                "Auth0-Client": PanasonicSession.AUTH_0_CLIENT,
-                "user-agent": "okhttp/4.10.0",
-            },
-            json={
-                "client_id": PanasonicSession.APP_CLIENT_ID,
-                "redirect_uri": PanasonicSession.REDIRECT_URI,
-                "tenant": "pdpauthglb-a1",
-                "response_type": "code",
-                "scope": "openid offline_access comfortcloud.control a2w.control",
-                "audience": f"https://digital.panasonic.com/{PanasonicSession.APP_CLIENT_ID}/api/v1/",
-                "_csrf": csrf,
-                "state": state,
-                "_intstate": "deprecated",
-                "username": self._username,
-                "password": self._password,
-                "lang": "en",
-                "connection": "PanasonicID-Authentication"
-            },
-            allow_redirects=False)
-        check_response(response, 'login', 200)
-
-        # -------------------------------------------------------------------
-        # CALLBACK
-        # -------------------------------------------------------------------
-
-        # get wa, wresult, wctx from body
-        soup = BeautifulSoup(await response.text(), "html.parser")
-        input_lines = soup.find_all("input", {"type": "hidden"})
-        parameters = dict()
-        for input_line in input_lines:
-            parameters[input_line.get("name")] = input_line.get("value")
-
-        user_agent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 "
-        user_agent += "(KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36"
-
-        response = await self._client.post(
-            url=f"{PanasonicSession.BASE_PATH_AUTH}/login/callback",
-            data=parameters,
-            headers={
-                "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": user_agent,
-            },
-            allow_redirects=False)
-        check_response(response, 'login_callback', 302)
-
-        # ------------------------------------------------------------------
-        # FOLLOW REDIRECT
-        # ------------------------------------------------------------------
-
-        location = response.headers['Location']
-
-        response = await self._client.get(
-            f"{PanasonicSession.BASE_PATH_AUTH}/{location}",
-            allow_redirects=False)
-        check_response(response, 'login_redirect', 302)
-
+            response = await self._client.get(
+                f"{PanasonicSession.BASE_PATH_AUTH}/{location}",
+                allow_redirects=False)
+            check_response(response, 'authorize_redirect', 200)
+    
+            # get the "_csrf" cookie
+            csrf = response.cookies['_csrf']
+    
+            # -------------------------------------------------------------------
+            # LOGIN
+            # -------------------------------------------------------------------
+    
+            response = await self._client.post(
+                f'{PanasonicSession.BASE_PATH_AUTH}/usernamepassword/login',
+                headers={
+                    "Auth0-Client": PanasonicSession.AUTH_0_CLIENT,
+                    "user-agent": "okhttp/4.10.0",
+                },
+                json={
+                    "client_id": PanasonicSession.APP_CLIENT_ID,
+                    "redirect_uri": PanasonicSession.REDIRECT_URI,
+                    "tenant": "pdpauthglb-a1",
+                    "response_type": "code",
+                    "scope": "openid offline_access comfortcloud.control a2w.control",
+                    "audience": f"https://digital.panasonic.com/{PanasonicSession.APP_CLIENT_ID}/api/v1/",
+                    "_csrf": csrf,
+                    "state": state,
+                    "_intstate": "deprecated",
+                    "username": self._username,
+                    "password": self._password,
+                    "lang": "en",
+                    "connection": "PanasonicID-Authentication"
+                },
+                allow_redirects=False)
+            check_response(response, 'login', 200)
+    
+            # -------------------------------------------------------------------
+            # CALLBACK
+            # -------------------------------------------------------------------
+    
+            # get wa, wresult, wctx from body
+            soup = BeautifulSoup(await response.text(), "html.parser")
+            input_lines = soup.find_all("input", {"type": "hidden"})
+            parameters = dict()
+            for input_line in input_lines:
+                parameters[input_line.get("name")] = input_line.get("value")
+    
+            user_agent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 "
+            user_agent += "(KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36"
+    
+            response = await self._client.post(
+                url=f"{PanasonicSession.BASE_PATH_AUTH}/login/callback",
+                data=parameters,
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "User-Agent": user_agent,
+                },
+                allow_redirects=False)
+            check_response(response, 'login_callback', 302)
+    
+            # ------------------------------------------------------------------
+            # FOLLOW REDIRECT
+            # ------------------------------------------------------------------
+    
+            location = response.headers['Location']
+    
+            response = await self._client.get(
+                f"{PanasonicSession.BASE_PATH_AUTH}/{location}",
+                allow_redirects=False)
+            check_response(response, 'login_redirect', 302)
+    
         # ------------------------------------------------------------------
         # GET TOKEN
         # ------------------------------------------------------------------
