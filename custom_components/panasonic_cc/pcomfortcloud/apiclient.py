@@ -53,7 +53,8 @@ class ApiClient(panasonicsession.PanasonicSession):
                         if 'deviceHashGuid' in device:
                             device_id = device['deviceHashGuid']
                         else:
-                            device_id = hashlib.md5(device['deviceGuid'].encode('utf-8')).hexdigest()
+                            device_id = hashlib.md5(
+                                device['deviceGuid'].encode('utf-8')).hexdigest()
 
                         self._device_indexer[device_id] = device['deviceGuid']
                         self._devices.append({
@@ -149,7 +150,7 @@ class ApiClient(panasonicsession.PanasonicSession):
         # routine to set the auto mode of fan (either horizontal, vertical, both or disabled)
         if air_x is not None or air_y is not None:
             fan_auto = 0
-            device = self.get_device(device_id)
+            device = await self.get_device(device_id)
 
             if device and device['parameters']['airSwingHorizontal'].value == -1:
                 fan_auto = fan_auto | 1
