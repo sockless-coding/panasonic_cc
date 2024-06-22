@@ -44,7 +44,7 @@ class PanasonicSettings:
             return
         try:
             async with aiofiles.open(self._fileName) as json_file:
-                data = json.load(await json_file.read())
+                data = json.loads(await json_file.read())
                 self._version = data[SETTING_VERSION]
                 self._versionDate = date.fromisoformat(data[SETTING_VERSION_DATE])
                 self._access_token = data[SETTING_ACCESS_TOKEN]
@@ -53,8 +53,8 @@ class PanasonicSettings:
                 self._clientId = data[SETTING_CLIENT_ID]
                 self._scope = data[SETTING_SCOPE]
                 _LOGGER.debug("Loaded settings from '%s'", self._fileName)
-        except:
-            _LOGGER.debug("Failed to loaded settings from '%s'", self._fileName)
+        except Exception as ex:
+            _LOGGER.warning("Failed to loaded settings from '%s'", self._fileName, exc_info = ex)
             pass
     
     def _save(self):
@@ -94,6 +94,8 @@ class PanasonicSettings:
     @property
     def is_version_expired(self):
         if self._version is None:
+            return True
+        if not self._version:
             return True
         if self._versionDate is None:
             return True

@@ -235,9 +235,10 @@ class PanasonicAuthentication:
         # ------------------------------------------------------------------
         # RETRIEVE ACC_CLIENT_ID
         # ------------------------------------------------------------------
+        _LOGGER.debug("Retrieving acc client id using access token: %s", self._settings.access_token)
         response = await self._client.post(
             f'{BASE_PATH_ACC}/auth/v2/login',
-            headers = await PanasonicRequestHeader.get(self._settings, self._app_version),
+            headers = await PanasonicRequestHeader.get(self._settings, self._app_version, include_client_id= False),
             json={
                 "language": 0
             })

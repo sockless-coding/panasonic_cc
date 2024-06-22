@@ -8,9 +8,9 @@ from .ccappversion import CCAppVersion
 class PanasonicRequestHeader:
 
     @staticmethod
-    async def get(settings: PanasonicSettings, app_version: CCAppVersion):
+    async def get(settings: PanasonicSettings, app_version: CCAppVersion, include_client_id = True):
         now = datetime.datetime.now()
-        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")        
         headers={
                 "Content-Type": "application/json;charset=utf-8",
                 "User-Agent": "G-RAC",
@@ -21,7 +21,7 @@ class PanasonicRequestHeader:
                 "X-CFC-API-KEY": PanasonicRequestHeader._get_api_key(),
                 "X-User-Authorization-V2": "Bearer " + settings.access_token
             }
-        if (settings.clientId):
+        if (include_client_id and settings.clientId):
             headers["X-Client-Id"] = settings.clientId
         return headers
         
