@@ -10,12 +10,11 @@ class CCAppVersion:
     def __init__(self, client: aiohttp.ClientSession, settings: PanasonicSettings) -> None:
         self._client = client
         self._settings = settings
-        self._appVersion = settings._version
     
     async def get(self):
         if self._settings.is_version_expired:
             await self._update()
-        return self._appVersion
+        return self._settings._version
 
     async def _update(self):        
         _LOGGER.debug("Fetching latest app version")
@@ -26,7 +25,6 @@ class CCAppVersion:
             version = data['files']['comfort-cloud-version']['content']
             if version is not None:
                 _LOGGER.debug(f"Found app version: {version}")
-                self._appVersion = version
                 self._settings.version = version
                 return
         except Exception as e:

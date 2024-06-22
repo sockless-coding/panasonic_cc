@@ -8,6 +8,7 @@ from homeassistant.util import Throttle
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.components.climate.const import ATTR_HVAC_MODE
+from .pcomfortcloud.apiclient import ApiClient
 
 from .const import PRESET_LIST, OPERATION_LIST
 
@@ -19,7 +20,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 class PanasonicApiDevice:
 
-    def __init__(self, hass: HomeAssistant, api, device, force_outside_sensor, enable_energy_sensor): # noqa: E501
+    def __init__(self, hass: HomeAssistant, api: ApiClient, device, force_outside_sensor, enable_energy_sensor): # noqa: E501
         from .pcomfortcloud import constants
         self.hass = hass
         self._api = api
@@ -69,10 +70,10 @@ class PanasonicApiDevice:
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
-                await self.hass.async_add_executor_job(self._api.login)
+                await self._api.refresh_token()
                 data = await self._api.get_device(self.id)
             except:
-                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))  # noqa: E501
+                _LOGGER.warning("Failed to renew token for device {id}, giving up for now".format(**self.device))  # noqa: E501
                 return
 
         if data is None:
@@ -116,7 +117,7 @@ class PanasonicApiDevice:
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
-                await self.hass.async_add_executor_job(self._api.login)
+                await self._api.refresh_token()
                 data= await self._api.get_device(self.id) # noqa: E501
             except:
                 _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device)) # noqa: E501
