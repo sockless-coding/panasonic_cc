@@ -15,14 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-def api_call_login(func):
-    def wrapper_call(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except:  # noqa: E722
-            args[0]._api.login()
-            func(*args, **kwargs)
-    return wrapper_call
+
 
 class PanasonicApiDevice:
 
@@ -72,12 +65,12 @@ class PanasonicApiDevice:
     async def do_update(self):
         #_LOGGER.debug("Requesting data for device {id}".format(**self.device))
         try:
-            data = await self.hass.async_add_executor_job(self._api.get_device,self.id)
+            data = await self._api.get_device(self.id)
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
                 await self.hass.async_add_executor_job(self._api.login)
-                data = await self.hass.async_add_executor_job(self._api.get_device, self.id)
+                data = await self._api.get_device(self.id)
             except:
                 _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device))  # noqa: E501
                 return
@@ -118,13 +111,13 @@ class PanasonicApiDevice:
     async def do_update_energy(self):
         #_LOGGER.debug("Requesting energy for device {id}".format(**self.device))
         try:
-            data= await self.hass.async_add_executor_job(self._api.history,self.id,"Day",datetime.now().strftime("%Y%m%d")) # noqa: E501
+            data= await self._api.history(self.id,"Day",datetime.now().strftime("%Y%m%d")) # noqa: E501
             
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
                 await self.hass.async_add_executor_job(self._api.login)
-                data= await self.hass.async_add_executor_job(self._api.get_device,self.id) # noqa: E501
+                data= await self._api.get_device(self.id) # noqa: E501
             except:
                 _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device)) # noqa: E501
                 return
@@ -234,15 +227,13 @@ class PanasonicApiDevice:
         return self.current_power_value
 
     async def turn_off(self):
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { "power": self.constants.Power.Off }
         )
         await self.do_update()
 
     async def turn_on(self):
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { "power": self.constants.Power.On }
         )
         await self.do_update()
@@ -250,8 +241,7 @@ class PanasonicApiDevice:
     async def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         _LOGGER.debug("Set %s ecomode %s", self.name, preset_mode)
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { 
                 "power": self.constants.Power.On,
                 "eco": self.constants.EcoMode[ PRESET_LIST[preset_mode] ]
@@ -273,8 +263,7 @@ class PanasonicApiDevice:
 
         _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             new_values
         )
         await self.do_update()
@@ -284,8 +273,7 @@ class PanasonicApiDevice:
         """Set new fan mode."""
         _LOGGER.debug("Set %s focus mode %s", self.name, fan_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { "fanSpeed": self.constants.FanSpeed[fan_mode] }
         )
         await self.do_update()
@@ -294,8 +282,7 @@ class PanasonicApiDevice:
         """Set operation mode."""
         _LOGGER.debug("Set %s mode %s", self.name, hvac_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { 
                 "power": self.constants.Power.On,
                 "mode": self.constants.OperationMode[OPERATION_LIST[hvac_mode]] 
@@ -313,8 +300,7 @@ class PanasonicApiDevice:
 
         _LOGGER.debug("Set %s swing mode %s", self.name, swing_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { 
                 "power": self.constants.Power.On,
                 "airSwingVertical": self.constants.AirSwingUD[swing_mode],
@@ -332,8 +318,7 @@ class PanasonicApiDevice:
 
         _LOGGER.debug("Set %s horizontal swing mode %s", self.name, swing_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { 
                 "power": self.constants.Power.On,
                 "airSwingHorizontal": self.constants.AirSwingLR[swing_mode],
@@ -345,15 +330,21 @@ class PanasonicApiDevice:
         """Set new nanoe mode."""
         _LOGGER.debug("Set %s nanoe mode %s", self.name, nanoe_mode)
 
-        await self.hass.async_add_executor_job(
-            self.set_device,
+        await self.set_device(
             { "nanoe": self.constants.NanoeMode[nanoe_mode] }
         )
         await self.do_update()
 
-    @api_call_login
-    def set_device(self, args):
-        self._api.set_device(
-            self.id,
-            **args
-        )
+
+    async def set_device(self, args):
+        try:
+            await self._api.set_device(
+                self.id,
+                **args
+            )
+        except:
+            await self._api.start_session()
+            await self._api.set_device(
+                self.id,
+                **args
+            )

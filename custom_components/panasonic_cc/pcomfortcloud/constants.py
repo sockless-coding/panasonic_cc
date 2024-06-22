@@ -68,3 +68,15 @@ class NanoeMode(Enum):
     On = 2
     ModeG = 3
     All = 4
+
+DEFAULT_X_APP_VERSION = "1.20.0"
+
+MAX_VERSION_AGE = 5
+
+SETTING_ACCESS_TOKEN = "access_token"
+SETTING_ACCESS_TOKEN_EXPIRES = "access_token_expires"
+SETTING_REFRESH_TOKEN = "refresh_token"
+SETTING_SCOPE = "scope"
+SETTING_VERSION = "android_version"
+SETTING_VERSION_DATE = "android_version_date"
+SETTING_CLIENT_ID = "clientId"

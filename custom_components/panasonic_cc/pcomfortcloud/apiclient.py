@@ -4,6 +4,7 @@ Panasonic session, using Panasonic Comfort Cloud app api
 
 import hashlib
 import re
+import aiohttp
 from urllib.parse import quote_plus
 
 from . import constants
@@ -14,9 +15,10 @@ class ApiClient(panasonicsession.PanasonicSession):
     def __init__(self,
                  username,
                  password,
-                 token_file_name='tokens.json',
+                 client: aiohttp.ClientSession,
+                 token_file_name='~/.panasonic-settings',
                  raw=False):
-        super().__init__(username, password, token_file_name, raw)
+        super().__init__(username, password, client, token_file_name, raw)
 
         self._groups = None
         self._devices = None
@@ -24,12 +26,12 @@ class ApiClient(panasonicsession.PanasonicSession):
         self._raw = raw
         self._acc_client_id = None
 
-    def start_session(self):
-        super().start_session()
-        self._get_groups()
+    async def start_session(self):
+        await super().start_session()
+        await self._get_groups()
 
-    def _get_groups(self):
-        self._groups = self.execute_get(
+    async def _get_groups(self):
+        self._groups = await self.execute_get(
             self._get_group_url(),
             "get_groups",
             200
@@ -51,7 +53,8 @@ class ApiClient(panasonicsession.PanasonicSession):
                         if 'deviceHashGuid' in device:
                             device_id = device['deviceHashGuid']
                         else:
-                            device_id = hashlib.md5(device['deviceGuid'].encode('utf-8')).hexdigest()
+                            device_id = hashlib.md5(
+                                device['deviceGuid'].encode('utf-8')).hexdigest()
 
                         self._device_indexer[device_id] = device['deviceGuid']
                         self._devices.append({
@@ -68,7 +71,7 @@ class ApiClient(panasonicsession.PanasonicSession):
             return self.execute_get(self._get_device_status_url(device_guid), "dump", 200)
         return None
 
-    def history(self, device_id, mode, date, time_zone="+01:00"):
+    async def history(self, device_id, mode, date, time_zone="+01:00"):
         device_guid = self._device_indexer.get(device_id)
 
         if device_guid:
@@ -84,7 +87,7 @@ class ApiClient(panasonicsession.PanasonicSession):
                 "osTimezone": time_zone
             }
 
-            json_response = self.execute_post(self._get_device_history_url(), payload, "history", 200)
+            json_response = await self.execute_post(self._get_device_history_url(), payload, "history", 200)
 
             return {
                 'id': device_id,
@@ -92,18 +95,18 @@ class ApiClient(panasonicsession.PanasonicSession):
             }
         return None
 
-    def get_device(self, device_id):
+    async def get_device(self, device_id):
         device_guid = self._device_indexer.get(device_id)
 
         if device_guid:
-            json_response = self.execute_get(self._get_device_status_url(device_guid), "get_device", 200)
+            json_response = await self.execute_get(self._get_device_status_url(device_guid), "get_device", 200)
             return {
                 'id': device_id,
                 'parameters': self._read_parameters(json_response['parameters'])
             }
         return None
 
-    def set_device(self, device_id, **kwargs):
+    async def set_device(self, device_id, **kwargs):
         """ Set parameters of device
 
         Args:
@@ -147,7 +150,7 @@ class ApiClient(panasonicsession.PanasonicSession):
         # routine to set the auto mode of fan (either horizontal, vertical, both or disabled)
         if air_x is not None or air_y is not None:
             fan_auto = 0
-            device = self.get_device(device_id)
+            device = await self.get_device(device_id)
 
             if device and device['parameters']['airSwingHorizontal'].value == -1:
                 fan_auto = fan_auto | 1
@@ -185,7 +188,7 @@ class ApiClient(panasonicsession.PanasonicSession):
                 "deviceGuid": device_guid,
                 "parameters": parameters
             }
-            _ = self.execute_post(self._get_device_status_control_url(), payload, "set_device", 200)
+            _ = await self.execute_post(self._get_device_status_control_url(), payload, "set_device", 200)
             return True
         return False
 

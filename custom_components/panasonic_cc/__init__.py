@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_FORCE_OUTSIDE_SENSOR,
@@ -67,10 +68,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         force_outside_sensor = conf[CONF_FORCE_OUTSIDE_SENSOR]
     enable_daily_energy_sensor = entry.options.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
 
-    api = pcomfortcloud.ApiClient(username, password)
-    await hass.async_add_executor_job(api.start_session)
+    client = async_get_clientsession(hass)
+    api = pcomfortcloud.ApiClient(username, password, client)
+    await api.start_session()
 
-    devices = await hass.async_add_executor_job(api.get_devices)
+    devices = api.get_devices()
 
     for device in devices:
         try:

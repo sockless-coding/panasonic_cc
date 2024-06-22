@@ -8,6 +8,7 @@ from aiohttp import ClientError
 from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN as PANASONIC_DOMAIN
 from .const import (
@@ -50,10 +51,10 @@ class FlowHandler(config_entries.ConfigFlow):
         """Create device."""
         from . import pcomfortcloud
         try:
-
-            api = pcomfortcloud.ApiClient(username, password)
-            await self.hass.async_add_executor_job(api.start_session)
-            devices = await self.hass.async_add_executor_job(api.get_devices)
+            client = async_get_clientsession(self.hass)
+            api = pcomfortcloud.ApiClient(username, password, client)
+            await api.start_session()
+            devices = api.get_devices()
 
             if not devices:
                 _LOGGER.debug("Not devices found")
