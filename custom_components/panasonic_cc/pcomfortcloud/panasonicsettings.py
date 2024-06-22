@@ -5,6 +5,7 @@ import time
 import base64
 import aiofiles
 import asyncio
+import logging
 from datetime import date
 from packaging import version
 
@@ -20,6 +21,8 @@ from .constants import (
     DEFAULT_X_APP_VERSION,
     MAX_VERSION_AGE
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 class PanasonicSettings:
 
@@ -37,6 +40,7 @@ class PanasonicSettings:
 
     async def _load(self):
         if not os.path.exists(self._fileName):
+            _LOGGER.info("Settings file '%s' was not found", self._fileName)
             return
         try:
             async with aiofiles.open(self._fileName) as json_file:
@@ -48,7 +52,9 @@ class PanasonicSettings:
                 self._refresh_token = data[SETTING_REFRESH_TOKEN]
                 self._clientId = data[SETTING_CLIENT_ID]
                 self._scope = data[SETTING_SCOPE]
+                _LOGGER.debug("Loaded settings from '%s'", self._fileName)
         except:
+            _LOGGER.debug("Failed to loaded settings from '%s'", self._fileName)
             pass
     
     def _save(self):
@@ -67,6 +73,7 @@ class PanasonicSettings:
     async def _do_save(self, data):
         async with aiofiles.open(self._fileName, 'w') as outfile:
             await outfile.write(json.dumps(data))
+            _LOGGER.debug("Saved settings to '%s'", self._fileName)
 
     @property
     def version(self):
