@@ -51,10 +51,10 @@ class PanasonicSession:
         if (not self._settings.has_refresh_token):
             await self._authentication.authenticate(self._username, self._password)
         if (not self._settings.is_access_token_valid):
-            await self._authentication.refresh_token()
-
-
-    
+            try:
+                await self._authentication.refresh_token()
+            except:
+                await self._authentication.authenticate(self._username, self._password)
 
     async def stop_session(self):
         _LOGGER.debug("Stopping Session")

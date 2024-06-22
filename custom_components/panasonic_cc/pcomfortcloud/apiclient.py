@@ -30,6 +30,9 @@ class ApiClient(panasonicsession.PanasonicSession):
         await super().start_session()
         await self._get_groups()
 
+    async def refresh_token(self):
+        await super().start_session()
+
     async def _get_groups(self):
         self._groups = await self.execute_get(
             self._get_group_url(),
