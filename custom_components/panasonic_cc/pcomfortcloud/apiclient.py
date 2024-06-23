@@ -254,13 +254,13 @@ class ApiClient(panasonicsession.PanasonicSession):
     def _get_device_status_url(self, guid):
         return '{base_url}/deviceStatus/{guid}'.format(
             base_url=constants.BASE_PATH_ACC,
-            guid=re.sub('(?i)\%2f', 'f', quote_plus(guid))
+            guid=re.sub(r'(?i)\%2f', 'f', quote_plus(guid))
         )
 
     def _get_device_status_now_url(self, guid):
         return '{base_url}/deviceStatus/now/{guid}'.format(
             base_url=constants.BASE_PATH_ACC,
-            guid=re.sub('(?i)\%2f', 'f', quote_plus(guid))
+            guid=re.sub(r'(?i)\%2f', 'f', quote_plus(guid))
         )
 
     def _get_device_status_control_url(self):
