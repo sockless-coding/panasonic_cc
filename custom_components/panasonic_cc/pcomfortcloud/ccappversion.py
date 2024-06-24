@@ -69,36 +69,3 @@ class CCAppVersion:
             _LOGGER.warning(f"Getting app version: {e}")
             pass
         _LOGGER.debug(f"Failed to retrive app version using version {self._settings.version}")
-
-    async def _update_appbrain(self):        
-        _LOGGER.debug("Fetching latest app version from app brain")
-        try:            
-            response = await self._client.get("https://www.appbrain.com/app/panasonic-comfort-cloud/com.panasonic.ACCsmart")
-            responseText = await response.text()
-            soup = BeautifulSoup(responseText, "html.parser")
-            meta_tag = soup.find("meta", itemprop="softwareVersion")
-            if meta_tag:
-                version = meta_tag['content']
-                _LOGGER.debug(f"Found app version: {version}")
-                self._settings.version = version
-                return
-        except Exception as e:
-            _LOGGER.warning(f"Getting app version: {e}")
-            pass
-        _LOGGER.debug(f"Failed to retrive app version using version {self._settings.version}")
-
-    async def _update_playstore(self):
-        _LOGGER.debug("Fetching latest app version from play store")
-        try:            
-            response = await self._client.get("https://play.google.com/store/apps/details?id=com.panasonic.ACCsmart")
-            responseText = await response.text()
-            version_match = re.search(r'\["(\d+\.\d+\.\d+)"\]', responseText)
-            if version_match:
-                version = version_match.group(1)
-                _LOGGER.debug(f"Found app version: {version}")
-                self._settings.version = version
-                return
-        except Exception as e:
-            _LOGGER.warning(f"Getting app version: {e}")
-            pass
-        _LOGGER.debug(f"Failed to retrive app version using version {self._settings.version}")
