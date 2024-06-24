@@ -57,6 +57,10 @@ class PanasonicAuthentication:
         
         authorization_response = await self._authorize(code_challenge)
         authorization_redirect = authorization_response.headers['Location']
+        _LOGGER.debug("Authorization result, %s", json.dumps({
+            'redirect': authorization_redirect,
+            'response': await authorization_response.text()
+        }))
         # check if the user can skip the authentication workflows - in that case, 
         # the location is directly pointing to the redirect url with the "code"
         # query parameter included
@@ -98,6 +102,7 @@ class PanasonicAuthentication:
         # AUTHORIZE
         # --------------------------------------------------------------------
         state = generate_random_string(20)
+        _LOGGER.debug("Requesting authorization, %s", json.dumps({'challenge': challenge, 'state': state}))
 
         response = await self._client.get(
             f'{BASE_PATH_AUTH}/authorize',
@@ -122,14 +127,16 @@ class PanasonicAuthentication:
         
         
     async def _login(self, authorization_response: aiohttp.ClientResponse, username, password):
-        _LOGGER.debug("Trying to log in")
+        
         state = get_querystring_parameter_from_header_entry_url(
                 authorization_response, 'Location', 'state')
         location = authorization_response.headers['Location']
+        _LOGGER.debug("Following authorization redirect, %s", json.dumps({'url': f"{BASE_PATH_AUTH}/{location}", 'state': state}))
         response = await self._client.get(
                 f"{BASE_PATH_AUTH}/{location}",
                 allow_redirects=False)
         await check_response(response, 'authorize_redirect', 200)
+        _LOGGER.debug("Authorization redirect response, %s", json.dumps({ 'headers': dict(response.headers), 'cookies': response.cookies.output() }))
 
         # get the "_csrf" cookie
         csrf = response.cookies['_csrf']
@@ -137,7 +144,7 @@ class PanasonicAuthentication:
         # -------------------------------------------------------------------
         # LOGIN
         # -------------------------------------------------------------------
-
+        _LOGGER.debug("Authenticating with username and password, %s", json.dumps({'csrf':csrf,'state':state}))
         response = await self._client.post(
             f'{BASE_PATH_AUTH}/usernamepassword/login',
             headers={
@@ -167,13 +174,15 @@ class PanasonicAuthentication:
         # -------------------------------------------------------------------
 
         # get wa, wresult, wctx from body
-        soup = BeautifulSoup(await response.text(), "html.parser")
+        response_text = await response.text()
+        _LOGGER.debug("Authentication response, %s", json.dumps({'html':response_text}))
+        soup = BeautifulSoup(response_text, "html.parser")
         input_lines = soup.find_all("input", {"type": "hidden"})
         parameters = dict()
         for input_line in input_lines:
             parameters[input_line.get("name")] = input_line.get("value")
 
-
+        _LOGGER.debug("Callback with parameters, %s", json.dumps(parameters))
         response = await self._client.post(
             url=f"{BASE_PATH_AUTH}/login/callback",
             data=parameters,
@@ -189,11 +198,14 @@ class PanasonicAuthentication:
         # ------------------------------------------------------------------
 
         location = response.headers['Location']
+        _LOGGER.debug("Callback response, %s", json.dumps({'redirect':location, 'html': await response.text()}))
 
         response = await self._client.get(
             f"{BASE_PATH_AUTH}/{location}",
             allow_redirects=False)
         await check_response(response, 'login_redirect', 302)
+        location = response.headers['Location']
+        _LOGGER.debug("Callback redirect, %s", json.dumps({'redirect':location, 'html': await response.text()}))
 
         return get_querystring_parameter_from_header_entry_url(
                 response, 'Location', 'code')
