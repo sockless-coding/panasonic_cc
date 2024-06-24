@@ -45,13 +45,20 @@ class PanasonicSettings:
         try:
             async with aiofiles.open(self._fileName) as json_file:
                 data = json.loads(await json_file.read())
-                self._version = data[SETTING_VERSION]
-                self._versionDate = date.fromisoformat(data[SETTING_VERSION_DATE])
-                self._access_token = data[SETTING_ACCESS_TOKEN]
-                self._access_token_expires = data[SETTING_ACCESS_TOKEN_EXPIRES]
-                self._refresh_token = data[SETTING_REFRESH_TOKEN]
-                self._clientId = data[SETTING_CLIENT_ID]
-                self._scope = data[SETTING_SCOPE]
+                if SETTING_VERSION in data:
+                    self._version = data[SETTING_VERSION]
+                if SETTING_VERSION_DATE in data:
+                    self._versionDate = date.fromisoformat(data[SETTING_VERSION_DATE])
+                if SETTING_ACCESS_TOKEN in data:
+                    self._access_token = data[SETTING_ACCESS_TOKEN]
+                if SETTING_ACCESS_TOKEN_EXPIRES in data:
+                    self._access_token_expires = data[SETTING_ACCESS_TOKEN_EXPIRES]
+                if SETTING_REFRESH_TOKEN in data:
+                    self._refresh_token = data[SETTING_REFRESH_TOKEN]
+                if SETTING_CLIENT_ID in data:
+                    self._clientId = data[SETTING_CLIENT_ID]
+                if SETTING_SCOPE in data:
+                    self._scope = data[SETTING_SCOPE]
                 _LOGGER.debug("Loaded settings from '%s'", self._fileName)
         except Exception as ex:
             _LOGGER.warning("Failed to loaded settings from '%s'", self._fileName, exc_info = ex)
