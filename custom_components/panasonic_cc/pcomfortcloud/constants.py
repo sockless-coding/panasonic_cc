@@ -69,7 +69,7 @@ class NanoeMode(Enum):
     ModeG = 3
     All = 4
 
-DEFAULT_X_APP_VERSION = "1.20.0"
+DEFAULT_X_APP_VERSION = "1.21.0"
 
 MAX_VERSION_AGE = 5
 
