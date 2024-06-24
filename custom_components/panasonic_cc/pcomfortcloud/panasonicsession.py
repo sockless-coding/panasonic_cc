@@ -70,7 +70,13 @@ class PanasonicSession:
             self._settings.clear()
         except FileNotFoundError:
             pass
+    
+    @property
+    def app_version(self):
+        return self._settings.version
 
+    async def update_app_version(self):
+        await self._app_version.refresh()
 
     async def execute_post(self, url, json_data, function_description, expected_status_code):
         await self._ensure_valid_token()
