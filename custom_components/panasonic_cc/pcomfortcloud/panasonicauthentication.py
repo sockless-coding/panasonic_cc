@@ -22,12 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 def generate_random_string(length):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
 
-def check_response(response: aiohttp.ClientResponse, function_description, expected_status):
+async def check_response(response: aiohttp.ClientResponse, function_description, expected_status):
     
     if response.status != expected_status:
+        response_text = await response.text()
+        _LOGGER.error("%s: Expected status code %s, received: %s: %s", function_description, expected_status, response.status, response_text)
         raise exceptions.ResponseError(
             f"({function_description}: Expected status code {expected_status}, received: {response.status}: " +
-            f"{response.text}"
+            f"{response_text}"
         )
     
 def get_querystring_parameter_from_header_entry_url(response: aiohttp.ClientResponse, header_entry, querystring_parameter):
@@ -86,7 +88,7 @@ class PanasonicAuthentication:
                 "grant_type": "refresh_token"
             },
             allow_redirects=False)
-        check_response(response, 'refresh_token', 200)
+        await check_response(response, 'refresh_token', 200)
         token_response = json.loads(await response.text())
         self._set_token(token_response, unix_time_token_received)
 
@@ -115,7 +117,7 @@ class PanasonicAuthentication:
                 "state": state,
             },
             allow_redirects=False)
-        check_response(response, 'authorize', 302)
+        await check_response(response, 'authorize', 302)
         return response
         
         
@@ -127,7 +129,7 @@ class PanasonicAuthentication:
         response = await self._client.get(
                 f"{BASE_PATH_AUTH}/{location}",
                 allow_redirects=False)
-        check_response(response, 'authorize_redirect', 200)
+        await check_response(response, 'authorize_redirect', 200)
 
         # get the "_csrf" cookie
         csrf = response.cookies['_csrf']
@@ -158,7 +160,7 @@ class PanasonicAuthentication:
                 "connection": "PanasonicID-Authentication"
             },
             allow_redirects=False)
-        check_response(response, 'login', 200)
+        await check_response(response, 'login', 200)
 
         # -------------------------------------------------------------------
         # CALLBACK
@@ -180,7 +182,7 @@ class PanasonicAuthentication:
                 "User-Agent": AUTH_BROWSER_USER_AGENT,
             },
             allow_redirects=False)
-        check_response(response, 'login_callback', 302)
+        await check_response(response, 'login_callback', 302)
 
         # ------------------------------------------------------------------
         # FOLLOW REDIRECT
@@ -191,7 +193,7 @@ class PanasonicAuthentication:
         response = await self._client.get(
             f"{BASE_PATH_AUTH}/{location}",
             allow_redirects=False)
-        check_response(response, 'login_redirect', 302)
+        await check_response(response, 'login_redirect', 302)
 
         return get_querystring_parameter_from_header_entry_url(
                 response, 'Location', 'code')
@@ -217,7 +219,7 @@ class PanasonicAuthentication:
                 "code_verifier": code_verifier
             },
             allow_redirects=False)
-        check_response(response, 'get_token', 200)
+        await check_response(response, 'get_token', 200)
 
         token_response = json.loads(await response.text())
         self._set_token(token_response, unix_time_token_received)
@@ -233,13 +235,14 @@ class PanasonicAuthentication:
         # ------------------------------------------------------------------
         # RETRIEVE ACC_CLIENT_ID
         # ------------------------------------------------------------------
+        _LOGGER.debug("Retrieving acc client id using access token: %s", self._settings.access_token)
         response = await self._client.post(
             f'{BASE_PATH_ACC}/auth/v2/login',
-            headers = await PanasonicRequestHeader.get(self._settings, self._app_version),
+            headers = await PanasonicRequestHeader.get(self._settings, self._app_version, include_client_id= False),
             json={
                 "language": 0
             })
-        check_response(response, 'get_acc_client_id', 200)
+        await check_response(response, 'get_acc_client_id', 200)
 
         json_body = json.loads(await response.text())
         self._settings.clientId = json_body["clientId"]

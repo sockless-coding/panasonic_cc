@@ -30,6 +30,9 @@ class ApiClient(panasonicsession.PanasonicSession):
         await super().start_session()
         await self._get_groups()
 
+    async def refresh_token(self):
+        await super().start_session()
+
     async def _get_groups(self):
         self._groups = await self.execute_get(
             self._get_group_url(),
@@ -251,13 +254,13 @@ class ApiClient(panasonicsession.PanasonicSession):
     def _get_device_status_url(self, guid):
         return '{base_url}/deviceStatus/{guid}'.format(
             base_url=constants.BASE_PATH_ACC,
-            guid=re.sub('(?i)2f', 'f', quote_plus(guid))
+            guid=re.sub(r'(?i)\%2f', 'f', quote_plus(guid))
         )
 
     def _get_device_status_now_url(self, guid):
         return '{base_url}/deviceStatus/now/{guid}'.format(
             base_url=constants.BASE_PATH_ACC,
-            guid=re.sub('(?i)2f', 'f', quote_plus(guid))
+            guid=re.sub(r'(?i)\%2f', 'f', quote_plus(guid))
         )
 
     def _get_device_status_control_url(self):

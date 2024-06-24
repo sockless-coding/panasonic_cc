@@ -136,8 +136,12 @@ class PanasonicEnergySensor(SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         if self._device_attribute == ATTR_DAILY_ENERGY:
+            if self._api.daily_energy is None:
+                return None
             return round(self._api.daily_energy,2)
         if self._device_attribute == ATTR_CURRENT_POWER:
+            if self._api.current_power is None:
+                return None
             return round(self._api.current_power,2)
         return None
 
