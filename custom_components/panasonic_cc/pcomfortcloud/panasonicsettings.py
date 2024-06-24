@@ -82,11 +82,11 @@ class PanasonicSettings:
         return self._version
 
     @version.setter
-    def version(self,value):
+    def version(self,value:str):
         if value is None:
             return
         if (self._version is None
-            or version.parse(self._version) < version.parse(value)):
+            or version.parse(self._version.strip('"')) < version.parse(value.strip('"'))):
             self._version = value
         self._versionDate = date.today()
         self._save()

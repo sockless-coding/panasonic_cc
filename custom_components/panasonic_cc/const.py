@@ -84,5 +84,6 @@ PANASONIC_DEVICES = "panasonic_devices"
 COMPONENT_TYPES = [
     "climate", 
     "sensor", 
-    "switch"
+    "switch",
+    "button"
     ]

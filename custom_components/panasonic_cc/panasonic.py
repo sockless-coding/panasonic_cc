@@ -63,6 +63,9 @@ class PanasonicApiDevice:
     async def update_energy(self, **kwargs):
         await self.do_update_energy()
 
+    async def update_app_version(self):
+        await self._api.update_app_version()
+
     async def do_update(self):
         #_LOGGER.debug("Requesting data for device {id}".format(**self.device))
         try:
@@ -161,6 +164,7 @@ class PanasonicApiDevice:
             "manufacturer": "Panasonic",
             "model": self.device['model'],
             "name": self.name,
+            "sw_version": self._api.app_version
         }
 
     @property
