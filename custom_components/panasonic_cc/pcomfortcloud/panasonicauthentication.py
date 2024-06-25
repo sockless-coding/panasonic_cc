@@ -46,8 +46,8 @@ class PanasonicAuthentication:
         self._app_version = app_version
 
     async def authenticate(self, username: str, password: str):
-
-        self._client.cookie_jar.clear()
+      
+        self._client.cookie_jar.clear_domain('authglb.digital.panasonic.com')
         # generate initial state and code_challenge
         code_verifier = generate_random_string(43)
 
