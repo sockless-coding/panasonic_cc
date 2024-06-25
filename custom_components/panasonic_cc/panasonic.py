@@ -132,7 +132,7 @@ class PanasonicApiDevice:
         t1 = datetime.now()
         if 'energyConsumption' in data['parameters']:
             c_energy = data['parameters']['energyConsumption']
-            if c_energy:
+            if (c_energy is not None) and (c_energy != -255):
                 if self.last_energy_reading_time is not None:
                     if c_energy != self.last_energy_reading:                
                         d = (t1 - self.last_energy_reading_time).total_seconds() / 60 / 60  # noqa: E501
