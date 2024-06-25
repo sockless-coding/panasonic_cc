@@ -48,6 +48,7 @@ class PanasonicSession:
 
     async def start_session(self):
         _LOGGER.debug("Starting Session")
+        await self._settings.is_ready()
         if (not self._settings.has_refresh_token):
             await self._authentication.authenticate(self._username, self._password)
         if (not self._settings.is_access_token_valid):
