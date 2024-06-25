@@ -5,10 +5,25 @@ Panasonic session, using Panasonic Comfort Cloud app api
 import hashlib
 import re
 import aiohttp
+import time
 from urllib.parse import quote_plus
 
 from . import constants
 from . import panasonicsession
+
+_current_time_zone = None
+def get_current_time_zone():
+    global _current_time_zone
+    if _current_time_zone is not None:
+        return _current_time_zone
+    local_offset_seconds = -time.timezone
+    if time.daylight:
+        local_offset_seconds += 3600
+    hours, remainder = divmod(abs(local_offset_seconds), 3600)
+    minutes = remainder // 60
+    _current_time_zone = f"{'+' if local_offset_seconds >= 0 else '-'}{int(hours):02}:{int(minutes):02}"
+    return _current_time_zone
+    
 
 
 class ApiClient(panasonicsession.PanasonicSession):
@@ -74,29 +89,32 @@ class ApiClient(panasonicsession.PanasonicSession):
             return self.execute_get(self._get_device_status_url(device_guid), "dump", 200)
         return None
 
-    async def history(self, device_id, mode, date, time_zone="+01:00"):
+    async def history(self, device_id, mode, date, time_zone=""):
         device_guid = self._device_indexer.get(device_id)
+        if not device_guid:
+            return None
+        if not time_zone:
+            time_zone = get_current_time_zone()
+        try:
+            data_mode = constants.DataMode[mode].value
+        except KeyError:
+            raise Exception("Wrong mode parameter")
 
-        if device_guid:
-            try:
-                data_mode = constants.DataMode[mode].value
-            except KeyError:
-                raise Exception("Wrong mode parameter")
+        payload = {
+            "deviceGuid": device_guid,
+            "dataMode": data_mode,
+            "date": date,
+            "osTimezone": time_zone
+        }
 
-            payload = {
-                "deviceGuid": device_guid,
-                "dataMode": data_mode,
-                "date": date,
-                "osTimezone": time_zone
-            }
+        json_response = await self.execute_post(self._get_device_history_url(), payload, "history", 200)
 
-            json_response = await self.execute_post(self._get_device_history_url(), payload, "history", 200)
-
-            return {
-                'id': device_id,
-                'parameters': self._read_parameters(json_response)
-            }
-        return None
+        return {
+            'id': device_id,
+            'parameters': self._read_parameters(json_response)
+        }
+    
+    
 
     async def get_device(self, device_id):
         device_guid = self._device_indexer.get(device_id)

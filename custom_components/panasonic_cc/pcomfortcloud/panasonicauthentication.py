@@ -47,6 +47,7 @@ class PanasonicAuthentication:
 
     async def authenticate(self, username: str, password: str):
 
+        self._client.cookie_jar.clear()
         # generate initial state and code_challenge
         code_verifier = generate_random_string(43)
 

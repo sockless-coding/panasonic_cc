@@ -35,8 +35,11 @@ class PanasonicSettings:
         self._refresh_token = None
         self._scope = None
         self._clientId = ""
-        asyncio.ensure_future(self._load())
+        self._loading_task =asyncio.ensure_future(self._load())
         
+    async def is_ready(self):
+        await self._loading_task
+        return True
 
     async def _load(self):
         if not os.path.exists(self._fileName):
