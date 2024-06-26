@@ -114,8 +114,9 @@ class PanasonicApiDevice:
 
     async def do_update_energy(self):
         #_LOGGER.debug("Requesting energy for device {id}".format(**self.device))
+        today = datetime.now().strftime("%Y%m%d")
         try:
-            data= await self._api.history(self.id,"Day",datetime.now().strftime("%Y%m%d")) # noqa: E501
+            data= await self._api.history(self.id,"Month",today) # noqa: E501
             
         except:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
@@ -129,13 +130,25 @@ class PanasonicApiDevice:
         if data is None:
             _LOGGER.debug("Received no energy data for device {id}".format(**self.device)) # noqa: E501
             return
-        t1 = datetime.now()
-        if 'energyConsumption' not in data['parameters']:
+        
+        if 'historyDataList' not in data['parameters']:
             return
-        c_energy = data['parameters']['energyConsumption']
+        t1 = datetime.now()
+        history = data['parameters']['historyDataList']
+        c_energy = None
+        for item in history:
+            if 'dataTime' not in item:
+                continue
+            if item['dataTime'] != today:
+                continue
+            if 'consumption' not in item:
+                break
+            c_energy = item['consumption']
+            break
+
         if (c_energy is None) or (c_energy < 0):
             return
-            
+        t1 = datetime.now()
         if self.last_energy_reading_time is not None:
             if c_energy != self.last_energy_reading:                
                 d = (t1 - self.last_energy_reading_time).total_seconds() / 60 / 60  # noqa: E501
@@ -152,7 +165,7 @@ class PanasonicApiDevice:
         else:
             self.last_energy_reading = c_energy
             self.last_energy_reading_time = t1
-        self._daily_energy = data['parameters']['energyConsumption']
+        self._daily_energy = c_energy
 
     @property
     def available(self) -> bool:
