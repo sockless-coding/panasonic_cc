@@ -12,17 +12,17 @@ class PanasonicRequestHeader:
         now = datetime.datetime.now()
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")        
         headers={
-                "Content-Type": "application/json;charset=utf-8",
-                "User-Agent": "G-RAC",
-                "X-APP-NAME": "Comfort Cloud",
-                "X-APP-TIMESTAMP": timestamp,
-                "X-APP-TYPE": "1",
-                "X-APP-VERSION": await app_version.get(),
-                "X-CFC-API-KEY": PanasonicRequestHeader._get_api_key(),
-                "X-User-Authorization-V2": "Bearer " + settings.access_token
+                "content-type": "application/json;charset=utf-8",
+                "user-agent": "G-RAC",
+                "x-app-name": "Comfort Cloud",
+                "x-app-timestamp": timestamp,
+                "x-app-type": "1",
+                "x-app-version": await app_version.get(),
+                "x-cfc-api-key": PanasonicRequestHeader._get_api_key(),
+                "x-user-authorization-v2": "Bearer " + settings.access_token
             }
         if (include_client_id and settings.clientId):
-            headers["X-Client-Id"] = settings.clientId
+            headers["x-client-id"] = settings.clientId
         return headers
         
     @staticmethod
