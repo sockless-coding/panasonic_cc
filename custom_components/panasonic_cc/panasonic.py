@@ -130,26 +130,29 @@ class PanasonicApiDevice:
             _LOGGER.debug("Received no energy data for device {id}".format(**self.device)) # noqa: E501
             return
         t1 = datetime.now()
-        if 'energyConsumption' in data['parameters']:
-            c_energy = data['parameters']['energyConsumption']
-            if (c_energy is not None) and (c_energy != -255):
-                if self.last_energy_reading_time is not None:
-                    if c_energy != self.last_energy_reading:                
-                        d = (t1 - self.last_energy_reading_time).total_seconds() / 60 / 60  # noqa: E501
-                        p = round((c_energy - self.last_energy_reading)*1000 / d)
-                        self.last_energy_reading = c_energy
-                        self.last_energy_reading_time = t1
-                        if p >= 0:
-                            self.current_power_value = p
-                        self.current_power_counter = 0
-                    else:
-                        self.current_power_counter += 1
-                        if self.current_power_counter > 30:
-                            self.current_power_value = 0
-                else:
-                    self.last_energy_reading = c_energy
-                    self.last_energy_reading_time = t1
-                self._daily_energy = data['parameters']['energyConsumption']
+        if 'energyConsumption' not in data['parameters']:
+            return
+        c_energy = data['parameters']['energyConsumption']
+        if (c_energy is None) or (c_energy < 0):
+            return
+            
+        if self.last_energy_reading_time is not None:
+            if c_energy != self.last_energy_reading:                
+                d = (t1 - self.last_energy_reading_time).total_seconds() / 60 / 60  # noqa: E501
+                p = round((c_energy - self.last_energy_reading)*1000 / d)
+                self.last_energy_reading = c_energy
+                self.last_energy_reading_time = t1
+                if p >= 0:
+                    self.current_power_value = p
+                self.current_power_counter = 0
+            else:
+                self.current_power_counter += 1
+                if self.current_power_counter > 30:
+                    self.current_power_value = 0
+        else:
+            self.last_energy_reading = c_energy
+            self.last_energy_reading_time = t1
+        self._daily_energy = data['parameters']['energyConsumption']
 
     @property
     def available(self) -> bool:
