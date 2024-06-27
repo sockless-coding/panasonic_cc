@@ -69,6 +69,8 @@ class NanoeMode(Enum):
     ModeG = 3
     All = 4
 
+INVALID_TEMPERATURE = 126
+
 DEFAULT_X_APP_VERSION = "1.21.0"
 
 MAX_VERSION_AGE = 5
