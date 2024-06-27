@@ -86,25 +86,19 @@ class PanasonicApiDevice:
         try:
             _LOGGER.debug("Data: {}".format(data))
 
-            if self.features is None:
-                self.features = data.get('features', None)
-
-            plst = data.get('parameters')
-            self._is_on = bool(plst.get('power').value)
-            if plst.get('temperatureInside') != 126:
-                self._inside_temperature = plst.get('temperatureInside')
-            if plst.get('temperatureOutside') != 126:
-                self._outside_temperature = plst.get('temperatureOutside')
-                if self._inside_temperature is None and self._outside_temperature is not None:
-                    self._inside_temperature = self._outside_temperature
-            if plst.get('temperature') != 126:
-                self._target_temperature = plst.get('temperature')
-            self._fan_mode = plst.get('fanSpeed').name
-            self._swing_mode = plst.get('airSwingVertical').name
-            self._swing_lr_mode = plst.get('airSwingHorizontal').name
-            self._hvac_mode = plst.get('mode').name
-            self._eco_mode = plst.get('eco').name
-            self._nanoe_mode = plst.get('nanoe', None)
+            self._is_on = bool(data.parameters.power.value)
+            if data.parameters.inside_temperature is not None:
+                self._inside_temperature = data.parameters.inside_temperature
+            if data.parameters.outside_temperature is not None:
+                self._outside_temperature = data.parameters.outside_temperature
+            if data.parameters.target_temperature is not None:
+                self._target_temperature = data.parameters.target_temperature
+            self._fan_mode = data.parameters.fan_speed.name
+            self._swing_mode = data.parameters.vertical_swing_mode.name
+            self._swing_lr_mode = data.parameters.horizontal_swing_mode.name
+            self._hvac_mode = data.parameters.mode.name
+            self._eco_mode = data.parameters.eco_mode.name
+            self._nanoe_mode = data.parameters.nanoe_mode.name
 
         except Exception as e:
             _LOGGER.debug("Failed to set data for device {id}".format(**self.device))
@@ -122,7 +116,7 @@ class PanasonicApiDevice:
             _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
             try:
                 await self._api.refresh_token()
-                data= await self._api.get_device(self.id) # noqa: E501
+                data= await self._api.history(self.id,"Month",today) # noqa: E501
             except:
                 _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device)) # noqa: E501
                 return

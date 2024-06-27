@@ -10,6 +10,7 @@ from urllib.parse import quote_plus
 
 from . import constants
 from . import panasonicsession
+from .panasonicdevice import PanasonicDevice
 
 _current_time_zone = None
 def get_current_time_zone():
@@ -116,15 +117,12 @@ class ApiClient(panasonicsession.PanasonicSession):
     
     
 
-    async def get_device(self, device_id):
+    async def get_device(self, device_id) -> PanasonicDevice:
         device_guid = self._device_indexer.get(device_id)
 
         if device_guid:
             json_response = await self.execute_get(self._get_device_status_url(device_guid), "get_device", 200)
-            return {
-                'id': device_id,
-                'parameters': self._read_parameters(json_response['parameters'])
-            }
+            return PanasonicDevice(device_id, json_response)
         return None
 
     async def set_device(self, device_id, **kwargs):
@@ -173,10 +171,10 @@ class ApiClient(panasonicsession.PanasonicSession):
             fan_auto = 0
             device = await self.get_device(device_id)
 
-            if device and device['parameters']['airSwingHorizontal'].value == -1:
+            if device and device.parameters.horizontal_swing_mode == constants.AirSwingLR.Auto:
                 fan_auto = fan_auto | 1
 
-            if device and device['parameters']['airSwingVertical'].value == -1:
+            if device and device.parameters.vertical_swing_mode == constants.AirSwingUD.Auto:
                 fan_auto = fan_auto | 2
 
             if air_x is not None:
