@@ -10,6 +10,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.const import UnitOfTemperature
 
 from . import PANASONIC_DEVICES
+from .panasonic import PanasonicApiDevice
 
 from .const import (
     SUPPORT_FLAGS,
@@ -60,7 +61,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class PanasonicClimateDevice(ClimateEntity):
 
-    def __init__(self, api):
+    def __init__(self, api: PanasonicApiDevice):
         """Initialize the climate device."""
         self._api = api
         self._attr_hvac_action = HVACAction.IDLE
@@ -207,11 +208,7 @@ class PanasonicClimateDevice(ClimateEntity):
         """Return the current preset mode, e.g., home, away, temp.
         Requires SUPPORT_PRESET_MODE.
         """
-        eco = self._api.eco_mode
-        for key, value in PRESET_LIST.items():
-            if value == eco:
-                #_LOGGER.debug("Preset mode is {0}".format(key))
-                return key
+        return self._api.preset_mode
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
@@ -223,17 +220,17 @@ class PanasonicClimateDevice(ClimateEntity):
         Requires SUPPORT_PRESET_MODE.
         """
         #_LOGGER.debug("Preset modes are {0}".format(",".join(PRESET_LIST.keys())))
-        return list(PRESET_LIST.keys())
+        return self._api.available_presets
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return 16
+        return self._api.min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return 30
+        return self._api.max_temp
 
     @property
     def target_temp_step(self):

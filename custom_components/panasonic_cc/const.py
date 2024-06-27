@@ -29,6 +29,8 @@ DEFAULT_ENABLE_DAILY_ENERGY_SENSOR = False
 
 SENSOR_TYPE_TEMPERATURE = "temperature"
 
+PRESET_8_15 = "+8/15"
+
 SENSOR_TYPES = {
     ATTR_INSIDE_TEMPERATURE: {
         CONF_NAME: "Inside Temperature",
@@ -67,7 +69,8 @@ SUPPORT_FLAGS = (
 PRESET_LIST = {
     PRESET_NONE: 'Auto',
     PRESET_BOOST: 'Powerful',
-    PRESET_ECO: 'Quiet'
+    PRESET_ECO: 'Quiet',
+    PRESET_8_15: '+8/15'
 }
 
 OPERATION_LIST = {
