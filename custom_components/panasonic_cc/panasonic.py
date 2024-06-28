@@ -104,7 +104,7 @@ class PanasonicApiDevice:
             self._swing_lr_mode = data.parameters.horizontal_swing_mode.name
             self._hvac_mode = data.parameters.mode.name
             self._eco_mode = data.parameters.eco_mode.name
-            self._nanoe_mode = data.parameters.nanoe_mode.name
+            self._nanoe_mode = data.parameters.nanoe_mode
 
         except Exception as e:
             _LOGGER.debug("Failed to set data for device {id}".format(**self.device))
