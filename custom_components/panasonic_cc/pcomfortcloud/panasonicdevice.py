@@ -110,9 +110,7 @@ class PanasonicDeviceParameters:
         if 'outTemperature' in json and json['outTemperature'] != constants.INVALID_TEMPERATURE:
             self.outside_temperature = json['outTemperature']
 
-        if self.inside_temperature is None and self.outside_temperature is not None:
-            self.inside_temperature = self.outside_temperature
-            self.outside_temperature = None
+
 
 
 
