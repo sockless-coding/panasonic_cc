@@ -261,6 +261,14 @@ class PanasonicApiDevice:
             return 15 if self._details.features.summer_house == 2 else 10
         return 30
 
+    @cached_property
+    def support_eco_navi(self) -> bool:
+        return self._details.features.eco_navi
+    
+    @property
+    def eco_navi(self):
+        return self._details.parameters.eco_navi_mode
+
     async def turn_off(self):
         await self.set_device(
             { "power": self.constants.Power.Off }
@@ -447,6 +455,15 @@ class PanasonicApiDevice:
 
         await self.set_device(
             { "nanoe": self.constants.NanoeMode[nanoe_mode] }
+        )
+        await self.do_update()
+
+    async def set_eco_navi_mode(self, eco_navi: constants.EcoNaviMode):
+        """Set new nanoe mode."""
+        _LOGGER.debug("Set %s eco navi mode %s", self.name, eco_navi.name)
+
+        await self.set_device(
+            { "nanoe": eco_navi }
         )
         await self.do_update()
 
