@@ -23,8 +23,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_entities):
     devices = []
-    for device in hass.data[PANASONIC_DEVICES]:
+    device_list: list[PanasonicApiDevice] = hass.data[PANASONIC_DEVICES]
+    for device in device_list:
         devices.append(PanasonicNanoeSwitch(device))
+        if device.support_eco_navi:
+            devices.append(PanasonicEcoNaviSwitch(device))
     async_add_entities(devices)
 
 class PanasonicNanoeSwitch(ToggleEntity):
