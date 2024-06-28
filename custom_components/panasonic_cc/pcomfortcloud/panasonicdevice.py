@@ -78,6 +78,7 @@ class PanasonicDeviceParameters:
         self.vertical_swing_mode = constants.AirSwingUD.Mid
         self.eco_mode = constants.EcoMode.Auto
         self.nanoe_mode = constants.NanoeMode.Unavailable
+        self.eco_navi_mode = constants.EcoNaviMode.Off
         self.target_temperature: int = None
         self.inside_temperature: int = None
         self.outside_temperature: int = None
@@ -101,6 +102,8 @@ class PanasonicDeviceParameters:
             self.eco_mode = constants.EcoMode(json['ecoMode'])
         if 'nanoe' in json:
             self.nanoe_mode = constants.NanoeMode(json['nanoe'])
+        if 'ecoNavi' in json:
+            self.eco_navi_mode = constants.NanoeMode(json['ecoNavi'])
 
     def _load_temperature(self, json):
         if 'temperatureSet' in json and json['temperatureSet'] != constants.INVALID_TEMPERATURE:

@@ -2,6 +2,8 @@
 import logging
 
 from homeassistant.helpers.entity import ToggleEntity
+from .panasonic import PanasonicApiDevice
+from .pcomfortcloud import constants
 
 from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
 
@@ -12,6 +14,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for device in hass.data[PANASONIC_DEVICES]:
         devices.append(PanasonicNanoeSwitch(device))
+        if device.support_eco_navi:
+            devices.append(PanasonicEcoNaviSwitch(device))
     add_entities(devices)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -26,7 +30,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class PanasonicNanoeSwitch(ToggleEntity):
     """Representation of a zone."""
 
-    def __init__(self, api_device):
+    def __init__(self, api_device:PanasonicApiDevice):
         """Initialize the zone."""
         self._api = api_device
 
@@ -66,3 +70,47 @@ class PanasonicNanoeSwitch(ToggleEntity):
     async def async_turn_off(self, **kwargs):
         """Turn off nanoe."""
         await self._api.set_nanoe_mode(self._api.constants.NanoeMode.Off.name)
+
+class PanasonicEcoNaviSwitch(ToggleEntity):
+    """Representation of a zone."""
+
+    def __init__(self, api_device:PanasonicApiDevice):
+        """Initialize the zone."""
+        self._api = api_device
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._api.id}-eco-navi"
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:leaf"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._api.name} Eco Navi"
+
+    @property
+    def is_on(self):
+        """Return the state of the sensor."""
+        return self._api.nanoe_mode == constants.EcoNaviMode.On
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return self._api.device_info
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        await self._api.update()
+
+    async def async_turn_on(self, **kwargs):
+        """Turn on nanoe."""
+        await self._api.set_eco_navi_mode(constants.EcoNaviMode.On)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn off nanoe."""
+        await self._api.set_eco_navi_mode(constants.EcoNaviMode.Off)
