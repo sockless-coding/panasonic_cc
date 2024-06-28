@@ -104,7 +104,7 @@ class PanasonicApiDevice:
             self._swing_lr_mode = data.parameters.horizontal_swing_mode.name
             self._hvac_mode = data.parameters.mode.name
             self._eco_mode = data.parameters.eco_mode.name
-            self._nanoe_mode = data.parameters.nanoe_mode.name
+            self._nanoe_mode = data.parameters.nanoe_mode
 
         except Exception as e:
             _LOGGER.debug("Failed to set data for device {id}".format(**self.device))
@@ -317,13 +317,16 @@ class PanasonicApiDevice:
         """Set new preset mode."""
         _LOGGER.debug("Set %s ecomode %s", self.name, preset_mode)
         data = {
-            "power": constants.Power.On
+            "power": constants.Power.On,
+            "eco": constants.EcoMode.Auto
         }
         if self.in_summer_house_mode and preset_mode != PRESET_8_15:
             await self._exit_summer_house_mode(data)
 
-        if PRESET_LIST[preset_mode] in self.constants.EcoMode:
-            data["eco"] = constants.EcoMode[ PRESET_LIST[preset_mode] ]
+        if preset_mode == PRESET_ECO:
+            data["eco"] = constants.EcoMode.Quiet
+        elif preset_mode == PRESET_BOOST:
+            data["eco"] = constants.EcoMode.Powerful
         elif preset_mode == PRESET_8_15:
             await self._enter_summer_house_mode()
             data["mode"] = constants.OperationMode.Heat
