@@ -111,9 +111,6 @@ class PanasonicDeviceParameters:
             self.outside_temperature = json['outTemperature']
 
 
-
-
-
     def _load_swing_mode(self, json):
         if 'airSwingLR' in json:
             try:
