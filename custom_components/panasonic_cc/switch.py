@@ -4,6 +4,7 @@ import logging
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from .panasonic import PanasonicApiDevice
 from .pcomfortcloud import constants
+from .pcomfortcloud.panasonicdevice import PanasonicDeviceZone
 
 from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
 
@@ -28,6 +29,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         devices.append(PanasonicNanoeSwitch(device))
         if device.support_eco_navi:
             devices.append(PanasonicEcoNaviSwitch(device))
+        for zone in device.zones:
+            devices.append(PanasonicZoneSwitch(device, zone))
     async_add_entities(devices)
 
 class PanasonicNanoeSwitch(ToggleEntity):
@@ -80,8 +83,6 @@ class PanasonicEcoNaviSwitch(ToggleEntity):
     def __init__(self, api_device:PanasonicApiDevice):
         """Initialize the zone."""
         self._api = api_device
-       
-        
 
     @property
     def unique_id(self):
@@ -119,3 +120,48 @@ class PanasonicEcoNaviSwitch(ToggleEntity):
     async def async_turn_off(self, **kwargs):
         """Turn off nanoe."""
         await self._api.set_eco_navi_mode(constants.EcoNaviMode.Off)
+
+class PanasonicZoneSwitch(ToggleEntity):
+    """Representation of a zone."""
+
+    def __init__(self, api_device:PanasonicApiDevice, zone: PanasonicDeviceZone):
+        """Initialize the zone."""
+        self._api = api_device
+        self._zone = zone
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._api.id}-zone-{self._zone.id}"
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:thermostat"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._api.name} {self._zone.name}"
+
+    @property
+    def is_on(self):
+        """Return the state of the sensor."""
+        return self._zone.mode == constants.ZoneMode.On
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return self._api.device_info
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        await self._api.update()
+
+    async def async_turn_on(self, **kwargs):
+        """Turn on zone."""
+        await self._api.set_zone(self._zone.id, mode=constants.ZoneMode.On)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn off zone."""
+        await self._api.set_zone(self._zone.id, mode=constants.ZoneMode.Off)

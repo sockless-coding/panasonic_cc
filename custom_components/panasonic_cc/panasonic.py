@@ -268,6 +268,14 @@ class PanasonicApiDevice:
     @property
     def eco_navi(self):
         return self._details.parameters.eco_navi_mode
+    
+    @cached_property
+    def support_zones(self) -> bool:
+        return self._details.parameters.zones.count() > 0
+    
+    @property
+    def zones(self):
+        return self._details.parameters.zones
 
     async def turn_off(self):
         await self.set_device(
@@ -464,6 +472,31 @@ class PanasonicApiDevice:
 
         await self.set_device(
             { "ecoNavi": eco_navi }
+        )
+        await self.do_update()
+
+    async def set_zone(
+            self, 
+            zone_id: int, 
+            mode: constants.ZoneMode = None, 
+            level: int = None,
+            temperature: int = None,
+            spill: int = None):
+        """Set new zone."""
+        _LOGGER.debug("Set %s zone id: %s", self.name, zone_id)
+        data = {
+            "zoneId": zone_id
+        }
+        if mode is not None:
+            data["zoneOnOff"] = mode
+        if level is not None:
+            data["zoneLevel"] = level
+        if temperature is not None:
+            data["zoneTemperature"] = temperature
+        if spill is not None:
+            data["zoneSpill"] = spill
+        await self.set_device(
+            { "zoneParameters": data }
         )
         await self.do_update()
 
