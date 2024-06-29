@@ -501,7 +501,7 @@ class PanasonicApiDevice:
             "zoneId": zone_id
         }
         if mode is not None:
-            data["zoneOnOff"] = mode
+            data["zoneOnOff"] = mode.value
         if level is not None:
             data["zoneLevel"] = level
         if temperature is not None:
