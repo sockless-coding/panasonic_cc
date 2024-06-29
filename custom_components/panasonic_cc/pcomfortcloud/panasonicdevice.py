@@ -153,7 +153,7 @@ class PanasonicDeviceZone:
         self.level = 100
         self.spill = 0
         self.temperature: int = None
-        pass
+        self.load(json)
 
     def load(self, json):
         if not json:
