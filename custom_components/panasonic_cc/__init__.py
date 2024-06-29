@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_FORCE_OUTSIDE_SENSOR,
@@ -20,7 +21,8 @@ from .const import (
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_USE_PANASONIC_PRESET_NAMES,
     PANASONIC_DEVICES,
-    COMPONENT_TYPES)
+    COMPONENT_TYPES,
+    STARTUP)
 
 from .panasonic import PanasonicApiDevice
 
@@ -50,7 +52,10 @@ def setup(hass, config):
 
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up the Garo Wallbox component."""
+
     hass.data.setdefault(DOMAIN, {})
+    integration = await async_get_integration(hass, DOMAIN)
+    _LOGGER.info(STARTUP, integration.version)
     return True
 
 
@@ -75,16 +80,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await api.start_session()
 
     devices = api.get_devices()
-
+    _LOGGER.info("Got %s devices", len(devices))
     for device in devices:
         try:
             api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor, use_panasonic_preset_names)
-            await api_device.update()
+            await api_device.do_update()
             if enable_daily_energy_sensor:
                 await api_device.update_energy()
             hass.data[PANASONIC_DEVICES].append(api_device)
         except Exception as e:
-            _LOGGER.warning(f"Failed to setup device: {device['name']} ({e})")
+            _LOGGER.warning(f"Failed to setup device: {device.name} ({e})")
 
     if hass.data[PANASONIC_DEVICES]:
         for component in COMPONENT_TYPES:

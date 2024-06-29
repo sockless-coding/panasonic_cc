@@ -2,7 +2,7 @@
 Panasonic session, using Panasonic Comfort Cloud app api
 '''
 
-import hashlib
+import logging
 import re
 import aiohttp
 import time
@@ -10,7 +10,9 @@ from urllib.parse import quote_plus
 
 from . import constants
 from . import panasonicsession
-from .panasonicdevice import PanasonicDevice
+from .panasonicdevice import PanasonicDevice, PanasonicDeviceInfo
+
+_LOGGER = logging.getLogger(__name__)
 
 _current_time_zone = None
 def get_current_time_zone():
@@ -37,14 +39,20 @@ class ApiClient(panasonicsession.PanasonicSession):
         super().__init__(username, password, client, token_file_name, raw)
 
         self._groups = None
-        self._devices = None
+        self._devices: list[PanasonicDeviceInfo] = None
         self._device_indexer = {}
         self._raw = raw
         self._acc_client_id = None
 
     async def start_session(self):
         await super().start_session()
-        await self._get_groups()
+        try:
+            await self._get_groups()
+        except Exception as ex:
+            _LOGGER.warning("Could not get groups, trying to re-authenticate", exc_info= ex)
+            await self.reauthenticate()
+            await self._get_groups()
+
 
     async def refresh_token(self):
         await super().start_session()
@@ -69,19 +77,10 @@ class ApiClient(panasonicsession.PanasonicSession):
 
                 for device in device_list:
                     if device:
-                        if 'deviceHashGuid' in device:
-                            device_id = device['deviceHashGuid']
-                        else:
-                            device_id = hashlib.md5(
-                                device['deviceGuid'].encode('utf-8')).hexdigest()
-
-                        self._device_indexer[device_id] = device['deviceGuid']
-                        self._devices.append({
-                            'id': device_id,
-                            'name': device['deviceName'],
-                            'group': group['groupName'],
-                            'model': device['deviceModuleNumber'] if 'deviceModuleNumber' in device else ''
-                        })
+                        device_info = PanasonicDeviceInfo(device)
+                        if device_info.is_valid:
+                            self._device_indexer[device_info.id] = device_info.guid
+                            self._devices.append(device_info)
         return self._devices
 
     def dump(self, device_id):

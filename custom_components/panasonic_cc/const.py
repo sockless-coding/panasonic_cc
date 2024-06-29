@@ -94,3 +94,14 @@ COMPONENT_TYPES = [
     "switch",
     "button"
     ]
+
+STARTUP = """
+-------------------------------------------------------------------
+Panasonic Comfort Cloud
+
+Version: %s
+This is a custom integration
+If you have any issues with this you need to open an issue here:
+https://github.com/sockless-coding/panasonic_cc/issues
+-------------------------------------------------------------------
+"""

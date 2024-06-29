@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.components.climate.const import ATTR_HVAC_MODE
 from homeassistant.helpers.storage import Store
 from .pcomfortcloud.apiclient import ApiClient
-from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
+from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone, PanasonicDeviceInfo
 from .pcomfortcloud import constants
 
 from .const import OPERATION_LIST, PRESET_8_15, PRESET_NONE, PRESET_ECO, PRESET_BOOST, PRESET_QUIET, PRESET_POWERFUL
@@ -28,21 +28,21 @@ class PanasonicApiDevice:
             self, 
             hass: HomeAssistant, 
             api: ApiClient, 
-            device, 
+            info: PanasonicDeviceInfo, 
             force_outside_sensor, 
             enable_energy_sensor,
             use_panasonic_preset_names: bool): # noqa: E501
         from .pcomfortcloud import constants
         self.hass = hass
         self._api = api
-        self.device = device
+        self.info = info
         self._details: PanasonicDevice = None
         self.force_outside_sensor = force_outside_sensor
         self.enable_energy_sensor = enable_energy_sensor
         self._use_panasonic_preset_names = use_panasonic_preset_names
-        self.id = device['id']
-        self.name = device['name']
-        self.group = device['group']
+        self.id = info.id
+        self.name = info.name
+        self.group = info.group
         #self.data = None
         #self.energy_data = None
         self.last_energy_reading = 0
@@ -83,18 +83,13 @@ class PanasonicApiDevice:
         #_LOGGER.debug("Requesting data for device {id}".format(**self.device))
         try:
             data = await self._api.get_device(self.id)
-        except:
-            _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
-            try:
-                await self._api.refresh_token()
-                data = await self._api.get_device(self.id)
-            except:
-                _LOGGER.warning("Failed to renew token for device {id}, giving up for now".format(**self.device))  # noqa: E501
-                return
+        except Exception as ex:
+            _LOGGER.debug("Error updating device %s", self.id, exc_info=ex) # noqa: E501
+            return
 
         if data is None:
             self._available = False
-            _LOGGER.debug("Received no data for device {id}".format(**self.device))
+            _LOGGER.debug("Received no data for device {id}".format(**self.info))
             return
         self._details = data
         try:
@@ -115,7 +110,7 @@ class PanasonicApiDevice:
             self._nanoe_mode = data.parameters.nanoe_mode
 
         except Exception as e:
-            _LOGGER.debug("Failed to set data for device {id}".format(**self.device))
+            _LOGGER.debug("Failed to set data for device {id}".format(**self.info))
             _LOGGER.debug("Set data Error: {0}".format(e))
         self._available = True
         #self.data = data
@@ -127,16 +122,16 @@ class PanasonicApiDevice:
             data= await self._api.history(self.id,"Month",today) # noqa: E501
             
         except:
-            _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.device)) # noqa: E501
+            _LOGGER.debug("Error trying to get device {id} state, probably expired token, trying to update it...".format(**self.info)) # noqa: E501
             try:
                 await self._api.refresh_token()
                 data= await self._api.history(self.id,"Month",today) # noqa: E501
             except:
-                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.device)) # noqa: E501
+                _LOGGER.debug("Failed to renew token for device {id}, giving up for now".format(**self.info)) # noqa: E501
                 return
 
         if data is None:
-            _LOGGER.debug("Received no energy data for device {id}".format(**self.device)) # noqa: E501
+            _LOGGER.debug("Received no energy data for device {id}".format(**self.info)) # noqa: E501
             return
         
         if 'historyDataList' not in data['parameters']:
@@ -186,7 +181,7 @@ class PanasonicApiDevice:
         return {
             "identifiers": { ("panasonic_cc", self.id) },
             "manufacturer": "Panasonic",
-            "model": self.device['model'],
+            "model": self.info.model,
             "name": self.name,
             "sw_version": self._api.app_version
         }
@@ -281,7 +276,7 @@ class PanasonicApiDevice:
     def support_zones(self) -> bool:
         if not self._details:
             return False
-        return self._details.parameters.zones.count() > 0
+        return len(self._details.parameters.zones) > 0
     
     @property
     def zones(self):
@@ -382,6 +377,10 @@ class PanasonicApiDevice:
 
     async def _exit_summer_house_mode(self, device_data):
         stored_data = await self._store.async_load()
+        device_data['mode'] = constants.OperationMode.Heat
+        device_data["eco"] = constants.EcoMode.Auto
+        device_data['temperature'] = 20
+        device_data['fanSpeed'] = constants.FanSpeed.Auto
         if stored_data is None:
             return
         if 'mode' in stored_data:
@@ -390,6 +389,8 @@ class PanasonicApiDevice:
             device_data["eco"] = stored_data['ecoMode']
         if 'targetTemperature' in stored_data:
             device_data['temperature'] = stored_data['targetTemperature']
+            if device_data['temperature'] < 16:
+                device_data['temperature'] = 20
         if 'fanSpeed' in stored_data:
             device_data['fanSpeed'] = stored_data['fanSpeed']
 

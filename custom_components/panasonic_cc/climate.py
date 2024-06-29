@@ -131,8 +131,7 @@ class PanasonicClimateDevice(ClimateEntity):
             await self._api.turn_off()
         else:
             await self._api.set_hvac_mode(hvac_mode)
-        self._attr_min_temp = self._api.min_temp
-        self._attr_max_temp = self._api.max_temp
+        self._clear_min_max()
 
     @property
     def hvac_action(self):
@@ -219,8 +218,7 @@ class PanasonicClimateDevice(ClimateEntity):
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
         await self._api.set_preset_mode(preset_mode)
-        self._attr_min_temp = self._api.min_temp
-        self._attr_max_temp = self._api.max_temp
+        self._clear_min_max()
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
@@ -254,3 +252,9 @@ class PanasonicClimateDevice(ClimateEntity):
         except KeyError:
             pass
         return attrs
+    
+    def _clear_min_max(self):
+        self._attr_min_temp = self._api.min_temp
+        self._attr_max_temp = self._api.max_temp
+        del self.min_temp
+        del self.max_temp

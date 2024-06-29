@@ -13,6 +13,7 @@ from .ccappversion import CCAppVersion
 from .panasonicauthentication import PanasonicAuthentication
 from .panasonicrequestheader import PanasonicRequestHeader
 from .constants import BASE_PATH_ACC
+from .exceptions import LoginError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,12 +51,24 @@ class PanasonicSession:
         _LOGGER.debug("Starting Session")
         await self._settings.is_ready()
         if (not self._settings.has_refresh_token):
+            _LOGGER.debug("No refresh token found")
             await self._authentication.authenticate(self._username, self._password)
         if (not self._settings.is_access_token_valid):
+            _LOGGER.debug("Access token is not valid")
             try:
                 await self._authentication.refresh_token()
-            except:
+            except Exception as ex:
+                _LOGGER.debug("Failed to refresh token, trying to reauthenticate", exc_info= ex)
                 await self._authentication.authenticate(self._username, self._password)
+        if (not self._settings.is_access_token_valid):
+            _LOGGER.critical("Unable to create a valid access token")
+            raise LoginError()
+        _LOGGER.debug("Access token is valid")
+
+
+    async def reauthenticate(self):
+        _LOGGER.debug("Reauthenticating")
+        await self._authentication.authenticate(self._username, self._password)
 
     async def stop_session(self):
         _LOGGER.debug("Stopping Session")
@@ -67,7 +80,7 @@ class PanasonicSession:
         if json.loads(await response.text())["result"] != 0:
             # issue during logout, but do we really care?
             pass
-        try:            
+        try:
             self._settings.clear()
         except FileNotFoundError:
             pass

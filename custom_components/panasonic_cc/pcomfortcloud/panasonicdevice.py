@@ -1,8 +1,48 @@
 import logging
+import hashlib
 
 from . import constants
 
 _LOGGER = logging.getLogger(__name__)
+
+def read_enum(json, key, type, default_value):
+    if key not in json:
+        return default_value
+    try:
+        type(json[key])
+    except Exception as es:
+        _LOGGER.warn("Error reading property '%s' with value '%s'", key, json[key], exc_info= es)
+    return default_value
+
+def read_value(json, key, default_value):
+    return json[key] if key in json else default_value
+
+class PanasonicDeviceInfo:
+    def __init__(self, json = None) -> None:
+        self.id: str = None
+        self.guid = None
+        self.name = "Unknown Device"
+        self.group = 'My House'
+        self.model = ''
+        self.load(json)
+
+
+    def load(self, json):
+        if not json:
+            return
+        if 'deviceHashGuid' in json:
+            self.id = json['deviceHashGuid']
+        else:
+            self.id = hashlib.md5(json['deviceGuid'].encode('utf-8')).hexdigest()
+        self.guid = json['deviceGuid']
+        self.name = read_value(json, 'deviceName', self.name)
+        self.group = read_value(json, 'groupName', self.group)
+        self.model = read_value(json, 'deviceModuleNumber', self.model)
+
+    @property
+    def is_valid(self):
+        return self.id is not None and self.guid is not None
+        
 
 class PanasonicDevice:
     def __init__(self, id: str, json = None) -> None:
@@ -89,23 +129,18 @@ class PanasonicDeviceParameters:
     def load(self, json):
         if not json:
             return
-        if 'operate' in json:
-            self.power = constants.Power(json['operate'])
-        if 'operationMode' in json:
-            self.mode = constants.OperationMode(json['operationMode'])
-        if 'fanSpeed' in json:
-            self.fan_speed = constants.FanSpeed(json['fanSpeed'])
-
+        self.power = read_enum(json, 'operate', constants.Power, self.power)
+        self.mode = read_enum(json, 'operationMode', constants.OperationMode, self.mode)
+        self.fan_speed = read_enum(json, 'fanSpeed', constants.FanSpeed, self.fan_speed)
+        
         self._load_swing_mode(json)
         self._load_temperature(json)
         self._load_zones(json)
 
-        if 'ecoMode' in json:
-            self.eco_mode = constants.EcoMode(json['ecoMode'])
-        if 'nanoe' in json:
-            self.nanoe_mode = constants.NanoeMode(json['nanoe'])
-        if 'ecoNavi' in json:
-            self.eco_navi_mode = constants.EcoNaviMode(json['ecoNavi'])
+        self.eco_mode = read_enum(json, 'ecoMode', constants.EcoMode, self.eco_mode)
+        self.nanoe_mode = read_enum(json, 'nanoe', constants.NanoeMode, self.nanoe_mode)
+        self.eco_mode = read_enum(json, 'ecoNavi', constants.EcoNaviMode, self.eco_navi_mode)
+        
 
     def _load_zones(self, json):
         if 'zoneParameters' not in json:
@@ -162,8 +197,7 @@ class PanasonicDeviceZone:
             self.id = json['zoneId']
         if 'zoneName' in json:
             self.name = json['zoneName']
-        if 'zoneOnOff' in json:
-            self.mode = constants.ZoneMode(json['zoneOnOff'])
+        self.mode = read_enum(json, 'zoneOnOff', constants.ZoneMode, self.mode)
         if 'zoneLevel' in json:
             self.level = json['zoneLevel']
         if 'zoneSpill' in json:
