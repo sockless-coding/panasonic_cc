@@ -82,6 +82,7 @@ class PanasonicDeviceParameters:
         self.target_temperature: int = None
         self.inside_temperature: int = None
         self.outside_temperature: int = None
+        self.zones: list[PanasonicDeviceZone] = []
         self.load(json)
         
 
@@ -97,6 +98,7 @@ class PanasonicDeviceParameters:
 
         self._load_swing_mode(json)
         self._load_temperature(json)
+        self._load_zones(json)
 
         if 'ecoMode' in json:
             self.eco_mode = constants.EcoMode(json['ecoMode'])
@@ -104,6 +106,13 @@ class PanasonicDeviceParameters:
             self.nanoe_mode = constants.NanoeMode(json['nanoe'])
         if 'ecoNavi' in json:
             self.eco_navi_mode = constants.EcoNaviMode(json['ecoNavi'])
+
+    def _load_zones(self, json):
+        if 'zoneParameters' not in json:
+            return
+        for zone in json['zoneParameters']:
+            self.zones.append(PanasonicDeviceZone(zone))
+        
 
     def _load_temperature(self, json):
         if 'temperatureSet' in json and json['temperatureSet'] != constants.INVALID_TEMPERATURE:
@@ -136,3 +145,31 @@ class PanasonicDeviceParameters:
 
         
 
+class PanasonicDeviceZone:
+    def __init__(self, json = None) -> None:
+        self.id:int = None
+        self.name:str = None
+        self.mode = constants.ZoneMode.Off
+        self.level = 100
+        self.spill = 0
+        self.temperature: int = None
+        pass
+
+    def load(self, json):
+        if not json:
+            return
+        if 'zoneId' in json:
+            self.id = json['zoneId']
+        if 'zoneName' in json:
+            self.name = json['zoneName']
+        if 'zoneOnOff' in json:
+            self.mode = constants.ZoneMode(json['zoneOnOff'])
+        if 'zoneLevel' in json:
+            self.level = json['zoneLevel']
+        if 'zoneSpill' in json:
+            self.spill = json['zoneSpill']
+        if 'zoneTemperature' in json:
+            self.temperature = json['zoneTemperature']
+            if self.temperature == -255:
+                self.temperature = None
+        

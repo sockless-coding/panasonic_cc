@@ -73,6 +73,10 @@ class EcoNaviMode(Enum):
     Off = 0
     On = 1
 
+class ZoneMode(Enum):
+    Off = 0
+    On = 1
+
 INVALID_TEMPERATURE = 126
 
 DEFAULT_X_APP_VERSION = "1.21.0"
