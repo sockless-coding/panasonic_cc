@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.components.climate.const import ATTR_HVAC_MODE
 from homeassistant.helpers.storage import Store
 from .pcomfortcloud.apiclient import ApiClient
-from .pcomfortcloud.panasonicdevice import PanasonicDevice
+from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
 from .pcomfortcloud import constants
 
 from .const import OPERATION_LIST, PRESET_8_15, PRESET_NONE, PRESET_ECO, PRESET_BOOST, PRESET_QUIET, PRESET_POWERFUL
@@ -279,10 +279,14 @@ class PanasonicApiDevice:
     
     @cached_property
     def support_zones(self) -> bool:
+        if not self._details:
+            return False
         return self._details.parameters.zones.count() > 0
     
     @property
     def zones(self):
+        if not self._details:
+            return [PanasonicDeviceZone]
         return self._details.parameters.zones
 
     async def turn_off(self):
