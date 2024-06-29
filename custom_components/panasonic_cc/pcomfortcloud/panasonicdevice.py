@@ -9,7 +9,7 @@ def read_enum(json, key, type, default_value):
     if key not in json:
         return default_value
     try:
-        type(json[key])
+        return type(json[key])
     except Exception as es:
         _LOGGER.warn("Error reading property '%s' with value '%s'", key, json[key], exc_info= es)
     return default_value
@@ -127,6 +127,7 @@ class PanasonicDeviceParameters:
         
 
     def load(self, json):
+        _LOGGER.debug('Loading device paramters, has data: %s', json is not None)
         if not json:
             return
         self.power = read_enum(json, 'operate', constants.Power, self.power)

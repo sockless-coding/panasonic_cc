@@ -236,7 +236,10 @@ class PanasonicClimateDevice(ClimateEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
+        was_in_summer_house_mode = self._api.in_summer_house_mode
         await self._api.update()
+        if was_in_summer_house_mode != self._api.in_summer_house_mode or self.min_temp != self._api.min_temp:
+            self._clear_min_max()
 
     @property
     def device_info(self):

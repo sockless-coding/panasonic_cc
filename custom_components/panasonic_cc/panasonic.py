@@ -84,16 +84,16 @@ class PanasonicApiDevice:
         try:
             data = await self._api.get_device(self.id)
         except Exception as ex:
-            _LOGGER.debug("Error updating device %s", self.id, exc_info=ex) # noqa: E501
+            _LOGGER.warning("Error updating device %s", self.id, exc_info=ex) # noqa: E501
             return
 
         if data is None:
             self._available = False
-            _LOGGER.debug("Received no data for device {id}".format(**self.info))
+            _LOGGER.warning("Received no data for device {id}".format(**self.info))
             return
         self._details = data
         try:
-            _LOGGER.debug("Data: {}".format(data))
+            _LOGGER.debug("Power state: %s", data.parameters.power.value)
 
             self._is_on = bool(data.parameters.power.value)
             if data.parameters.inside_temperature is not None:
