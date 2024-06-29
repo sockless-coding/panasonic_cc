@@ -166,6 +166,12 @@ class ApiClient(panasonicsession.PanasonicSession):
                         value != constants.NanoeMode.Unavailable:
                     parameters['nanoe'] = value.value
 
+                if key == 'ecoNavi' and isinstance(value, constants.EcoNaviMode):
+                    parameters['ecoNavi'] = value.value
+
+                if key == 'zoneParameters' and value is not None:
+                    parameters['zoneParameters'] = value
+
         # routine to set the auto mode of fan (either horizontal, vertical, both or disabled)
         if air_x is not None or air_y is not None:
             fan_auto = 0
