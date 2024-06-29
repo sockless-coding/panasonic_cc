@@ -1,7 +1,7 @@
 """Support for Panasonic Nanoe."""
 import logging
 
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from .panasonic import PanasonicApiDevice
 from .pcomfortcloud import constants
 
@@ -80,6 +80,8 @@ class PanasonicEcoNaviSwitch(ToggleEntity):
     def __init__(self, api_device:PanasonicApiDevice):
         """Initialize the zone."""
         self._api = api_device
+       
+        
 
     @property
     def unique_id(self):

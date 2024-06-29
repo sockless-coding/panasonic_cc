@@ -459,11 +459,11 @@ class PanasonicApiDevice:
         await self.do_update()
 
     async def set_eco_navi_mode(self, eco_navi: constants.EcoNaviMode):
-        """Set new nanoe mode."""
+        """Set new eco navi mode."""
         _LOGGER.debug("Set %s eco navi mode %s", self.name, eco_navi.name)
 
         await self.set_device(
-            { "nanoe": eco_navi }
+            { "ecoNavi": eco_navi }
         )
         await self.do_update()
 

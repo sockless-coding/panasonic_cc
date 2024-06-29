@@ -103,7 +103,7 @@ class PanasonicDeviceParameters:
         if 'nanoe' in json:
             self.nanoe_mode = constants.NanoeMode(json['nanoe'])
         if 'ecoNavi' in json:
-            self.eco_navi_mode = constants.NanoeMode(json['ecoNavi'])
+            self.eco_navi_mode = constants.EcoNaviMode(json['ecoNavi'])
 
     def _load_temperature(self, json):
         if 'temperatureSet' in json and json['temperatureSet'] != constants.INVALID_TEMPERATURE:
