@@ -64,6 +64,7 @@ class PanasonicApiDevice:
         self._hvac_mode = None
         self._eco_mode = None
         self._nanoe_mode = None
+        self._eco_navi_mode = None
         self._daily_energy = None
 
         self.features = None
@@ -108,6 +109,7 @@ class PanasonicApiDevice:
             self._hvac_mode = data.parameters.mode.name
             self._eco_mode = data.parameters.eco_mode.name
             self._nanoe_mode = data.parameters.nanoe_mode
+            self._eco_navi_mode = data.parameters.eco_navi_mode
 
         except Exception as e:
             _LOGGER.debug("Failed to set data for device {id}".format(**self.info))
@@ -235,6 +237,10 @@ class PanasonicApiDevice:
     @property
     def nanoe_mode(self):
         return self._nanoe_mode
+
+    @property
+    def eco_navi_mode(self):
+        return self._eco_navi_mode
 
     @property
     def energy_sensor_enabled(self):
