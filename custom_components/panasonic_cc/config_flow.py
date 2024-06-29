@@ -15,7 +15,9 @@ from .const import (
     KEY_DOMAIN,
     CONF_FORCE_OUTSIDE_SENSOR,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
-    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+    CONF_USE_PANASONIC_PRESET_NAMES,
+    DEFAULT_USE_PANASONIC_PRESET_NAMES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +46,8 @@ class FlowHandler(config_entries.ConfigFlow):
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
             CONF_FORCE_OUTSIDE_SENSOR: False,
-            CONF_ENABLE_DAILY_ENERGY_SENSOR: DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+            CONF_ENABLE_DAILY_ENERGY_SENSOR: DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+            CONF_USE_PANASONIC_PRESET_NAMES: DEFAULT_USE_PANASONIC_PRESET_NAMES
         })
 
     async def _create_device(self, username, password):
@@ -119,6 +122,12 @@ class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_ENABLE_DAILY_ENERGY_SENSOR,
                         default=self.config_entry.options.get(
                             CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_USE_PANASONIC_PRESET_NAMES,
+                        default=self.config_entry.options.get(
+                            CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES
                         ),
                     ): bool,
                 }

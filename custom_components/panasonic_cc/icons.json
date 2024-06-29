@@ -1,0 +1,18 @@
+{
+    "entity": {
+      "climate": {
+        "panasonic_climate":{
+            "state_attributes": {
+                "preset_mode": {
+                    "state": {
+                        "+8/15": "mdi:weather-sunny",
+                        "quiet": "mdi:leaf",
+                        "powerful": "mdi:arm-flex"
+                    }
+                }
+            }
+        }
+      }
+    }
+  }
+  
