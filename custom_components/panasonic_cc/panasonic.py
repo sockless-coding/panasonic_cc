@@ -265,6 +265,10 @@ class PanasonicApiDevice:
         return 30
 
     @cached_property
+    def support_nanoe(self) -> bool:
+        return self._details.features.nanoe
+
+    @cached_property
     def support_eco_navi(self) -> bool:
         return self._details.features.eco_navi
     
