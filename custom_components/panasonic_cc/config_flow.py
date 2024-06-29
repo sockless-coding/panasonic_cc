@@ -16,6 +16,7 @@ from .const import (
     CONF_FORCE_OUTSIDE_SENSOR,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+    DEFAULT_FORCE_OUTSIDE_SENSOR,
     CONF_USE_PANASONIC_PRESET_NAMES,
     DEFAULT_USE_PANASONIC_PRESET_NAMES)
 
@@ -45,7 +46,7 @@ class FlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(title="", data={
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
-            CONF_FORCE_OUTSIDE_SENSOR: False,
+            CONF_FORCE_OUTSIDE_SENSOR: DEFAULT_FORCE_OUTSIDE_SENSOR,
             CONF_ENABLE_DAILY_ENERGY_SENSOR: DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
             CONF_USE_PANASONIC_PRESET_NAMES: DEFAULT_USE_PANASONIC_PRESET_NAMES
         })
@@ -115,7 +116,7 @@ class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_FORCE_OUTSIDE_SENSOR,
                         default=self.config_entry.options.get(
-                            CONF_FORCE_OUTSIDE_SENSOR, False
+                            CONF_FORCE_OUTSIDE_SENSOR, DEFAULT_FORCE_OUTSIDE_SENSOR
                         ),
                     ): bool,
                     vol.Optional(
