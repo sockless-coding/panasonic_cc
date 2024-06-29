@@ -62,10 +62,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class PanasonicClimateDevice(ClimateEntity):
 
     def __init__(self, api: PanasonicApiDevice):
-        """Initialize the climate device."""
+        """Initialize the climate device."""        
         self._api = api
         self._attr_hvac_action = HVACAction.IDLE
         self._enable_turn_on_off_backwards_compatibility = False
+        self._attr_translation_key = 'panasonic_climate'
+        self._attr_min_temp = api.min_temp
+        self._attr_max_temp = api.max_temp
+
 
     @property
     def unique_id(self):
@@ -127,6 +131,8 @@ class PanasonicClimateDevice(ClimateEntity):
             await self._api.turn_off()
         else:
             await self._api.set_hvac_mode(hvac_mode)
+        self._attr_min_temp = self._api.min_temp
+        self._attr_max_temp = self._api.max_temp
 
     @property
     def hvac_action(self):
@@ -213,6 +219,8 @@ class PanasonicClimateDevice(ClimateEntity):
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
         await self._api.set_preset_mode(preset_mode)
+        self._attr_min_temp = self._api.min_temp
+        self._attr_max_temp = self._api.max_temp
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
@@ -222,15 +230,6 @@ class PanasonicClimateDevice(ClimateEntity):
         #_LOGGER.debug("Preset modes are {0}".format(",".join(PRESET_LIST.keys())))
         return self._api.available_presets
 
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return self._api.min_temp
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return self._api.max_temp
 
     @property
     def target_temp_step(self):

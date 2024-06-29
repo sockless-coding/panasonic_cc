@@ -18,6 +18,7 @@ from .const import (
     DEFAULT_FORCE_OUTSIDE_SENSOR,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+    CONF_USE_PANASONIC_PRESET_NAMES,
     PANASONIC_DEVICES,
     COMPONENT_TYPES)
 
@@ -67,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if CONF_FORCE_OUTSIDE_SENSOR in conf:
         force_outside_sensor = conf[CONF_FORCE_OUTSIDE_SENSOR]
     enable_daily_energy_sensor = entry.options.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
+    use_panasonic_preset_names = entry.options.get(CONF_USE_PANASONIC_PRESET_NAMES, False)
 
     client = async_get_clientsession(hass)
     api = pcomfortcloud.ApiClient(username, password, client)
@@ -76,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     for device in devices:
         try:
-            api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor)
+            api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor, use_panasonic_preset_names)
             await api_device.update()
             if enable_daily_energy_sensor:
                 await api_device.update_energy()

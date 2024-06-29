@@ -14,7 +14,7 @@ from .pcomfortcloud.apiclient import ApiClient
 from .pcomfortcloud.panasonicdevice import PanasonicDevice
 from .pcomfortcloud import constants
 
-from .const import PRESET_LIST, OPERATION_LIST, PRESET_8_15, PRESET_NONE, PRESET_ECO, PRESET_BOOST
+from .const import OPERATION_LIST, PRESET_8_15, PRESET_NONE, PRESET_ECO, PRESET_BOOST, PRESET_QUIET, PRESET_POWERFUL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,14 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 class PanasonicApiDevice:
 
-    def __init__(self, hass: HomeAssistant, api: ApiClient, device, force_outside_sensor, enable_energy_sensor): # noqa: E501
+    def __init__(
+            self, 
+            hass: HomeAssistant, 
+            api: ApiClient, 
+            device, 
+            force_outside_sensor, 
+            enable_energy_sensor,
+            use_panasonic_preset_names: bool): # noqa: E501
         from .pcomfortcloud import constants
         self.hass = hass
         self._api = api
@@ -32,6 +39,7 @@ class PanasonicApiDevice:
         self._details: PanasonicDevice = None
         self.force_outside_sensor = force_outside_sensor
         self.enable_energy_sensor = enable_energy_sensor
+        self._use_panasonic_preset_names = use_panasonic_preset_names
         self.id = device['id']
         self.name = device['name']
         self.group = device['group']
@@ -289,13 +297,18 @@ class PanasonicApiDevice:
         )
         await self.do_update()
 
+    def _get_quiet_preset(self):
+        return PRESET_QUIET if self._use_panasonic_preset_names else PRESET_ECO
+    def _get_powerful_preset(self):
+        return PRESET_POWERFUL if self._use_panasonic_preset_names else PRESET_BOOST
+
     @cached_property
     def available_presets(self):
         presets = [PRESET_NONE]
         if self._details.features.quiet_mode:
-            presets.append(PRESET_ECO)
+            presets.append(self._get_quiet_preset())
         if self._details.features.powerful_mode:
-            presets.append(PRESET_BOOST)
+            presets.append(self._get_powerful_preset())
         if self._details.features.summer_house > 0:
             presets.append(PRESET_8_15)
         return presets
@@ -306,9 +319,9 @@ class PanasonicApiDevice:
             return PRESET_NONE
         match self._details.parameters.eco_mode:
             case constants.EcoMode.Quiet:
-                return PRESET_ECO
+                return self._get_quiet_preset()
             case constants.EcoMode.Powerful:
-                return PRESET_BOOST
+                return self._get_powerful_preset()
         if self.in_summer_house_mode:
             return PRESET_8_15        
 
@@ -339,9 +352,9 @@ class PanasonicApiDevice:
         if self.in_summer_house_mode and preset_mode != PRESET_8_15:
             await self._exit_summer_house_mode(data)
 
-        if preset_mode == PRESET_ECO:
+        if preset_mode == self._get_quiet_preset():
             data["eco"] = constants.EcoMode.Quiet
-        elif preset_mode == PRESET_BOOST:
+        elif preset_mode == self._get_powerful_preset():
             data["eco"] = constants.EcoMode.Powerful
         elif preset_mode == PRESET_8_15:
             await self._enter_summer_house_mode()
