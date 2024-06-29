@@ -1,5 +1,5 @@
 """Constants for Panasonic Cloud."""
-from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, EntityCategory
 from homeassistant.components.climate.const import (
     HVACMode, ClimateEntityFeature,
     PRESET_ECO, PRESET_NONE, PRESET_BOOST)

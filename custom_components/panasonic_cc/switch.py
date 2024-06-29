@@ -39,6 +39,7 @@ class PanasonicNanoeSwitch(ToggleEntity):
     def __init__(self, api_device:PanasonicApiDevice):
         """Initialize the zone."""
         self._api = api_device
+        self._attr_entity_category = EntityCategory.CONFIG
 
     @property
     def unique_id(self):
@@ -83,6 +84,7 @@ class PanasonicEcoNaviSwitch(ToggleEntity):
     def __init__(self, api_device:PanasonicApiDevice):
         """Initialize the zone."""
         self._api = api_device
+        self._attr_entity_category = EntityCategory.CONFIG
 
     @property
     def unique_id(self):
@@ -128,6 +130,7 @@ class PanasonicZoneSwitch(ToggleEntity):
         """Initialize the zone."""
         self._api = api_device
         self._zone = zone
+        self._attr_entity_category = EntityCategory.CONFIG
 
     @property
     def unique_id(self):
