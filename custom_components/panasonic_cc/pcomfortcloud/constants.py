@@ -75,6 +75,11 @@ class EcoNaviMode(Enum):
     Off = 1
     On = 2
 
+class EcoFunctionMode(Enum):
+    Unavailable = 0
+    Off = 1
+    On = 2
+
 class ZoneMode(Enum):
     Off = 0
     On = 1
