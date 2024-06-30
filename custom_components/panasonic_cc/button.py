@@ -1,6 +1,7 @@
 import logging
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.const import EntityCategory
 from . import PANASONIC_DEVICES
 from .panasonic import PanasonicApiDevice
 
@@ -18,6 +19,7 @@ class UpdateAppVersionButton(ButtonEntity):
     def __init__(self, device: PanasonicApiDevice, hass):
         self._hass = hass
         self._device = device
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
     
     @property
     def icon(self):
