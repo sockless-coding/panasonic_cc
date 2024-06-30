@@ -71,8 +71,9 @@ class NanoeMode(Enum):
     All = 4
 
 class EcoNaviMode(Enum):
-    Off = 0
-    On = 1
+    Unavailable = 0
+    Off = 1
+    On = 2
 
 class ZoneMode(Enum):
     Off = 0

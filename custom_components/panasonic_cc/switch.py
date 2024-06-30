@@ -35,10 +35,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(devices)
 
 class PanasonicNanoeSwitch(ToggleEntity):
-    """Representation of a zone."""
+    """Representation of Nanoe."""
 
     def __init__(self, api_device:PanasonicApiDevice):
-        """Initialize the zone."""
+        """Initialize the Nanoe."""
         self._api = api_device
         self._attr_entity_category = EntityCategory.CONFIG
 
@@ -80,7 +80,7 @@ class PanasonicNanoeSwitch(ToggleEntity):
         await self._api.set_nanoe_mode(self._api.constants.NanoeMode.Off.name)
 
 class PanasonicEcoNaviSwitch(ToggleEntity):
-    """Representation of a zone."""
+    """Representation of ECONAVI."""
 
     def __init__(self, api_device:PanasonicApiDevice):
         """Initialize the zone."""
@@ -100,12 +100,12 @@ class PanasonicEcoNaviSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._api.name} Eco Navi"
+        return f"{self._api.name} ECONAVI"
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        return self._api.nanoe_mode == constants.EcoNaviMode.On
+        return self._api.eco_navi_mode == self._api.constants.EcoNaviMode.On
 
     @property
     def device_info(self):
@@ -117,11 +117,11 @@ class PanasonicEcoNaviSwitch(ToggleEntity):
         await self._api.update()
 
     async def async_turn_on(self, **kwargs):
-        """Turn on nanoe."""
+        """Turn on ECONAVI."""
         await self._api.set_eco_navi_mode(constants.EcoNaviMode.On)
 
     async def async_turn_off(self, **kwargs):
-        """Turn off nanoe."""
+        """Turn off ECONAVI."""
         await self._api.set_eco_navi_mode(constants.EcoNaviMode.Off)
 
 class PanasonicZoneSwitch(ToggleEntity):
