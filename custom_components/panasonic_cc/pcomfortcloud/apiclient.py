@@ -168,6 +168,9 @@ class ApiClient(panasonicsession.PanasonicSession):
                 if key == 'ecoNavi' and isinstance(value, constants.EcoNaviMode):
                     parameters['ecoNavi'] = value.value
 
+                if key == 'ecoFunctionData' and isinstance(value, constants.EcoFunctionMode):
+                    parameters['ecoFunctionData'] = value.value
+
                 if key == 'zoneParameters' and value is not None:
                     parameters['zoneParameters'] = value
 

@@ -241,6 +241,14 @@ class PanasonicApiDevice:
     @property
     def eco_navi_mode(self):
         return self._eco_navi_mode
+    
+    @cached_property
+    def support_eco_function(self):
+        return self._details.features.eco_function > 0 if self._details is not None else False
+
+    @property
+    def eco_function_mode(self):
+        return self._details.parameters.eco_function_mode
 
     @property
     def energy_sensor_enabled(self):
@@ -496,6 +504,16 @@ class PanasonicApiDevice:
 
         await self.set_device(
             { "ecoNavi": eco_navi }
+        )
+        await self.do_update()
+
+    
+    async def set_eco_function_mode(self, eco_function: constants.EcoFunctionMode):
+        """Set new eco function mode."""
+        _LOGGER.debug("Set %s ai eco mode %s", self.name, eco_function.name)
+
+        await self.set_device(
+            { "ecoFunctionData": eco_function }
         )
         await self.do_update()
 

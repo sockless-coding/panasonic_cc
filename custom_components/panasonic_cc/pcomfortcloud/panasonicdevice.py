@@ -70,7 +70,7 @@ class PanasonicDeviceFeatures:
         self.quiet_mode = False
         self.air_swing_lr = False
         self.auto_swing_ud = False
-        self.eco_eunction = 0
+        self.eco_function = 0
         self.load(json)
 
     def load(self, json):
@@ -107,7 +107,7 @@ class PanasonicDeviceFeatures:
         if 'autoSwingUD' in json:
             self.auto_swing_ud = json['autoSwingUD']
         if 'ecoFunction' in json:
-            self.eco_eunction = json['ecoFunction']
+            self.eco_function = json['ecoFunction']
         
 class PanasonicDeviceParameters:
     def __init__(self, json = None) -> None:
@@ -119,6 +119,7 @@ class PanasonicDeviceParameters:
         self.eco_mode = constants.EcoMode.Auto
         self.nanoe_mode = constants.NanoeMode.Unavailable
         self.eco_navi_mode = constants.EcoNaviMode.Unavailable
+        self.eco_function_mode = constants.EcoFunctionMode.Unavailable
         self.target_temperature: int = None
         self.inside_temperature: int = None
         self.outside_temperature: int = None
@@ -141,6 +142,7 @@ class PanasonicDeviceParameters:
         self.eco_mode = read_enum(json, 'ecoMode', constants.EcoMode, self.eco_mode)
         self.nanoe_mode = read_enum(json, 'nanoe', constants.NanoeMode, self.nanoe_mode)
         self.eco_navi_mode = read_enum(json, 'ecoNavi', constants.EcoNaviMode, self.eco_navi_mode)
+        self.eco_function_mode = read_enum(json, 'ecoFunctionData', constants.EcoFunctionMode, self.eco_function_mode)
         
 
     def _load_zones(self, json):
