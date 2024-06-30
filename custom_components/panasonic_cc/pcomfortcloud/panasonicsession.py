@@ -103,7 +103,8 @@ class PanasonicSession:
             )
         except (aiohttp.client_exceptions.ClientError,
                 aiohttp.http_exceptions.HttpProcessingError,
-                aiohttp.web_exceptions.HTTPError) as ex:            
+                aiohttp.web_exceptions.HTTPError) as ex:
+            _LOGGER.error("POST url: %s, data: %s", url, json_data)
             raise exceptions.RequestError(ex)
 
         
