@@ -14,20 +14,12 @@ from .panasonicauthentication import PanasonicAuthentication
 from .panasonicrequestheader import PanasonicRequestHeader
 from .constants import BASE_PATH_ACC
 from .exceptions import LoginError
-from .helpers import has_new_version_been_published
+from .helpers import has_new_version_been_published, check_response
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-
-def check_response(response: aiohttp.ClientResponse, function_description, expected_status):
-    
-    if response.status != expected_status:
-        raise exceptions.ResponseError(
-            f"({function_description}: Expected status code {expected_status}, received: {response.status}: " +
-            f"{response.text}"
-        )
 
 
 class PanasonicSession:
@@ -78,7 +70,7 @@ class PanasonicSession:
             f"{BASE_PATH_ACC}/auth/v2/logout",
             headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
         )
-        check_response(response, "logout", 200)
+        await check_response(response, "logout", 200)
         if json.loads(await response.text())["result"] != 0:
             # issue during logout, but do we really care?
             pass
@@ -119,7 +111,7 @@ class PanasonicSession:
 
         
         self._print_response_if_raw_is_set(response, function_description)
-        check_response(response, function_description, expected_status_code)
+        await check_response(response, function_description, expected_status_code, payload=json_data)
         response_text = await response.text()
         _LOGGER.debug("POST url: %s, data: %s, response: %s", url, json_data, response_text)
         return json.loads(response_text)
@@ -145,7 +137,7 @@ class PanasonicSession:
             raise exceptions.RequestError(ex)
 
         self._print_response_if_raw_is_set(response, function_description)
-        check_response(response, function_description, expected_status_code)
+        await check_response(response, function_description, expected_status_code)
         response_text = await response.text()
         _LOGGER.debug("GET url: %s, response: %s", url, response_text)
         return json.loads(response_text)

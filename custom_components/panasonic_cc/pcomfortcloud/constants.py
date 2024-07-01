@@ -105,3 +105,11 @@ BASE_PATH_AUTH = "https://authglb.digital.panasonic.com"
 BASE_PATH_ACC = "https://accsmart.panasonic.com"
 AUTH_API_USER_AGENT = "okhttp/4.10.0"
 AUTH_BROWSER_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36"
+
+CHECK_RESPONSE_ERROR_MESSAGE = """Error in %s
+Expected status code '%s' but received '%s'
+Response body: %s"""
+CHECK_RESPONSE_ERROR_MESSAGE_WITH_PAYLOAD = """Error in %s
+Expected status code '%s' but received '%s'
+Payload: %s
+Response body: %s"""

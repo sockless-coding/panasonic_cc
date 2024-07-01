@@ -47,6 +47,7 @@ class PanasonicNanoeSwitch(ToggleEntity):
         """Initialize the Nanoe."""
         self._api = api_device
         self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_entity_registry_enabled_default
 
     @property
     def unique_id(self):

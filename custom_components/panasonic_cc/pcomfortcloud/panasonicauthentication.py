@@ -16,22 +16,14 @@ from .ccappversion import CCAppVersion
 from .panasonicrequestheader import PanasonicRequestHeader
 from . import exceptions
 from .constants import (APP_CLIENT_ID, AUTH_0_CLIENT, BASE_PATH_ACC, BASE_PATH_AUTH, REDIRECT_URI, AUTH_API_USER_AGENT, AUTH_BROWSER_USER_AGENT)
-from .helpers import has_new_version_been_published
+from .helpers import has_new_version_been_published, check_response
 
 _LOGGER = logging.getLogger(__name__)
 
 def generate_random_string(length):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
 
-async def check_response(response: aiohttp.ClientResponse, function_description, expected_status):
-    
-    if response.status != expected_status:
-        response_text = await response.text()
-        _LOGGER.error("%s: Expected status code %s, received: %s: %s", function_description, expected_status, response.status, response_text)
-        raise exceptions.ResponseError(
-            f"({function_description}: Expected status code {expected_status}, received: {response.status}: " +
-            f"{response_text}"
-        )
+
     
 def get_querystring_parameter_from_header_entry_url(response: aiohttp.ClientResponse, header_entry, querystring_parameter):
     header_entry_value = response.headers[header_entry]
