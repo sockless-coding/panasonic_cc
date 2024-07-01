@@ -16,6 +16,7 @@ from .ccappversion import CCAppVersion
 from .panasonicrequestheader import PanasonicRequestHeader
 from . import exceptions
 from .constants import (APP_CLIENT_ID, AUTH_0_CLIENT, BASE_PATH_ACC, BASE_PATH_AUTH, REDIRECT_URI, AUTH_API_USER_AGENT, AUTH_BROWSER_USER_AGENT)
+from .helpers import has_new_version_been_published
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,14 +250,27 @@ class PanasonicAuthentication:
         # RETRIEVE ACC_CLIENT_ID
         # ------------------------------------------------------------------
         _LOGGER.debug("Retrieving acc client id using access token: %s", self._settings.access_token)
+      
         response = await self._client.post(
             f'{BASE_PATH_ACC}/auth/v2/login',
             headers = await PanasonicRequestHeader.get(self._settings, self._app_version, include_client_id= False),
             json={
                 "language": 0
             })
+        if await has_new_version_been_published(response):
+            _LOGGER.info("New version of acc client id has been published")
+            await self._app_version.refresh()
+            response = await self._client.post(
+                f'{BASE_PATH_ACC}/auth/v2/login',
+                headers = await PanasonicRequestHeader.get(self._settings, self._app_version, include_client_id= False),
+                json={
+                    "language": 0
+                })
+
+
         await check_response(response, 'get_acc_client_id', 200)
 
         json_body = json.loads(await response.text())
         self._settings.clientId = json_body["clientId"]
+        return
 
