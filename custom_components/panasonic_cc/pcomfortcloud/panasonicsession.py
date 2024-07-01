@@ -14,6 +14,8 @@ from .panasonicauthentication import PanasonicAuthentication
 from .panasonicrequestheader import PanasonicRequestHeader
 from .constants import BASE_PATH_ACC
 from .exceptions import LoginError
+from .helpers import has_new_version_been_published
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +103,14 @@ class PanasonicSession:
                 json = json_data,
                 headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
             )
+            if await has_new_version_been_published(response):
+                _LOGGER.info("New version of acc client id has been published")
+                await self._app_version.refresh()
+                response = await self._client.post(
+                    url,
+                    json = json_data,
+                    headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
+                )
         except (aiohttp.client_exceptions.ClientError,
                 aiohttp.http_exceptions.HttpProcessingError,
                 aiohttp.web_exceptions.HTTPError) as ex:
@@ -122,6 +132,13 @@ class PanasonicSession:
                 url,
                 headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
             )
+            if await has_new_version_been_published(response):
+                 _LOGGER.info("New version of acc client id has been published")
+                 await self._app_version.refresh()
+                 response = await self._client.get(
+                    url,
+                    headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
+                )
         except (aiohttp.client_exceptions.ClientError,
                 aiohttp.http_exceptions.HttpProcessingError,
                 aiohttp.web_exceptions.HTTPError) as ex:
