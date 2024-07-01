@@ -15,7 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for device in hass.data[PANASONIC_DEVICES]:
-        devices.append(PanasonicNanoeSwitch(device))
+        if device.support_nanoe:
+            devices.append(PanasonicNanoeSwitch(device))
         if device.support_eco_navi:
             devices.append(PanasonicEcoNaviSwitch(device))
         if device.support_eco_function:
@@ -29,7 +30,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     devices = []
     device_list: list[PanasonicApiDevice] = hass.data[PANASONIC_DEVICES]
     for device in device_list:
-        devices.append(PanasonicNanoeSwitch(device))
+        if device.support_nanoe:
+            devices.append(PanasonicNanoeSwitch(device))
         if device.support_eco_navi:
             devices.append(PanasonicEcoNaviSwitch(device))
         if device.support_eco_function:
