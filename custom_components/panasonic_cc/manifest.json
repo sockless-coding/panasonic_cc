@@ -2,7 +2,7 @@
     "domain": "panasonic_cc",
     "name": "Panasonic Comfort Cloud",
     "after_dependencies": ["http"],
-    "version": "1.0.57",
+    "version": "1.0.58",
     "config_flow": true,
     "documentation": "https://github.com/sockless-coding/panasonic_cc/",
     "dependencies": [],
