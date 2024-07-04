@@ -222,6 +222,11 @@ class PanasonicApiDevice:
     def swing_mode(self):
         return self._swing_mode
 
+    @cached_property
+    def support_horizontal_swing(self):
+        return (self._details.features.air_swing_lr 
+                and self._details.parameters.horizontal_swing_mode != constants.AirSwingLR.Unavailable)
+
     @property
     def swing_lr_mode(self):
         return self._swing_lr_mode

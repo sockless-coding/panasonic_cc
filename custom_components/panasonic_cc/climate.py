@@ -201,7 +201,7 @@ class PanasonicClimateDevice(ClimateEntity):
     @property
     def swing_lr_modes(self):
         """Return the list of available swing modes."""
-        return [f.name for f in self._api.constants.AirSwingLR]
+        return [f.name for f in self._api.constants.AirSwingLR if f != self._api.constants.AirSwingLR.Unavailable]
 
     @property
     def current_temperature(self):

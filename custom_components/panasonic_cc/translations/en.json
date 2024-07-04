@@ -37,7 +37,40 @@
               "quiet": "Quiet",
               "powerful": "Powerful"
             }
+          },
+          "swing_mode":{
+            "state": {
+              "Auto": "Auto",
+              "Up": "Top",
+              "UpMid": "Mid-top",
+              "Mid": "Middle",
+              "DownMid": "Mid-bottom",
+              "Down": "Bottom",
+              "Swing": "Swing"
+            }
           }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing":{
+        "state": {
+          "Auto": "Auto",
+          "Left": "Left",
+          "LeftMid": "Center left",
+          "Mid": "Center",
+          "RightMid": "Center right",
+          "Right": "Right"
+        }
+      },
+      "vertical_swing":{
+        "state": {
+          "Auto": "Auto",
+          "Up": "Top",
+          "UpMid": "Mid-top",
+          "Mid": "Middle",
+          "DownMid": "Mid-bottom",
+          "Down": "Bottom"
         }
       }
     }

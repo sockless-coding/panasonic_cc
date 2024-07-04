@@ -92,7 +92,8 @@ COMPONENT_TYPES = [
     "climate", 
     "sensor", 
     "switch",
-    "button"
+    "button",
+    "select"
     ]
 
 STARTUP = """
