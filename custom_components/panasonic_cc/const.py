@@ -92,7 +92,8 @@ COMPONENT_TYPES = [
     "climate", 
     "sensor", 
     "switch",
-    "button"
+    "button",
+    "select"
     ]
 
 STARTUP = """
@@ -105,3 +106,6 @@ If you have any issues with this you need to open an issue here:
 https://github.com/sockless-coding/panasonic_cc/issues
 -------------------------------------------------------------------
 """
+
+SELECT_HORIZONTAL_SWING = "horizontal_swing"
+SELECT_VERTICAL_SWING = "vertical_swing"
