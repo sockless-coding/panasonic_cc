@@ -138,6 +138,7 @@ class ApiClient(panasonicsession.PanasonicSession):
                         else constants.AirSwingAutoMode.AirSwingUD)
 
         await self.set_device_raw(
+            device,
             { 
                 "operate": constants.Power.On,
                 "airSwingLR": new_value.value,
@@ -157,10 +158,41 @@ class ApiClient(panasonicsession.PanasonicSession):
                         else constants.AirSwingAutoMode.AirSwingLR)
 
         await self.set_device_raw(
+            device,
             { 
                 "operate": constants.Power.On,
                 "airSwingUD": new_value.value,
                 "fanAutoMode": fan_auto.value
+            })
+        
+    async def set_nanoe_mode(self, device:PanasonicDevice, new_value: str | constants.NanoeMode):
+        """ Set Nanoe mode"""
+        if isinstance(new_value, str):
+            new_value = constants.NanoeMode[new_value]
+        await self.set_device_raw(
+            device,
+            {
+                "nanoe", new_value.value
+            })
+        
+    async def set_eco_navi_mode(self, device:PanasonicDevice, new_value: str | constants.EcoNaviMode):
+        """ Set EcoNavi mode"""
+        if isinstance(new_value, str):
+            new_value = constants.EcoNaviMode[new_value]
+        await self.set_device_raw(
+            device,
+            {
+                "ecoNavi", new_value.value
+            })
+        
+    async def set_eco_function_mode(self, device:PanasonicDevice, new_value: str | constants.EcoFunctionMode):
+        """ Set EcoFunction mode"""
+        if isinstance(new_value, str):
+            new_value = constants.EcoFunctionMode[new_value]
+        await self.set_device_raw(
+            device,
+            {
+                "ecoFunctionData", new_value.value
             })
 
     async def set_device_raw(self, device:PanasonicDevice, parameters):
