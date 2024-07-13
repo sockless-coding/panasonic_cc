@@ -45,53 +45,72 @@ class PanasonicDeviceInfo:
         
 
 class PanasonicDevice:
-    def __init__(self, id: str, json = None) -> None:
-        self.id = id        
+    def __init__(self, info: PanasonicDeviceInfo, json = None) -> None:
+        self._info = info
+        self._features: PanasonicDeviceFeatures = None
+        self._parameters: PanasonicDeviceParameters = None
         self.load(json)
 
     @property
+    def id(self)->str:
+        return self.info.id
+
+    @property
+    def info(self) -> PanasonicDeviceInfo:
+        return self._info
+    
+    @property
+    def features(self):
+        return self._features
+    
+    @property
+    def parameters(self):
+        return self._parameters
+
+
+    @property
     def has_eco_navi(self):
-        return self.features.eco_navi and self.parameters.eco_navi_mode != constants.EcoNaviMode.Unavailable
+        return self._features.eco_navi and self._parameters.eco_navi_mode != constants.EcoNaviMode.Unavailable
     
     @property
     def has_eco_function(self):
-        return self.features.eco_function and self.parameters.eco_function_mode != constants.EcoFunctionMode.Unavailable
+        return self._features.eco_function and self._parameters.eco_function_mode != constants.EcoFunctionMode.Unavailable
     
     @property
     def has_nanoe(self):
-        return self.features.nanoe and self.parameters.nanoe_mode!= constants.NanoeMode.Unavailable
+        return self._features.nanoe and self._parameters.nanoe_mode!= constants.NanoeMode.Unavailable
     
     @property
     def has_zones(self):
-        return len(self.parameters.zones) > 0
+        return len(self._parameters.zones) > 0
     
     @property
     def has_horizontal_swing(self):
-        return self.features.air_swing_lr and self.parameters.horizontal_swing_mode != constants.AirSwingLR.Unavailable
+        return self._features.air_swing_lr and self._parameters.horizontal_swing_mode != constants.AirSwingLR.Unavailable
     
     @property
     def has_inside_temperature(self):
-        return self.parameters.inside_temperature is not None
+        return self._parameters.inside_temperature is not None
     
     @property
     def has_outside_temperature(self):
-        return self.parameters.outside_temperature is not None
+        return self._parameters.outside_temperature is not None
 
     def load(self, json) -> bool:
         has_changed = False
-        if not self.features:
-            self.features = PanasonicDeviceFeatures(json)
+        if not self._features:
+            self._features = PanasonicDeviceFeatures(json)
             has_changed = True
         else:
-            has_changed = has_changed or self.features.load(json)
+            has_changed = has_changed or self._features.load(json)
         json_parameters = None
         if (json is not None and 'parameters' in json):
             json_parameters = json['parameters']
-        if not self.parameters:
-            self.parameters = PanasonicDeviceParameters(json_parameters)
+        if not self._parameters:
+            self._parameters = PanasonicDeviceParameters(json_parameters)
             has_changed = True
         else:
-            has_changed = has_changed or self.parameters.load(json)
+            has_changed = has_changed or self._parameters.load(json)
         return has_changed
 
 

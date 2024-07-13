@@ -1,15 +1,18 @@
 from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 
-from .panasonic import PanasonicApiDevice
-from . import PANASONIC_DEVICES
-from .const import SELECT_HORIZONTAL_SWING, SELECT_VERTICAL_SWING
+from .const import DOMAIN, DATA_COORDINATORS, SELECT_HORIZONTAL_SWING, SELECT_VERTICAL_SWING
 from .pcomfortcloud import constants
+from .pcomfortcloud.panasonicdevice import PanasonicDevice
+
+from .coordinator import PanasonicDeviceCoordinator
+from .base import PanasonicDataEntity
 
 
 
-def get_horiziontal_swing_description(device: PanasonicApiDevice):
-    is_supported = device.support_horizontal_swing
+def get_horiziontal_swing_description(device: PanasonicDevice):
+    is_supported = device.has_horizontal_swing
     return SelectEntityDescription(
         key=SELECT_HORIZONTAL_SWING, 
         translation_key=SELECT_HORIZONTAL_SWING,
@@ -18,60 +21,54 @@ def get_horiziontal_swing_description(device: PanasonicApiDevice):
         entity_registry_visible_default=is_supported,
         options= [opt.name for opt in constants.AirSwingLR if opt != constants.AirSwingLR.Unavailable])
 
-def get_vertical_swing_description(device: PanasonicApiDevice):
-    auto_supported = device._details.features.auto_swing_ud
+def get_vertical_swing_description(device: PanasonicDevice):
+    auto_supported = device.features.auto_swing_ud
     return SelectEntityDescription(
         key=SELECT_VERTICAL_SWING, 
         translation_key=SELECT_VERTICAL_SWING,
         entity_category=EntityCategory.CONFIG, 
         options= [opt.name for opt in constants.AirSwingUD if opt != constants.AirSwingUD.Auto or auto_supported])
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     entities = []
-    device_list: list[PanasonicApiDevice] = hass.data[PANASONIC_DEVICES]
-
-    for device in device_list:
-        entities.append(PanasonicHorizontalSwingSelectEntity(device, get_horiziontal_swing_description(device)))
-        entities.append(PanasonicVerticalSwingSelectEntity(device, get_vertical_swing_description(device)))
+    data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
+    for coordinator in data_coordinators:
+        entities.append(PanasonicHorizontalSwingSelectEntity(coordinator, get_horiziontal_swing_description(coordinator.device)))
+        entities.append(PanasonicVerticalSwingSelectEntity(coordinator, get_vertical_swing_description(coordinator.device)))
         
     async_add_entities(entities)
 
-class PanasonicHorizontalSwingSelectEntity(SelectEntity):
+class PanasonicHorizontalSwingSelectEntity(PanasonicDataEntity, SelectEntity):
     
-    _attr_has_entity_name = True
     
-    def __init__(self, device: PanasonicApiDevice, description: SelectEntityDescription):
-        self._device = device
+    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: SelectEntityDescription):
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{device.id}_{description.key}"
-        self.current_option = device._details.parameters.horizontal_swing_mode.name
         self._attr_icon = "mdi:swap-horizontal"
         self._attr_name = "Horizontal Swing Mode"
-        self._attr_device_info = device.device_info
-        self._attr_available = device.support_horizontal_swing
+        self._attr_available = self.coordinator.device.has_horizontal_swing
 
     async def async_select_option(self, option: str) -> None:
-        await self._device.set_swing_lr_mode(option)
+        await self.coordinator.api_client.set_horizontal_swing(option)
+        self._attr_current_option = option
+        self.async_write_ha_state()
 
-    async def async_update(self):
-        await self._device.update()
+    async def _async_update_attrs(self) -> None:
+        self.current_option = self.coordinator.device.parameters.horizontal_swing_mode.name
 
-class PanasonicVerticalSwingSelectEntity(SelectEntity):
-    
-    _attr_has_entity_name = True
-    
-    def __init__(self, device: PanasonicApiDevice, description: SelectEntityDescription):
-        self._device = device
+
+class PanasonicVerticalSwingSelectEntity(PanasonicDataEntity, SelectEntity):
+        
+    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: SelectEntityDescription):
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{device.id}_{description.key}"
-        self.current_option = device._details.parameters.vertical_swing_mode.name
         self._attr_icon = "mdi:swap-vertical"
         self._attr_name = "Vertical Swing Mode"
-        self._attr_device_info = device.device_info
-        
-
+    
     async def async_select_option(self, option: str) -> None:
-        await self._device.set_swing_mode(option)
+        await self.coordinator.api_client.set_vertical_swing(option)
+        self._attr_current_option = option
+        self.async_write_ha_state()
 
-    async def async_update(self):
-        await self._device.update()
+    async def _async_update_attrs(self) -> None:
+        self.current_option = self.coordinator.device.parameters.vertical_swing_mode.name

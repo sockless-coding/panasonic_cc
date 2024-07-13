@@ -1,35 +1,30 @@
 """Support for Panasonic Nanoe."""
 import logging
 
+from homeassistant.core import HomeAssistant
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from .panasonic import PanasonicApiDevice
 from .pcomfortcloud import constants
 from .pcomfortcloud.panasonicdevice import PanasonicDeviceZone
 
-from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
+
+from . import DOMAIN, PANASONIC_DEVICES
+from .const import DATA_COORDINATORS
+from .coordinator import PanasonicDeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     devices = []
     device_list: list[PanasonicApiDevice] = hass.data[PANASONIC_DEVICES]
+    data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
+    for data_coordinator in data_coordinators:
+        if data_coordinator.device.has_nanoe:
+            devices.append(PanasonicNanoeSwitch(data_coordinator.device))
     
-    for device in device_list:
-        devices.append(PanasonicNanoeSwitch(device))
-        if device.support_eco_navi:
-            devices.append(PanasonicEcoNaviSwitch(device))
-        if device.support_eco_function:
-            devices.append(PanasonicEcoFunctionSwitch(device))
-    add_entities(devices)
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    pass
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    devices = []
-    device_list: list[PanasonicApiDevice] = hass.data[PANASONIC_DEVICES]
     for device in device_list:
         devices.append(PanasonicNanoeSwitch(device))
         if device.support_eco_navi:

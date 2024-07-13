@@ -116,23 +116,63 @@ class ApiClient(panasonicsession.PanasonicSession):
     
     
 
-    async def get_device(self, device_id) -> PanasonicDevice:
-        device_guid = self._device_indexer.get(device_id)
-
-        if device_guid:
-            json_response = await self.execute_get(self._get_device_status_url(device_guid), "get_device", 200)
-            return PanasonicDevice(device_id, json_response)
-        return None
+    async def get_device(self, device_info: PanasonicDeviceInfo) -> PanasonicDevice:
+        json_response = await self.execute_get(self._get_device_status_url(device_info.guid), "get_device", 200)
+        return PanasonicDevice(device_info, json_response)
     
     async def try_update_device(self, device: PanasonicDevice) -> bool:
-        device_guid = self._device_indexer.get(device.id)
-        if not device_guid:
-            return False
+        device_guid = device.info.guid
         json_response = await self.execute_get(self._get_device_status_url(device_guid), "try_update", 200)
-        device.load(json_response)
-        return True
+        return device.load(json_response)
+    
+    async def set_horizontal_swing(self, device:PanasonicDevice, new_value: str | constants.AirSwingLR):
+        """ Set horizontal swing"""
+        if isinstance(new_value, str):
+            new_value = constants.AirSwingLR[new_value]
+        fan_auto = (constants.AirSwingAutoMode.AirSwingLR 
+                    if new_value == constants.AirSwingLR.Auto 
+                    else constants.AirSwingAutoMode.Disabled)
+        if device.parameters.vertical_swing_mode == constants.AirSwingUD.Auto:
+            fan_auto = (constants.AirSwingAutoMode.Both 
+                        if new_value == constants.AirSwingLR.Auto 
+                        else constants.AirSwingAutoMode.AirSwingUD)
 
-    async def set_device(self, device_id, **kwargs):
+        await self.set_device_raw(
+            { 
+                "operate": constants.Power.On,
+                "airSwingLR": new_value.value,
+                "fanAutoMode": fan_auto.value
+            })
+        
+    async def set_vertical_swing(self, device:PanasonicDevice, new_value: str | constants.AirSwingUD):
+        """ Set vertical swing"""
+        if isinstance(new_value, str):
+            new_value = constants.AirSwingUD[new_value]
+        fan_auto = (constants.AirSwingAutoMode.AirSwingUD 
+                    if new_value == constants.AirSwingUD.Auto 
+                    else constants.AirSwingAutoMode.Disabled)
+        if device.parameters.horizontal_swing_mode == constants.AirSwingLR.Auto:
+            fan_auto = (constants.AirSwingAutoMode.Both 
+                        if new_value == constants.AirSwingUD.Auto 
+                        else constants.AirSwingAutoMode.AirSwingLR)
+
+        await self.set_device_raw(
+            { 
+                "operate": constants.Power.On,
+                "airSwingUD": new_value.value,
+                "fanAutoMode": fan_auto.value
+            })
+
+    async def set_device_raw(self, device:PanasonicDevice, parameters):
+        """ Set parameters of device"""
+        payload = {
+            "deviceGuid": device.info.guid,
+            "parameters": parameters
+        }
+        await self.execute_post(self._get_device_status_control_url(), payload, "set_device", 200)
+
+
+    async def set_device(self, device_info: PanasonicDeviceInfo, **kwargs):
         """ Set parameters of device
 
         Args:
@@ -185,7 +225,7 @@ class ApiClient(panasonicsession.PanasonicSession):
         # routine to set the auto mode of fan (either horizontal, vertical, both or disabled)
         if air_x is not None or air_y is not None:
             fan_auto = 0
-            device = await self.get_device(device_id)
+            device = await self.get_device(device_info)
 
             if device and device.parameters.horizontal_swing_mode == constants.AirSwingLR.Auto:
                 fan_auto = fan_auto | 1
@@ -217,7 +257,7 @@ class ApiClient(panasonicsession.PanasonicSession):
             else:
                 parameters['fanAutoMode'] = constants.AirSwingAutoMode.Disabled.value
 
-        device_guid = self._device_indexer.get(device_id)
+        device_guid = device_info.guid
         if device_guid:
             payload = {
                 "deviceGuid": device_guid,
