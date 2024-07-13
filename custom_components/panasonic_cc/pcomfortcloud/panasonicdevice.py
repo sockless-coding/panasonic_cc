@@ -49,6 +49,34 @@ class PanasonicDevice:
         self.id = id        
         self.load(json)
 
+    @property
+    def has_eco_navi(self):
+        return self.features.eco_navi and self.parameters.eco_navi_mode != constants.EcoNaviMode.Unavailable
+    
+    @property
+    def has_eco_function(self):
+        return self.features.eco_function and self.parameters.eco_function_mode != constants.EcoFunctionMode.Unavailable
+    
+    @property
+    def has_nanoe(self):
+        return self.features.nanoe and self.parameters.nanoe_mode!= constants.NanoeMode.Unavailable
+    
+    @property
+    def has_zones(self):
+        return len(self.parameters.zones) > 0
+    
+    @property
+    def has_horizontal_swing(self):
+        return self.features.air_swing_lr and self.parameters.horizontal_swing_mode != constants.AirSwingLR.Unavailable
+    
+    @property
+    def has_inside_temperature(self):
+        return self.parameters.inside_temperature is not None
+    
+    @property
+    def has_outside_temperature(self):
+        return self.parameters.outside_temperature is not None
+
     def load(self, json) -> bool:
         has_changed = False
         if not self.features:
