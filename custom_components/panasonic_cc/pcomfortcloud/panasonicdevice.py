@@ -47,11 +47,21 @@ class PanasonicDeviceInfo:
 class PanasonicDevice:
     def __init__(self, id: str, json = None) -> None:
         self.id = id
-        self.features = PanasonicDeviceFeatures(json)
+        self.load(json)
+
+    def load(self, json):
+        if not self.features:
+            self.features = PanasonicDeviceFeatures(json)
+        else:
+            self.features.load(json)
         json_parameters = None
         if (json is not None and 'parameters' in json):
             json_parameters = json['parameters']
-        self.parameters = PanasonicDeviceParameters(json_parameters)
+        if not self.parameters:
+            self.parameters = PanasonicDeviceParameters(json_parameters)
+        else:
+            self.parameters.load(json)
+
 
 class PanasonicDeviceFeatures:
     def __init__(self, json = None) -> None:

@@ -123,6 +123,14 @@ class ApiClient(panasonicsession.PanasonicSession):
             json_response = await self.execute_get(self._get_device_status_url(device_guid), "get_device", 200)
             return PanasonicDevice(device_id, json_response)
         return None
+    
+    async def try_update_device(self, device: PanasonicDevice) -> bool:
+        device_guid = self._device_indexer.get(device.id)
+        if not device_guid:
+            return False
+        json_response = await self.execute_get(self._get_device_status_url(device_guid), "try_update", 200)
+        device.load(json_response)
+        return True
 
     async def set_device(self, device_id, **kwargs):
         """ Set parameters of device
