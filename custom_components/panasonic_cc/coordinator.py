@@ -7,6 +7,7 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceInfo
 from .pcomfortcloud.apiclient import ApiClient
+from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
 from .const import DOMAIN,MANUFACTURER, DEFAULT_DEVICE_FETCH_INTERVAL, CONF_DEVICE_FETCH_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +45,13 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
             name=self._panasonic_device_info.name,
             sw_version=self._api_client.app_version
         )
+    
+    def get_change_request_builder(self):
+        return ChangeRequestBuilder(self._device)
+    
+    async def async_apply_changes(self, request_builder: ChangeRequestBuilder):
+        await self._api_client.set_device_raw(self._device, request_builder.build())
+
 
     async def _fetch_device_data(self)->int:
         try:

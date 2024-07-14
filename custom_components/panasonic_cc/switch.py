@@ -1,6 +1,6 @@
 """Support for Panasonic Nanoe."""
 import logging
-from typing import Awaitable, Callable
+from typing import Callable
 from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
@@ -10,6 +10,7 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from .panasonic import PanasonicApiDevice
 from .pcomfortcloud import constants
 from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
+from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
 from .pcomfortcloud.apiclient import ApiClient
 
 
@@ -24,8 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 class PanasonicSwitchEntityDescription(SwitchEntityDescription):
     """Describes Panasonic Switch entity."""
 
-    on_func: Callable[[ApiClient], Awaitable]
-    off_func: Callable[[ApiClient], Awaitable]
+    on_func: Callable[[ChangeRequestBuilder], ChangeRequestBuilder]
+    off_func: Callable[[ChangeRequestBuilder], ChangeRequestBuilder]
     get_state: Callable[[PanasonicDevice], bool]
     is_available: Callable[[PanasonicDevice], bool]
 
@@ -36,8 +37,8 @@ NANOE_DESCRIPTION = PanasonicSwitchEntityDescription(
     icon="mdi:air-conditioner",
     entity_category=EntityCategory.CONFIG,
     entity_registry_enabled_default=False,
-    on_func = lambda api: api.set_nanoe_mode(constants.NanoeMode.On),
-    off_func= lambda api: api.set_nanoe_mode(constants.NanoeMode.Off),
+    on_func = lambda builder: builder.set_nanoe_mode(constants.NanoeMode.On),
+    off_func= lambda builder: builder.set_nanoe_mode(constants.NanoeMode.Off),
     get_state = lambda device: device.parameters.nanoe_mode == constants.NanoeMode.On,
     is_available = lambda device: device.has_nanoe
 )
@@ -48,8 +49,8 @@ ECONAVI_DESCRIPTION = PanasonicSwitchEntityDescription(
     icon="mdi:leaf",
     entity_category=EntityCategory.CONFIG,
     entity_registry_enabled_default=False,
-    on_func = lambda api: api.set_eco_navi_mode(constants.EcoNaviMode.On),
-    off_func= lambda api: api.set_eco_navi_mode(constants.EcoNaviMode.Off),
+    on_func = lambda builder: builder.set_eco_navi_mode(constants.EcoNaviMode.On),
+    off_func= lambda builder: builder.set_eco_navi_mode(constants.EcoNaviMode.Off),
     get_state = lambda device: device.parameters.eco_navi_mode == constants.EcoNaviMode.On,
     is_available = lambda device: device.has_eco_navi
 )
@@ -60,8 +61,8 @@ ECO_FUNCTION_DESCRIPTION = PanasonicSwitchEntityDescription(
     icon="mdi:leaf",
     entity_category=EntityCategory.CONFIG,
     entity_registry_enabled_default=False,
-    on_func = lambda api: api.set_eco_function_mode(constants.EcoFunctionMode.On),
-    off_func= lambda api: api.set_eco_function_mode(constants.EcoFunctionMode.Off),
+    on_func = lambda builder: builder.set_eco_function_mode(constants.EcoFunctionMode.On),
+    off_func= lambda builder: builder.set_eco_function_mode(constants.EcoFunctionMode.Off),
     get_state = lambda device: device.parameters.eco_function_mode == constants.EcoFunctionMode.On,
     is_available = lambda device: device.has_eco_function
 )
@@ -97,13 +98,17 @@ class PanasonicSwitchEntity(PanasonicDataEntity, PanasonicSwitchEntityBase):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the Switch."""
-        await self.entity_description.on_func(self.coordinator.api_client)
+        builder = self.coordinator.get_change_request_builder()
+        self.entity_description.on_func(builder)
+        await self.coordinator.async_apply_changes(builder)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the Switch."""
-        await self.entity_description.off_func(self.coordinator.api_client)
+        builder = self.coordinator.get_change_request_builder()
+        self.entity_description.off_func(builder)
+        await self.coordinator.async_apply_changes(builder)
         self._attr_is_on = False
         self.async_write_ha_state()
 

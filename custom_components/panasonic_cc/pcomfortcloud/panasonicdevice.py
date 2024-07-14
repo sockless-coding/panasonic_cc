@@ -95,6 +95,19 @@ class PanasonicDevice:
     @property
     def has_outside_temperature(self):
         return self._parameters.outside_temperature is not None
+    
+    @property
+    def in_summer_house_mode(self):        
+        temp = self._parameters.target_temperature
+        i = 1 if temp - 8 > 0 else (0 if temp -8 else -1)
+        match self._features.summer_house:
+            case 1:
+                return i == 0 or temp == 10
+            case 2:
+                return i >= 0 and temp <= 15
+            case 3:
+                return i == 0 or temp == 10
+        return False
 
     def load(self, json) -> bool:
         has_changed = False
