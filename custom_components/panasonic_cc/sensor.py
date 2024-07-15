@@ -41,7 +41,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_entities):
     for device in hass.data[PANASONIC_DEVICES]:
-        sensors = [ATTR_INSIDE_TEMPERATURE]
+        sensors = []
+        if device.support_inside_temperature:
+            sensors.append(ATTR_INSIDE_TEMPERATURE)
         if device.support_outside_temperature:
             sensors.append(ATTR_OUTSIDE_TEMPERATURE)
         entities = [PanasonicClimateSensor(device, sensor) for sensor in sensors]
