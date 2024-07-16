@@ -23,22 +23,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Panasonic climate"""
-
-    if discovery_info is None:
-        return
-    add_devices(
-        [
-            PanasonicClimateDevice(device)
-            for device in hass.data[PANASONIC_DEVICES]
-        ]
-    )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    pass
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(

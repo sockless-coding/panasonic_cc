@@ -1,45 +1,66 @@
-"""Support for Panasonic sensors."""
+from typing import Callable, Any
+from dataclasses import dataclass
 import logging
 
 from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, UnitOfTemperature
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
-    SensorDeviceClass
+    SensorDeviceClass,
+    SensorEntityDescription
 )
 
-from . import PANASONIC_DEVICES
+from .pcomfortcloud.panasonicdevice import PanasonicDevice
+
 from .const import (
-    ATTR_INSIDE_TEMPERATURE, 
-    ATTR_OUTSIDE_TEMPERATURE, 
-    SENSOR_TYPES, 
+    DOMAIN,
+    DATA_COORDINATORS,
     
     ATTR_DAILY_ENERGY,
     ATTR_CURRENT_POWER,
     ENERGY_SENSOR_TYPES
     )
+from .base import PanasonicDataEntity
+from .coordinator import PanasonicDeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    
-    for device in hass.data[PANASONIC_DEVICES]:
-        sensors = []
-        if device.support_inside_temperature:
-            sensors.append(ATTR_INSIDE_TEMPERATURE)
-        if device.support_outside_temperature:
-            sensors.append(ATTR_OUTSIDE_TEMPERATURE)
-        entities = [PanasonicClimateSensor(device, sensor) for sensor in sensors]
-        if device.energy_sensor_enabled:
-            entities.append(PanasonicEnergySensor(device, ATTR_DAILY_ENERGY))
-            entities.append(PanasonicEnergySensor(device, ATTR_CURRENT_POWER))
-        add_entities(entities)
+@dataclass(frozen=True, kw_only=True)
+class PanasonicSensorEntityDescription(SensorEntityDescription):
+    """Describes Panasonic sensor entity."""
+    entity_registry_enabled_default=False
+    get_state: Callable[[PanasonicDevice], Any] = None
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    pass
+INSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
+    key="inside_temperature",
+    translation_key="inside_temperature",
+    name="Inside Temperature",
+    icon="mdi:thermometer",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    get_state=lambda device: device.parameters.inside_temperature
+)
+OUTSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
+    key="outside_temperature",
+    translation_key="outside_temperature",
+    name="Outside Temperature",
+    icon="mdi:thermometer",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    get_state=lambda device: device.parameters.outside_temperature
+)
 
 async def async_setup_entry(hass, entry, async_add_entities):
+    entities = []
+    data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
+    for coordinator in data_coordinators:
+        entities.append(PanasonicSensorEntity(coordinator, INSIDE_TEMPERATURE_DESCRIPTION))
+        entities.append(PanasonicSensorEntity(coordinator, OUTSIDE_TEMPERATURE_DESCRIPTION))
+        
+    async_add_entities(entities)
+    """
     for device in hass.data[PANASONIC_DEVICES]:
         sensors = [ATTR_INSIDE_TEMPERATURE]
         if device.support_outside_temperature:
@@ -49,55 +70,23 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entities.append(PanasonicEnergySensor(device, ATTR_DAILY_ENERGY))
             entities.append(PanasonicEnergySensor(device, ATTR_CURRENT_POWER))
         async_add_entities(entities)
+        """
+
+class PanasonicSensorEntityBase(SensorEntity):
+    """Base class for all sensor entities."""
+    entity_description: PanasonicSensorEntityDescription
+
+class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
+    
+    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicSensorEntityDescription):
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_native_value = self.entity_description.get_state(self.coordinator.device)
 
 
-class PanasonicClimateSensor(Entity):
-    """Representation of a Sensor."""
-
-    def __init__(self, api, monitored_state) -> None:
-        """Initialize the sensor."""
-        self._api = api
-        self._sensor = SENSOR_TYPES[monitored_state]
-        self._name = f"{api.name} {self._sensor[CONF_NAME]}"
-        self._device_attribute = monitored_state
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._api.id}-{self._device_attribute}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._sensor[CONF_ICON]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._device_attribute == ATTR_INSIDE_TEMPERATURE:
-            return self._api.inside_temperature
-        if self._device_attribute == ATTR_OUTSIDE_TEMPERATURE:
-            return self._api.outside_temperature
-        return None
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return UnitOfTemperature.CELSIUS
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self._api.update()
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
 
 class PanasonicEnergySensor(SensorEntity):
     """Representation of a Sensor."""

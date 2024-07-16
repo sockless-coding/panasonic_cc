@@ -16,6 +16,8 @@ from .base import PanasonicDataEntity
 @dataclass(frozen=True, kw_only=True)
 class PanasonicSelectEntityDescription(SelectEntityDescription):
     """Description of a select entity."""
+    entity_category=EntityCategory.CONFIG, 
+    entity_registry_enabled_default=False,
     set_option: Callable[[ChangeRequestBuilder, str], ChangeRequestBuilder]
     get_current_option: Callable[[PanasonicDevice], str]
     is_available: Callable[[PanasonicDevice], bool]
@@ -27,8 +29,6 @@ HORIZONTAL_SWING_DESCRIPTION = PanasonicSelectEntityDescription(
     translation_key=SELECT_HORIZONTAL_SWING,
     icon="mdi:swap-horizontal",
     name="Horizontal Swing Mode",
-    entity_category=EntityCategory.CONFIG, 
-    entity_registry_enabled_default=False,
     options= [opt.name for opt in constants.AirSwingLR if opt != constants.AirSwingLR.Unavailable],
     set_option = lambda builder, new_value : builder.set_horizontal_swing(new_value),
     get_current_option = lambda device : device.parameters.horizontal_swing_mode.name,
@@ -39,8 +39,6 @@ VERTICAL_SWING_DESCRIPTION = PanasonicSelectEntityDescription(
     translation_key=SELECT_VERTICAL_SWING,
     icon="mdi:swap-vertical",
     name="Vertical Swing Mode",
-    entity_category=EntityCategory.CONFIG, 
-    entity_registry_enabled_default=False,
     get_options= lambda device: [opt.name for opt in constants.AirSwingUD if opt != constants.AirSwingUD.Auto or device.features.auto_swing_ud],
     set_option = lambda builder, new_value : builder.set_vertical_swing(new_value),
     get_current_option = lambda device : device.parameters.vertical_swing_mode.name,
