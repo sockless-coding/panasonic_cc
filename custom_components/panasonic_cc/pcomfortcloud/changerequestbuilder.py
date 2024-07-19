@@ -99,6 +99,13 @@ class ChangeRequestBuilder:
         self._request["ecoFunctionData"] = new_value.value
         return self
     
+    def set_power_mode(self, new_value: str | constants.Power):
+        """ Set Power mode"""
+        if isinstance(new_value, str):
+            new_value = constants.Power[new_value]
+        self._request["operate"] = new_value.value
+        return self
+    
     def _ensure_powered_on(self) -> None:
         """ Ensure that the device is powered on"""
         if self._device.parameters.power == constants.Power.On:

@@ -364,9 +364,9 @@ class PanasonicDeviceParameters:
         self._nanoe_mode = constants.NanoeMode.Unavailable
         self._eco_navi_mode = constants.EcoNaviMode.Unavailable
         self._eco_function_mode = constants.EcoFunctionMode.Unavailable
-        self._target_temperature: int = None
-        self._inside_temperature: int = None
-        self._outside_temperature: int = None
+        self._target_temperature: float = None
+        self._inside_temperature: float = None
+        self._outside_temperature: float = None
         self._zones: list[PanasonicDeviceZone] = []
         self._zone_index: dict[int, PanasonicDeviceZone] = {}
         self._has_changed = False

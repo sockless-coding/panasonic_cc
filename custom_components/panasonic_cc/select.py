@@ -74,6 +74,6 @@ class PanasonicSelectEntity(PanasonicDataEntity, PanasonicSelectEntityBase):
         self._attr_current_option = option
         self.async_write_ha_state()
 
-    async def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> None:
         self.current_option = self.entity_description.get_current_option(self.coordinator.device)
 
