@@ -4,6 +4,7 @@ from datetime import timedelta
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.storage import Store
 
 from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceInfo
 from .pcomfortcloud.apiclient import ApiClient
@@ -27,6 +28,7 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         self._api_client = api_client
         self._panasonic_device_info = device_info
         self._device:PanasonicDevice = None
+        self._store = Store(hass, version=1, key=f"panasonic_cc_{device_info.id}")
         
     @property
     def device(self) -> PanasonicDevice:
@@ -51,6 +53,15 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
     
     async def async_apply_changes(self, request_builder: ChangeRequestBuilder):
         await self._api_client.set_device_raw(self._device, request_builder.build())
+
+    async def async_get_stored_data(self):
+        data = await self._store.async_load()
+        if data is None:
+            data = {}
+        return data
+    
+    async def async_store_data(self, data):
+        await self._store.async_save(data)
 
 
     async def _fetch_device_data(self)->int:
