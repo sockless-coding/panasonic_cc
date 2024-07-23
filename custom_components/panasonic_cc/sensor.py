@@ -30,6 +30,7 @@ class PanasonicSensorEntityDescription(SensorEntityDescription):
     """Describes Panasonic sensor entity."""
     entity_registry_enabled_default=False
     get_state: Callable[[PanasonicDevice], Any] = None
+    is_available: Callable[[PanasonicDevice], bool] = None
 
 INSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     key="inside_temperature",
@@ -39,7 +40,8 @@ INSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    get_state=lambda device: device.parameters.inside_temperature
+    get_state=lambda device: device.parameters.inside_temperature,
+    is_available=lambda device: device.parameters.inside_temperature is not None,
 )
 OUTSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     key="outside_temperature",
@@ -49,7 +51,8 @@ OUTSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    get_state=lambda device: device.parameters.outside_temperature
+    get_state=lambda device: device.parameters.outside_temperature,
+    is_available=lambda device: device.parameters.outside_temperature is not None,
 )
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -79,11 +82,12 @@ class PanasonicSensorEntityBase(SensorEntity):
 class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
     
     def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicSensorEntityDescription):
-        super().__init__(coordinator, description.key)
         self.entity_description = description
+        super().__init__(coordinator, description.key)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
+        self._attr_available = self.entity_description.is_available(self.coordinator.device)
         self._attr_native_value = self.entity_description.get_state(self.coordinator.device)
 
 

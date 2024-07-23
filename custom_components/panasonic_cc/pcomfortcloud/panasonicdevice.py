@@ -115,7 +115,7 @@ class PanasonicDevice:
             self._features = PanasonicDeviceFeatures(json)
             has_changed = True
         else:
-            has_changed = has_changed or self._features.load(json)
+            has_changed = True if self._features.load(json) else has_changed
         json_parameters = None
         if (json is not None and 'parameters' in json):
             json_parameters = json['parameters']
@@ -123,7 +123,7 @@ class PanasonicDevice:
             self._parameters = PanasonicDeviceParameters(json_parameters)
             has_changed = True
         else:
-            has_changed = has_changed or self._parameters.load(json)
+            has_changed = True if self._parameters.load(json_parameters) else has_changed
         return has_changed
 
 
@@ -501,7 +501,7 @@ class PanasonicDeviceParameters:
         return self._zones
 
     def load(self, json) -> bool:
-        _LOGGER.debug('Loading device paramters, has data: %s', json is not None)
+        _LOGGER.debug('Loading device parameters, has data: %s', json is not None)
         if not json:
             return False
         self._has_changed = False

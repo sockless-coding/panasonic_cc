@@ -16,7 +16,6 @@ from .base import PanasonicDataEntity
 @dataclass(frozen=True, kw_only=True)
 class PanasonicSelectEntityDescription(SelectEntityDescription):
     """Description of a select entity."""
-    entity_category=EntityCategory.CONFIG, 
     entity_registry_enabled_default=False,
     set_option: Callable[[ChangeRequestBuilder, str], ChangeRequestBuilder]
     get_current_option: Callable[[PanasonicDevice], str]
@@ -62,10 +61,10 @@ class PanasonicSelectEntityBase(SelectEntity):
 class PanasonicSelectEntity(PanasonicDataEntity, PanasonicSelectEntityBase):
 
     def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicSelectEntityDescription):
-        super().__init__(coordinator, description.key)
         self.entity_description = description
         if description.get_options is not None:
             self._attr_options = description.get_options(coordinator.device)
+        super().__init__(coordinator, description.key)
     
     async def async_select_option(self, option: str) -> None:
         builder = self.coordinator.get_change_request_builder()

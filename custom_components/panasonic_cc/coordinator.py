@@ -29,6 +29,7 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         self._panasonic_device_info = device_info
         self._device:PanasonicDevice = None
         self._store = Store(hass, version=1, key=f"panasonic_cc_{device_info.id}")
+        self._update_id = 0
         
     @property
     def device(self) -> PanasonicDevice:
@@ -68,9 +69,12 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         try:
             if self._device is None:
                 self._device = await self._api_client.get_device(self._panasonic_device_info)
-                return 1
+                self._update_id = 1
+                return self._update_id
             if await self._api_client.try_update_device(self._device):
-               return self.data+1
+               self._update_id = self._update_id + 1
+               _LOGGER.debug(f"Data updated: LR [{self._device.parameters.horizontal_swing_mode.name}]")
+               return self._update_id
         except BaseException as e:
             raise UpdateFailed(f"Invalid response from API: {e}") from e
-        return self.data
+        return self._update_id

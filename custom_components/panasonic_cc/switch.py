@@ -88,8 +88,8 @@ class PanasonicSwitchEntity(PanasonicDataEntity, PanasonicSwitchEntityBase):
 
     def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicSwitchEntityDescription):
         """Initialize the Switch."""
-        super().__init__(coordinator)
         self.entity_description = description
+        super().__init__(coordinator, description.key)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""

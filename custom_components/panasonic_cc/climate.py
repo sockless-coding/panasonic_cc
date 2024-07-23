@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 from typing import Optional, List
 
+from homeassistant.core import HomeAssistant
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription, HVACAction, HVACMode, ATTR_HVAC_MODE
 from homeassistant.helpers import config_validation as cv, entity_platform
 
@@ -30,7 +31,9 @@ from .const import (
     PRESET_ECO, 
     PRESET_BOOST, 
     PRESET_QUIET, 
-    PRESET_POWERFUL)
+    PRESET_POWERFUL,
+    DOMAIN,
+    DATA_COORDINATORS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,13 +77,13 @@ def convert_hvac_mode_to_operation_mode(hvac_mode: HVACMode) -> constants.Operat
             return constants.OperationMode.Heat
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    async_add_entities(
-        [
-            PanasonicClimateDevice(device)
-            for device in hass.data[PANASONIC_DEVICES]
-        ]
-    )
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
+    entities = []
+    data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
+    for coordinator in data_coordinators:
+        entities.append(PanasonicClimateEntity(coordinator, PANASONIC_CLIMATE_DESCRIPTION))
+        
+    async_add_entities(entities)
 
     platform = entity_platform.current_platform.get()
 
@@ -133,6 +136,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         
 
         super().__init__(coordinator, description.key)
+        _LOGGER.info(f"Registing Climate entity: '{self._attr_unique_id}'")
         
 
 
@@ -148,6 +152,16 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         self._set_temp_range()
         self._attr_current_temperature = state.inside_temperature
         self._attr_target_temperature = state.target_temperature
+        self._attr_fan_mode = state.fan_speed.name
+        self._attr_swing_mode = state.vertical_swing_mode.name
+        if self.coordinator.device.in_summer_house_mode:
+            self._attr_preset_mode = PRESET_8_15
+        elif state.eco_mode == constants.EcoMode.Quiet:
+            self._attr_preset_mode = PRESET_QUIET
+        elif state.eco_mode == constants.EcoMode.Powerful:
+            self._attr_preset_mode = PRESET_POWERFUL
+        else:
+            self._attr_preset_mode = PRESET_NONE
 
     def _set_temp_range(self) -> None:
         """Set new target temperature range."""

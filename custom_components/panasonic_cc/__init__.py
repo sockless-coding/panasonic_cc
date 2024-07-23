@@ -22,9 +22,12 @@ from .const import (
     CONF_USE_PANASONIC_PRESET_NAMES,
     PANASONIC_DEVICES,
     COMPONENT_TYPES,
-    STARTUP)
+    STARTUP,
+    DATA_COORDINATORS)
 
 from .panasonic import PanasonicApiDevice
+from .coordinator import PanasonicDeviceCoordinator
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,38 +81,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = async_get_clientsession(hass)
     api = pcomfortcloud.ApiClient(username, password, client)
     await api.start_session()
-
     devices = api.get_devices()
+   
     _LOGGER.info("Got %s devices", len(devices))
+    data_coordinators: list[PanasonicDeviceCoordinator] = []
+
+
     for device in devices:
         try:
-            api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor, use_panasonic_preset_names)
+            data_coordinators.append(PanasonicDeviceCoordinator(hass, conf, api, device))
+            """api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor, use_panasonic_preset_names)
             await api_device.do_update()
             if enable_daily_energy_sensor:
                 await api_device.update_energy()
-            hass.data[PANASONIC_DEVICES].append(api_device)
+            hass.data[PANASONIC_DEVICES].append(api_device)"""
         except Exception as e:
             _LOGGER.warning(f"Failed to setup device: {device.name} ({e})")
 
-    if hass.data[PANASONIC_DEVICES]:
-        for component in COMPONENT_TYPES:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
+    hass.data[DOMAIN][DATA_COORDINATORS] = data_coordinators
+    await asyncio.gather(
+        *(
+            data.async_config_entry_first_refresh()
+            for data in data_coordinators
+        ),
+    )
 
+    await hass.config_entries.async_forward_entry_setups(entry, COMPONENT_TYPES)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry):
+async def async_unload_entry(hass: HomeAssistant, entry):
     """Unload a config entry."""
-    tasks = []
-    for component in COMPONENT_TYPES:
-        tasks.append(
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_unload(config_entry, component)  # noqa: E501
-            )
-        )
-
-    await asyncio.wait(tasks)
-    hass.data.pop(PANASONIC_DEVICES)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, COMPONENT_TYPES)

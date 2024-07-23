@@ -12,7 +12,7 @@ class PanasonicDataEntity(CoordinatorEntity[PanasonicDeviceCoordinator]):
     def __init__(self, coordinator: PanasonicDeviceCoordinator, key: str) -> None:
         super().__init__(coordinator)
         self._attr_translation_key = key
-        self._attr_unique_id = f"{coordinator.device.id}_{key}"
+        self._attr_unique_id = f"{coordinator.device.id}-{key}"
         self._attr_device_info = self.coordinator.device_info
         self._async_update_attrs()
 
