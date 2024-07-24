@@ -29,7 +29,7 @@
   },
   "entity": {
     "climate": {
-      "panasonic_climate": {
+      "climate": {
         "state_attributes": {
           "preset_mode": {
             "state": {

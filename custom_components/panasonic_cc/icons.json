@@ -1,7 +1,7 @@
 {
     "entity": {
       "climate": {
-        "panasonic_climate":{
+        "climate":{
             "state_attributes": {
                 "preset_mode": {
                     "state": {
@@ -9,6 +9,17 @@
                         "quiet": "mdi:leaf",
                         "powerful": "mdi:arm-flex"
                     }
+                },
+                "swing_mode":{
+                  "state": {
+                    "Auto": "mdi:shuffle",
+                    "Up": "mdi:arrow-up-thin",
+                    "UpMid": "mdi:arrow-top-right-thin",
+                    "Mid": "mdi:arrow-right-thin",
+                    "DownMid": "mdi:arrow-bottom-right-thin",
+                    "Down": "mdi:arrow-down-thin",
+                    "Swing": "mdi:shuffle"
+                  }
                 }
             }
         }
