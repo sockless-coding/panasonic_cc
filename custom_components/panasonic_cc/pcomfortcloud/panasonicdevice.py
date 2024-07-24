@@ -129,7 +129,8 @@ class PanasonicDevice:
             has_changed = True
         else:
             has_changed = True if self._parameters.load(json_parameters) else has_changed
-        self._last_update = datetime.now(timezone.utc)
+        if has_changed:
+            self._last_update = datetime.now(timezone.utc)
         return has_changed
 
 
