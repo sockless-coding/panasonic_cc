@@ -6,10 +6,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.storage import Store
 
-from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceInfo
+from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceInfo, PanasonicDeviceEnergy
 from .pcomfortcloud.apiclient import ApiClient
 from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
-from .const import DOMAIN,MANUFACTURER, DEFAULT_DEVICE_FETCH_INTERVAL, CONF_DEVICE_FETCH_INTERVAL
+from .const import DOMAIN,MANUFACTURER, DEFAULT_DEVICE_FETCH_INTERVAL, CONF_DEVICE_FETCH_INTERVAL, CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +78,54 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                 self._update_id = 1
                 return self._update_id
             if await self._api_client.try_update_device(self._device):
+               self._update_id = self._update_id + 1
+               return self._update_id
+        except BaseException as e:
+            raise UpdateFailed(f"Invalid response from API: {e}") from e
+        return self._update_id
+
+class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
+
+    def __init__(self, hass: HomeAssistant, config: dict, api_client: ApiClient, device_info: PanasonicDeviceInfo):
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Panasonic Device Energy Coordinator",
+            update_interval=timedelta(seconds=config.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL)),
+            update_method=self._fetch_device_data,
+        )
+        self._hass = hass
+        self._config = config
+        self._api_client = api_client
+        self._panasonic_device_info = device_info
+        self._energy: PanasonicDeviceEnergy = None
+        self._update_id = 0
+
+    @property
+    def api_client(self) -> ApiClient:
+        return self._api_client
+    
+    @property
+    def energy(self) -> PanasonicDeviceEnergy:
+        return self._energy
+    
+    @property
+    def device_info(self)->DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._panasonic_device_info.id )},
+            manufacturer=MANUFACTURER,
+            model=self._panasonic_device_info.model,
+            name=self._panasonic_device_info.name,
+            sw_version=self._api_client.app_version
+        )
+
+    async def _fetch_device_data(self)->int:
+        try:
+            if self._energy is None:
+                self._energy = await self._api_client.async_get_energy(self._panasonic_device_info)
+                self._update_id = 1
+                return self._update_id
+            if await self._api_client.async_try_update_energy(self._energy):
                self._update_id = self._update_id + 1
                return self._update_id
         except BaseException as e:

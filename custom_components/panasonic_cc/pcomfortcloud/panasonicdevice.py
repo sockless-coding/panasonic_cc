@@ -669,4 +669,78 @@ class PanasonicDeviceZone:
         self._has_changed = False
         return has_changed
 
-        
+class PanasonicDeviceEnergy:
+
+    def __init__(self, info: PanasonicDeviceInfo, json = None) -> None:
+        self._info = info
+        self._consumption: float = 0.0
+        self._heatingRate: float = 0.0
+        self._coolingRate: float = 0.0
+        self._heatingConsumption: float = 0.0
+        self._coolingConsumption: float = 0.0
+        self._has_changed = False
+        self.load(json)
+
+    @property
+    def id(self)->str:
+        return self.info.id
+    
+    @property
+    def info(self) -> PanasonicDeviceInfo:
+        return self._info
+
+    @property
+    def consumption(self) -> float:
+        return self._consumption
+    @consumption.setter
+    def consumption(self, value):
+        if self._consumption == value:
+            return
+        self._has_changed = True
+        self._consumption = value
+
+    @property
+    def heatingRate(self) -> float:
+        return self._heatingRate
+    @heatingRate.setter
+    def heatingRate(self, value):
+        if self._heatingRate == value:
+            return
+        self._has_changed = True
+        self._heatingRate = value
+
+    @property
+    def heatingConsumption(self) -> float:
+        return self._heatingConsumption
+
+    @property
+    def coolingRate(self) -> float:
+        return self._coolingRate
+    @coolingRate.setter
+    def coolingRate(self, value):
+        if self._coolingRate == value:
+            return
+        self._has_changed = True
+        self._coolingRate = value
+
+    @property
+    def coolingConsumption(self) -> float:
+        return self._coolingConsumption
+
+    def load(self, json) -> bool:
+        if not json:
+            return False
+        self._has_changed = False
+        if 'consumption' in json and json['consumption'] >= 0:
+            self.consumption = json['consumption']
+        if 'heatConsumptionRate' in json and json['heatConsumptionRate'] >= 0:
+            self.heatingRate = json['heatConsumptionRate']
+        if 'coolConsumptionRate' in json and json['coolConsumptionRate'] >= 0:
+            self.coolingRate = json['coolConsumptionRate']
+
+        has_changed = self._has_changed
+        if has_changed:
+            self._coolingConsumption = self.coolingRate * self.consumption
+            self._heatingConsumption = self.heatingRate * self.consumption
+        self._has_changed = False
+        return has_changed

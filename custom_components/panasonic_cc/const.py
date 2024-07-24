@@ -90,6 +90,7 @@ DOMAIN = "panasonic_cc"
 MANUFACTURER = "Panasonic"
 PANASONIC_DEVICES = "panasonic_devices"
 DATA_COORDINATORS = "data_coordinators"
+ENERGY_COORDINATORS = "energy_coordinators"
 
 COMPONENT_TYPES = [
     "climate", 

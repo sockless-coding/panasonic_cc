@@ -23,10 +23,11 @@ from .const import (
     PANASONIC_DEVICES,
     COMPONENT_TYPES,
     STARTUP,
-    DATA_COORDINATORS)
+    DATA_COORDINATORS,
+    ENERGY_COORDINATORS)
 
 from .panasonic import PanasonicApiDevice
-from .coordinator import PanasonicDeviceCoordinator
+from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,11 +86,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
    
     _LOGGER.info("Got %s devices", len(devices))
     data_coordinators: list[PanasonicDeviceCoordinator] = []
+    energy_coordinators: list[PanasonicDeviceEnergyCoordinator] = []
 
 
     for device in devices:
         try:
             data_coordinators.append(PanasonicDeviceCoordinator(hass, conf, api, device))
+            energy_coordinators.append(PanasonicDeviceEnergyCoordinator(hass, conf, api, device))
             """api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor, use_panasonic_preset_names)
             await api_device.do_update()
             if enable_daily_energy_sensor:
@@ -99,10 +102,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.warning(f"Failed to setup device: {device.name} ({e})")
 
     hass.data[DOMAIN][DATA_COORDINATORS] = data_coordinators
+    hass.data[DOMAIN][ENERGY_COORDINATORS] = energy_coordinators
     await asyncio.gather(
         *(
             data.async_config_entry_first_refresh()
             for data in data_coordinators
+        ),
+        *(
+            data.async_config_entry_first_refresh()
+            for data in energy_coordinators
         ),
     )
 
