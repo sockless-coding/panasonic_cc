@@ -69,11 +69,16 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         try:
             if self._device is None:
                 self._device = await self._api_client.get_device(self._panasonic_device_info)
+                _LOGGER.debug(
+                    "%s Device features\nNanoe: %s\nEco Navi: %s\nAI Eco: %s", 
+                    self._panasonic_device_info.name,
+                    self._device.has_nanoe, 
+                    self._device.has_eco_navi, 
+                    self._device.has_eco_function)
                 self._update_id = 1
                 return self._update_id
             if await self._api_client.try_update_device(self._device):
                self._update_id = self._update_id + 1
-               _LOGGER.debug(f"Data updated: LR [{self._device.parameters.horizontal_swing_mode.name}]")
                return self._update_id
         except BaseException as e:
             raise UpdateFailed(f"Invalid response from API: {e}") from e

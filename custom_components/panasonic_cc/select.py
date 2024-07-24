@@ -66,6 +66,11 @@ class PanasonicSelectEntity(PanasonicDataEntity, PanasonicSelectEntityBase):
             self._attr_options = description.get_options(coordinator.device)
         super().__init__(coordinator, description.key)
     
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.entity_description.is_available(self.coordinator.device)
+
     async def async_select_option(self, option: str) -> None:
         builder = self.coordinator.get_change_request_builder()
         self.entity_description.set_option(builder, option)

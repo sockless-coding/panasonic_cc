@@ -35,7 +35,6 @@ NANOE_DESCRIPTION = PanasonicSwitchEntityDescription(
     translation_key="nanoe",
     name="Nanoe",
     icon="mdi:air-conditioner",
-    entity_category=EntityCategory.CONFIG,
     entity_registry_enabled_default=False,
     on_func = lambda builder: builder.set_nanoe_mode(constants.NanoeMode.On),
     off_func= lambda builder: builder.set_nanoe_mode(constants.NanoeMode.Off),
@@ -47,7 +46,6 @@ ECONAVI_DESCRIPTION = PanasonicSwitchEntityDescription(
     translation_key="eco-navi",
     name="ECONAVI",
     icon="mdi:leaf",
-    entity_category=EntityCategory.CONFIG,
     entity_registry_enabled_default=False,
     on_func = lambda builder: builder.set_eco_navi_mode(constants.EcoNaviMode.On),
     off_func= lambda builder: builder.set_eco_navi_mode(constants.EcoNaviMode.Off),
@@ -59,7 +57,6 @@ ECO_FUNCTION_DESCRIPTION = PanasonicSwitchEntityDescription(
     translation_key="eco-function",
     name="AI ECO",
     icon="mdi:leaf",
-    entity_category=EntityCategory.CONFIG,
     entity_registry_enabled_default=False,
     on_func = lambda builder: builder.set_eco_function_mode(constants.EcoFunctionMode.On),
     off_func= lambda builder: builder.set_eco_function_mode(constants.EcoFunctionMode.Off),
@@ -91,10 +88,16 @@ class PanasonicSwitchEntity(PanasonicDataEntity, PanasonicSwitchEntityBase):
         self.entity_description = description
         super().__init__(coordinator, description.key)
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.entity_description.is_available(self.coordinator.device)
+
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self.entity_description.is_available(self.coordinator.device)
         self._attr_is_on = self.entity_description.get_state(self.coordinator.device)
+        
 
     async def async_turn_on(self, **kwargs):
         """Turn on the Switch."""

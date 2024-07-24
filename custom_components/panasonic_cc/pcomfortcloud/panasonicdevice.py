@@ -74,7 +74,7 @@ class PanasonicDevice:
     
     @property
     def has_eco_function(self):
-        return self._features.eco_function and self._parameters.eco_function_mode != constants.EcoFunctionMode.Unavailable
+        return self._features.eco_function > 0 and self._parameters.eco_function_mode != constants.EcoFunctionMode.Unavailable
     
     @property
     def has_nanoe(self):

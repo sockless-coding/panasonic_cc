@@ -85,6 +85,11 @@ class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
         self.entity_description = description
         super().__init__(coordinator, description.key)
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.entity_description.is_available(self.coordinator.device)
+
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self.entity_description.is_available(self.coordinator.device)
