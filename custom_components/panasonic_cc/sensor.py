@@ -2,7 +2,7 @@ from typing import Callable, Any
 from dataclasses import dataclass
 import logging
 
-from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, UnitOfTemperature
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, UnitOfTemperature, EntityCategory
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
@@ -54,6 +54,19 @@ OUTSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     get_state=lambda device: device.parameters.outside_temperature,
     is_available=lambda device: device.parameters.outside_temperature is not None,
 )
+LAST_UPDATE_TIME_DESCRIPTION = PanasonicSensorEntityDescription(
+    key="last_update",
+    translation_key="last_update",
+    name="Last Updated",
+    icon="mdi:clock-outline",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=None,
+    native_unit_of_measurement=None,
+    get_state=lambda device: device.last_update,
+    is_available=lambda device: True
+)
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
@@ -61,6 +74,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for coordinator in data_coordinators:
         entities.append(PanasonicSensorEntity(coordinator, INSIDE_TEMPERATURE_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, OUTSIDE_TEMPERATURE_DESCRIPTION))
+        entities.append(PanasonicSensorEntity(coordinator, LAST_UPDATE_TIME_DESCRIPTION))
         
     async_add_entities(entities)
     """
@@ -93,7 +107,7 @@ class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self.entity_description.is_available(self.coordinator.device)
-        self._attr_native_value = self.entity_description.get_state(self.coordinator.device)
+        self._attr_native_value = self.entity_description.get_state(self.coordinator.device)        
 
 
 

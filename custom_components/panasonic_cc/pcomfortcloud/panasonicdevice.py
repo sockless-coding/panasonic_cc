@@ -1,5 +1,6 @@
 import logging
 import hashlib
+from datetime import datetime, timedelta, timezone
 
 from . import constants
 
@@ -49,6 +50,7 @@ class PanasonicDevice:
         self._info = info
         self._features: PanasonicDeviceFeatures = None
         self._parameters: PanasonicDeviceParameters = None
+        self._last_update = datetime.now(timezone.utc)
         self.load(json)
 
     @property
@@ -67,6 +69,9 @@ class PanasonicDevice:
     def parameters(self):
         return self._parameters
 
+    @property
+    def last_update(self) -> datetime:
+        return self._last_update
 
     @property
     def has_eco_navi(self):
@@ -124,6 +129,7 @@ class PanasonicDevice:
             has_changed = True
         else:
             has_changed = True if self._parameters.load(json_parameters) else has_changed
+        self._last_update = datetime.now(timezone.utc)
         return has_changed
 
 
