@@ -91,7 +91,7 @@ DAILY_HEATING_ENERGY_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement="kWh",
-    get_state=lambda energy: energy.heatingConsumption
+    get_state=lambda energy: energy.heating_consumption
 )
 DAILY_COOLING_ENERGY_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     key="daily_cooling_energy",
@@ -101,9 +101,17 @@ DAILY_COOLING_ENERGY_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement="kWh",
-    get_state=lambda energy: energy.coolingConsumption
+    get_state=lambda energy: energy.cooling_consumption
 )
-
+POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
+    key="current_power",
+    translation_key="current_power",
+    name="Current Power",
+    icon="mdi:flash",
+    device_class=SensorDeviceClass.POWER,
+    native_unit_of_measurement="W",
+    get_state=lambda energy: energy.current_power
+    )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -119,6 +127,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(PanasonicEnergySensorEntity(coordinator, DAILY_ENERGY_DESCRIPTION))
         entities.append(PanasonicEnergySensorEntity(coordinator, DAILY_COOLING_ENERGY_DESCRIPTION))
         entities.append(PanasonicEnergySensorEntity(coordinator, DAILY_HEATING_ENERGY_DESCRIPTION))
+        entities.append(PanasonicEnergySensorEntity(coordinator, POWER_DESCRIPTION))
 
         
     async_add_entities(entities)

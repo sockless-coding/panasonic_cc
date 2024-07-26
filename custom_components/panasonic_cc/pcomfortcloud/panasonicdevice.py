@@ -674,10 +674,13 @@ class PanasonicDeviceEnergy:
     def __init__(self, info: PanasonicDeviceInfo, json = None) -> None:
         self._info = info
         self._consumption: float = 0.0
-        self._heatingRate: float = 0.0
-        self._coolingRate: float = 0.0
-        self._heatingConsumption: float = 0.0
-        self._coolingConsumption: float = 0.0
+        self._heating_rate: float = 0.0
+        self._cooling_rate: float = 0.0
+        self._heating_consumption: float = 0.0
+        self._cooling_consumption: float = 0.0
+        self._last_consumption: float = None
+        self._last_consumption_changed: datetime = None
+        self._current_power: float = None
         self._has_changed = False
         self.load(json)
 
@@ -694,38 +697,55 @@ class PanasonicDeviceEnergy:
         return self._consumption
     @consumption.setter
     def consumption(self, value):
+        now = datetime.now()
         if self._consumption == value:
+            if now - self._last_consumption_changed >= timedelta(minutes= 15):
+                self._current_power = 0
             return
         self._has_changed = True
+        self._last_consumption = self._consumption
         self._consumption = value
+        if self._last_consumption_changed is None:
+            self._last_consumption_changed = now
+        else:
+            delta = (now - self._last_consumption_changed).total_seconds() / 3600
+            self._last_consumption_changed = now
+            energy_diff = value - self._last_consumption
+            self._current_power = round((energy_diff*1000)/delta)
+            
+
 
     @property
-    def heatingRate(self) -> float:
-        return self._heatingRate
-    @heatingRate.setter
-    def heatingRate(self, value):
-        if self._heatingRate == value:
+    def heating_rate(self) -> float:
+        return self._heating_rate
+    @heating_rate.setter
+    def heating_rate(self, value):
+        if self._heating_rate == value:
             return
         self._has_changed = True
-        self._heatingRate = value
+        self._heating_rate = value
 
     @property
-    def heatingConsumption(self) -> float:
-        return self._heatingConsumption
+    def heating_consumption(self) -> float:
+        return self._heating_consumption
 
     @property
-    def coolingRate(self) -> float:
-        return self._coolingRate
-    @coolingRate.setter
-    def coolingRate(self, value):
-        if self._coolingRate == value:
+    def cooling_rate(self) -> float:
+        return self._cooling_rate
+    @cooling_rate.setter
+    def cooling_rate(self, value):
+        if self._cooling_rate == value:
             return
         self._has_changed = True
-        self._coolingRate = value
+        self._cooling_rate = value
 
     @property
-    def coolingConsumption(self) -> float:
-        return self._coolingConsumption
+    def cooling_consumption(self) -> float:
+        return self._cooling_consumption
+    
+    @property
+    def current_power(self)->float|None:
+        return self._current_power
 
     def load(self, json) -> bool:
         if not json:
@@ -734,13 +754,13 @@ class PanasonicDeviceEnergy:
         if 'consumption' in json and json['consumption'] >= 0:
             self.consumption = json['consumption']
         if 'heatConsumptionRate' in json and json['heatConsumptionRate'] >= 0:
-            self.heatingRate = json['heatConsumptionRate']
+            self.heating_rate = json['heatConsumptionRate']
         if 'coolConsumptionRate' in json and json['coolConsumptionRate'] >= 0:
-            self.coolingRate = json['coolConsumptionRate']
+            self.cooling_rate = json['coolConsumptionRate']
 
         has_changed = self._has_changed
         if has_changed:
-            self._coolingConsumption = self.coolingRate * self.consumption
-            self._heatingConsumption = self.heatingRate * self.consumption
+            self._cooling_consumption = self.cooling_rate * self.consumption
+            self._heating_consumption = self.heating_rate * self.consumption
         self._has_changed = False
         return has_changed
