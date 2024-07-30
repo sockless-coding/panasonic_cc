@@ -710,7 +710,7 @@ class PanasonicDeviceEnergy:
         else:
             delta = (now - self._last_consumption_changed).total_seconds() / 3600
             self._last_consumption_changed = now
-            energy_diff = value - self._last_consumption
+            energy_diff = value if value < self._last_consumption else value - self._last_consumption
             self._current_power = round((energy_diff*1000)/delta)
             
 
