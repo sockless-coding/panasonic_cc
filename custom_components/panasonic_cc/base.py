@@ -12,7 +12,7 @@ class PanasonicDataEntity(CoordinatorEntity[PanasonicDeviceCoordinator]):
     def __init__(self, coordinator: PanasonicDeviceCoordinator, key: str) -> None:
         super().__init__(coordinator)
         self._attr_translation_key = key
-        self._attr_unique_id = f"{coordinator.device.id}-{key}"
+        self._attr_unique_id = f"{coordinator.device_id}-{key}"
         self._attr_device_info = self.coordinator.device_info
         self._async_update_attrs()
 
@@ -33,7 +33,7 @@ class PanasonicEnergyEntity(CoordinatorEntity[PanasonicDeviceEnergyCoordinator])
     def __init__(self, coordinator: PanasonicDeviceEnergyCoordinator, key: str) -> None:
         super().__init__(coordinator)
         self._attr_translation_key = key
-        self._attr_unique_id = f"{coordinator.energy.id}-{key}"
+        self._attr_unique_id = f"{coordinator.device_id}-{key}"
         self._attr_device_info = self.coordinator.device_info
         self._async_update_attrs()
 

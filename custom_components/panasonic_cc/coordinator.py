@@ -31,6 +31,7 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         self._store = Store(hass, version=1, key=f"panasonic_cc_{device_info.id}")
         self._update_id = 0
         
+        
     @property
     def device(self) -> PanasonicDevice:
         return self._device
@@ -38,6 +39,11 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
     @property
     def api_client(self) -> ApiClient:
         return self._api_client
+    
+    @property
+    def device_id(self) -> str:
+        return self._panasonic_device_info.id
+
     
     @property
     def device_info(self)->DeviceInfo:
@@ -105,6 +111,10 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
     @property
     def api_client(self) -> ApiClient:
         return self._api_client
+    
+    @property
+    def device_id(self) -> str:
+        return self._panasonic_device_info.id
     
     @property
     def energy(self) -> PanasonicDeviceEnergy:
