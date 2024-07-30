@@ -6,6 +6,8 @@ from . import constants
 
 _LOGGER = logging.getLogger(__name__)
 
+ENERGY_VALUE_TTL = timedelta(minutes= 15)
+
 def read_enum(json, key, type, default_value):
     if key not in json:
         return default_value
@@ -676,11 +678,17 @@ class PanasonicDeviceEnergy:
         self._consumption: float = 0.0
         self._heating_rate: float = 0.0
         self._cooling_rate: float = 0.0
-        self._heating_consumption: float = 0.0
+        self._heating_consumption: float = 0.0        
         self._cooling_consumption: float = 0.0
         self._last_consumption: float = None
         self._last_consumption_changed: datetime = None
+        self._last_cooling_consumption: float = 0.0
+        self._last_cooling_consumption_changed: datetime = None
+        self._last_heating_consumption: float = 0.0
+        self._last_heating_consumption_changed: datetime = None
         self._current_power: float = None
+        self._cooling_power: float = None
+        self._heating_power: float = None
         self._has_changed = False
         self.load(json)
 
@@ -699,8 +707,10 @@ class PanasonicDeviceEnergy:
     def consumption(self, value):
         now = datetime.now()
         if self._consumption == value:
-            if now - self._last_consumption_changed >= timedelta(minutes= 15):
+            if (self._last_consumption_changed is not None 
+                and now - self._last_consumption_changed >= ENERGY_VALUE_TTL):
                 self._current_power = 0
+                self._has_changed = True
             return
         self._has_changed = True
         self._last_consumption = self._consumption
@@ -746,6 +756,14 @@ class PanasonicDeviceEnergy:
     @property
     def current_power(self)->float|None:
         return self._current_power
+    
+    @property
+    def cooling_power(self)->float|None:
+        return self._cooling_power
+    
+    @property
+    def heating_power(self)->float|None:
+        return self._heating_power
 
     def load(self, json) -> bool:
         if not json:
@@ -758,9 +776,51 @@ class PanasonicDeviceEnergy:
         if 'coolConsumptionRate' in json and json['coolConsumptionRate'] >= 0:
             self.cooling_rate = json['coolConsumptionRate']
 
+        self._set_cooling_consumption(self.cooling_rate * self.consumption)
+        self._set_heating_consumption(self.heating_rate * self.consumption)
         has_changed = self._has_changed
-        if has_changed:
-            self._cooling_consumption = self.cooling_rate * self.consumption
-            self._heating_consumption = self.heating_rate * self.consumption
         self._has_changed = False
         return has_changed
+    
+    def _set_cooling_consumption(self, value):
+        now = datetime.now()
+        if self._cooling_consumption == value:
+            if self._cooling_power is None:
+                self._cooling_power = 0
+            if (self._last_cooling_consumption_changed is not None 
+                and now - self._last_cooling_consumption_changed >= ENERGY_VALUE_TTL):
+                self._cooling_power = 0
+                self._has_changed = True
+            return
+        self._has_changed = True
+        self._last_cooling_consumption = self._cooling_consumption
+        self._cooling_consumption = value
+        if self._last_cooling_consumption_changed is None:
+            self._last_cooling_consumption_changed = now
+        else:
+            delta = (now - self._last_cooling_consumption_changed).total_seconds() / 3600
+            self._last_cooling_consumption_changed = now
+            energy_diff = value if value < self._last_cooling_consumption else value - self._last_cooling_consumption
+            self._cooling_power = round((energy_diff*1000)/delta)
+
+    def _set_heating_consumption(self, value):
+        now = datetime.now()
+        if self._heating_consumption == value:
+            if self._heating_power is None:
+                self._heating_power = 0
+            if (self._last_heating_consumption_changed is not None 
+                and now - self._last_heating_consumption_changed >= ENERGY_VALUE_TTL):
+                self._heating_power  = 0
+                self._has_changed = True
+            return
+        self._has_changed = True
+        self._last_heating_consumption = self._heating_consumption
+        self._heating_consumption = value
+        if self._last_heating_consumption_changed is None:
+            self._last_heating_consumption_changed = now
+        else:
+            delta  = (now - self._last_heating_consumption_changed).total_seconds() / 3600
+            self._last_heating_consumption_changed = now
+            energy_diff = value if value < self._last_heating_consumption else value - self._last_heating_consumption
+            self._heating_power = round((energy_diff*1000)/delta)
+

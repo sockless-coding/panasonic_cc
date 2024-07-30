@@ -29,14 +29,12 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass(frozen=True, kw_only=True)
 class PanasonicSensorEntityDescription(SensorEntityDescription):
     """Describes Panasonic sensor entity."""
-    entity_registry_enabled_default=False
     get_state: Callable[[PanasonicDevice], Any] = None
     is_available: Callable[[PanasonicDevice], bool] = None
 
 @dataclass(frozen=True, kw_only=True)
 class PanasonicEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Panasonic sensor entity."""
-    entity_registry_enabled_default=False
     get_state: Callable[[PanasonicDeviceEnergy], Any] = None
 
 INSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
@@ -111,7 +109,25 @@ POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     device_class=SensorDeviceClass.POWER,
     native_unit_of_measurement="W",
     get_state=lambda energy: energy.current_power
-    )
+)
+COOLING_POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
+    key="cooling_power",
+    translation_key="cooling_power",
+    name="Cooling Power",
+    icon="mdi:flash",
+    device_class=SensorDeviceClass.POWER,
+    native_unit_of_measurement="W",
+    get_state=lambda energy: energy.cooling_power
+)
+HEATING_POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
+    key="heating_power",
+    translation_key="heating_power",
+    name="Heating Power",
+    icon="mdi:flash",
+    device_class=SensorDeviceClass.POWER,
+    native_unit_of_measurement="W",
+    get_state=lambda energy: energy.heating_power
+)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -128,6 +144,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(PanasonicEnergySensorEntity(coordinator, DAILY_COOLING_ENERGY_DESCRIPTION))
         entities.append(PanasonicEnergySensorEntity(coordinator, DAILY_HEATING_ENERGY_DESCRIPTION))
         entities.append(PanasonicEnergySensorEntity(coordinator, POWER_DESCRIPTION))
+        entities.append(PanasonicEnergySensorEntity(coordinator, COOLING_POWER_DESCRIPTION))
+        entities.append(PanasonicEnergySensorEntity(coordinator, HEATING_POWER_DESCRIPTION))
+        
 
         
     async_add_entities(entities)

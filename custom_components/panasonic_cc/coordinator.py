@@ -81,6 +81,7 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                self._update_id = self._update_id + 1
                return self._update_id
         except BaseException as e:
+            _LOGGER.error("Error fetching device data from API: %s", e, exc_info=e)
             raise UpdateFailed(f"Invalid response from API: {e}") from e
         return self._update_id
 
@@ -129,5 +130,6 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
                self._update_id = self._update_id + 1
                return self._update_id
         except BaseException as e:
+            _LOGGER.error("Error fetching energy data from API: %s", e, exc_info=e)
             raise UpdateFailed(f"Invalid response from API: {e}") from e
         return self._update_id
