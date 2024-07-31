@@ -18,7 +18,7 @@ class ChangeRequestBuilder:
     
     @property
     def eco_mode(self) -> constants.EcoMode | None:
-        return constants.EcoMode[self._request["ecoMode"]] if "ecoMode" in self._request else None
+        return constants.EcoMode(self._request["ecoMode"]) if "ecoMode" in self._request else None
     
     def set_eco_mode(self, new_value: str | constants.EcoMode):
         """ Set eco mode """
@@ -40,7 +40,7 @@ class ChangeRequestBuilder:
     
     @property
     def fan_speed(self) -> constants.FanSpeed | None:
-        return constants.FanSpeed[self._request["fanSpeed"]] if "fanSpeed" in self._request else None
+        return constants.FanSpeed(self._request["fanSpeed"]) if "fanSpeed" in self._request else None
     
     def set_fan_speed(self, new_value: str | constants.FanSpeed):
         """ Set fan speed """
@@ -52,7 +52,7 @@ class ChangeRequestBuilder:
 
     @property
     def hvac_mode(self) -> constants.OperationMode | None:
-        return constants.OperationMode[self._request["operationMode"]] if "operationMode" in self._request else None
+        return constants.OperationMode(self._request["operationMode"]) if "operationMode" in self._request else None
 
     def set_hvac_mode(self, new_value: str | constants.OperationMode):
         """ Set hvac mode"""
@@ -66,9 +66,9 @@ class ChangeRequestBuilder:
     def horizontal_swing(self) -> constants.AirSwingLR | None:
         if "airSwingLR" not in self._request:
             return None
-        if self._request["fanAutoMode"] in (constants.AirSwingAutoMode.Both, constants.AirSwingAutoMode.AirSwingLR):
+        if self._request["fanAutoMode"] in (constants.AirSwingAutoMode.Both.value, constants.AirSwingAutoMode.AirSwingLR.value):
             return constants.AirSwingLR.Auto
-        return constants.AirSwingAutoMode[self._request["airSwingLR"]]
+        return constants.AirSwingAutoMode(self._request["airSwingLR"])
     
     def set_horizontal_swing(self, new_value: str | constants.AirSwingLR):
         """ Set horizontal swing"""
@@ -90,9 +90,9 @@ class ChangeRequestBuilder:
     def vertical_swing(self) -> constants.AirSwingUD | None:
         if "airSwingUD" not in self._request:
             return None
-        if self._request["fanAutoMode"] in (constants.AirSwingAutoMode.Both, constants.AirSwingAutoMode.AirSwingUD):
+        if self._request["fanAutoMode"] in (constants.AirSwingAutoMode.Both.value, constants.AirSwingAutoMode.AirSwingUD.value):
             return constants.AirSwingUD.Auto
-        return constants.AirSwingUD[self._request["airSwingUD"]]
+        return constants.AirSwingUD(self._request["airSwingUD"])
     
     def set_vertical_swing(self, new_value: str | constants.AirSwingUD):
         """ Set vertical swing"""
@@ -112,7 +112,7 @@ class ChangeRequestBuilder:
     
     @property
     def nanoe_mode(self) -> constants.NanoeMode | None:
-        return constants.NanoeMode[self._request["nanoeMode"]] if "nanoe" in self._request else None
+        return constants.NanoeMode(self._request["nanoeMode"]) if "nanoe" in self._request else None
     
     def set_nanoe_mode(self, new_value: str | constants.NanoeMode):
         """ Set Nanoe mode"""
@@ -123,7 +123,7 @@ class ChangeRequestBuilder:
         
     @property
     def eco_navi_mode(self) -> constants.EcoNaviMode | None:
-        return constants.EcoNaviMode[self._request["ecoNavi"]] if "ecoNavi" in self._request else None
+        return constants.EcoNaviMode(self._request["ecoNavi"]) if "ecoNavi" in self._request else None
     
     def set_eco_navi_mode(self, new_value: str | constants.EcoNaviMode):
         """ Set EcoNavi mode"""
@@ -134,7 +134,7 @@ class ChangeRequestBuilder:
         
     @property
     def eco_function_mode(self) -> constants.EcoFunctionMode | None:
-        return constants.EcoFunctionMode[self._request["ecoFunctionData"]] if "ecoFunctionData" in self._request else None
+        return constants.EcoFunctionMode(self._request["ecoFunctionData"]) if "ecoFunctionData" in self._request else None
     
     def set_eco_function_mode(self, new_value: str | constants.EcoFunctionMode):
         """ Set EcoFunction mode"""
@@ -145,7 +145,7 @@ class ChangeRequestBuilder:
     
     @property
     def power_mode(self) -> constants.Power | None:
-        return constants.Power[self._request["operate"]] if "operate" in self._request else None
+        return constants.Power(self._request["operate"]) if "operate" in self._request else None
     
     def set_power_mode(self, new_value: str | constants.Power):
         """ Set Power mode"""
