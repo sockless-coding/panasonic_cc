@@ -16,7 +16,6 @@ from .base import PanasonicDataEntity
 @dataclass(frozen=True, kw_only=True)
 class PanasonicSelectEntityDescription(SelectEntityDescription):
     """Description of a select entity."""
-    entity_registry_enabled_default=False,
     set_option: Callable[[ChangeRequestBuilder, str], ChangeRequestBuilder]
     get_current_option: Callable[[PanasonicDevice], str]
     is_available: Callable[[PanasonicDevice], bool]
