@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import EntityCategory
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
-from .panasonic import PanasonicApiDevice
 from .pcomfortcloud import constants
 from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
 from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
@@ -116,7 +115,7 @@ class PanasonicSwitchEntity(PanasonicDataEntity, PanasonicSwitchEntityBase):
 class PanasonicZoneSwitch(ToggleEntity):
     """Representation of a zone."""
 
-    def __init__(self, api_device:PanasonicApiDevice, zone: PanasonicDeviceZone):
+    def __init__(self, api_device, zone: PanasonicDeviceZone):
         """Initialize the zone."""
         self._api = api_device
         self._zone = zone

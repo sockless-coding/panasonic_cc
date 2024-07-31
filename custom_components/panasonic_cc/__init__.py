@@ -26,7 +26,6 @@ from .const import (
     DATA_COORDINATORS,
     ENERGY_COORDINATORS)
 
-from .panasonic import PanasonicApiDevice
 from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator
 
 
