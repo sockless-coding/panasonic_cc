@@ -103,6 +103,7 @@ POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     name="Current Power",
     icon="mdi:flash",
     device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement="W",
     get_state=lambda energy: energy.current_power
 )
@@ -112,6 +113,7 @@ COOLING_POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     name="Cooling Power",
     icon="mdi:flash",
     device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement="W",
     get_state=lambda energy: energy.cooling_power
 )
@@ -121,6 +123,7 @@ HEATING_POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     name="Heating Power",
     icon="mdi:flash",
     device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement="W",
     get_state=lambda energy: energy.heating_power
 )
