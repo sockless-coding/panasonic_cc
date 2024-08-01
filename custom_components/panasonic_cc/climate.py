@@ -170,7 +170,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     def _update_attributes(self, builder: ChangeRequestBuilder) -> None:
         """Update attributes."""
         if builder.power_mode == constants.Power.Off:
-            self._attr_hvac_mode = HVACMode.OFF.name
+            self._attr_hvac_mode = HVACMode.OFF
         if builder.target_temperature:
             self._attr_target_temperature = builder.target_temperature
             if builder.target_temperature > 15 and self._attr_preset_mode == PRESET_8_15:
@@ -191,7 +191,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         if builder.vertical_swing:
             self._attr_swing_mode = builder.vertical_swing.name
         if builder.hvac_mode:
-            self._attr_hvac_mode = builder.hvac_mode.name
+            self._attr_hvac_mode = convert_operation_mode_to_hvac_mode(builder.hvac_mode)
         self.async_write_ha_state()
 
 

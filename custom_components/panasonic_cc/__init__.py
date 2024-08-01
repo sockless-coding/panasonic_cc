@@ -39,7 +39,6 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_FORCE_OUTSIDE_SENSOR, default=DEFAULT_FORCE_OUTSIDE_SENSOR): cv.boolean,  # noqa: E501
                 vol.Optional(CONF_ENABLE_DAILY_ENERGY_SENSOR, default=DEFAULT_ENABLE_DAILY_ENERGY_SENSOR): cv.boolean,
                 # noqa: E501
             }
@@ -72,9 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    force_outside_sensor = entry.options.get(CONF_FORCE_OUTSIDE_SENSOR, DEFAULT_FORCE_OUTSIDE_SENSOR)
-    if CONF_FORCE_OUTSIDE_SENSOR in conf:
-        force_outside_sensor = conf[CONF_FORCE_OUTSIDE_SENSOR]
     enable_daily_energy_sensor = entry.options.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
     use_panasonic_preset_names = entry.options.get(CONF_USE_PANASONIC_PRESET_NAMES, False)
 
@@ -91,12 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for device in devices:
         try:
             data_coordinators.append(PanasonicDeviceCoordinator(hass, conf, api, device))
-            energy_coordinators.append(PanasonicDeviceEnergyCoordinator(hass, conf, api, device))
-            """api_device = PanasonicApiDevice(hass, api, device, force_outside_sensor, enable_daily_energy_sensor, use_panasonic_preset_names)
-            await api_device.do_update()
             if enable_daily_energy_sensor:
-                await api_device.update_energy()
-            hass.data[PANASONIC_DEVICES].append(api_device)"""
+                energy_coordinators.append(PanasonicDeviceEnergyCoordinator(hass, conf, api, device))
         except Exception as e:
             _LOGGER.warning(f"Failed to setup device: {device.name} ({e})")
 

@@ -2,7 +2,7 @@ from typing import Callable, Any
 from dataclasses import dataclass
 import logging
 
-from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, UnitOfTemperature, EntityCategory
+from homeassistant.const import UnitOfTemperature, EntityCategory
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
@@ -15,11 +15,7 @@ from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceEnerg
 from .const import (
     DOMAIN,
     DATA_COORDINATORS,
-    ENERGY_COORDINATORS,
-    
-    ATTR_DAILY_ENERGY,
-    ATTR_CURRENT_POWER,
-    ENERGY_SENSOR_TYPES
+    ENERGY_COORDINATORS
     )
 from .base import PanasonicDataEntity, PanasonicEnergyEntity
 from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator
@@ -146,21 +142,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(PanasonicEnergySensorEntity(coordinator, POWER_DESCRIPTION))
         entities.append(PanasonicEnergySensorEntity(coordinator, COOLING_POWER_DESCRIPTION))
         entities.append(PanasonicEnergySensorEntity(coordinator, HEATING_POWER_DESCRIPTION))
-        
 
-        
     async_add_entities(entities)
-    """
-    for device in hass.data[PANASONIC_DEVICES]:
-        sensors = [ATTR_INSIDE_TEMPERATURE]
-        if device.support_outside_temperature:
-            sensors.append(ATTR_OUTSIDE_TEMPERATURE)
-        entities = [PanasonicClimateSensor(device, sensor) for sensor in sensors]
-        if device.energy_sensor_enabled:
-            entities.append(PanasonicEnergySensor(device, ATTR_DAILY_ENERGY))
-            entities.append(PanasonicEnergySensor(device, ATTR_CURRENT_POWER))
-        async_add_entities(entities)
-        """
+
 
 class PanasonicSensorEntityBase(SensorEntity):
     """Base class for all sensor entities."""
@@ -189,82 +173,14 @@ class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
     def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicEnergySensorEntityDescription):
         self.entity_description = description
         super().__init__(coordinator, description.key)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._attr_available
     
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_native_value = self.entity_description.get_state(self.coordinator.energy)
-        if self.registry_entry is not None and self.registry_entry.disabled and self._attr_native_value is not None:
-           self.registry_entry.disabled_by = None
-
-
-
-class PanasonicEnergySensor(SensorEntity):
-    """Representation of a Sensor."""
-
-    def __init__(self, api, monitored_state) -> None:
-        """Initialize the sensor."""
-        self._api = api
-        self._sensor = ENERGY_SENSOR_TYPES[monitored_state]
-        self._name = f"{api.name} {self._sensor[CONF_NAME]}"
-        self._device_attribute = monitored_state
-        if self._device_attribute == ATTR_DAILY_ENERGY:
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-            self._attr_device_class = SensorDeviceClass.ENERGY
-        else:
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-            self._attr_device_class = SensorDeviceClass.POWER
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        if self._device_attribute == ATTR_DAILY_ENERGY:
-            return f"{self._api.id}-daily_energy_sensor"
-        return f"{self._api.id}-{self._device_attribute}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._sensor[CONF_ICON]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._device_attribute == ATTR_DAILY_ENERGY:
-            if self._api.daily_energy is None:
-                return None
-            return round(self._api.daily_energy,2)
-        if self._device_attribute == ATTR_CURRENT_POWER:
-            if self._api.current_power is None:
-                return None
-            return round(self._api.current_power,2)
-        return None
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self.state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._sensor[CONF_TYPE]
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._sensor[CONF_TYPE]
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self._api.update_energy()
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
-    
+        value = self.entity_description.get_state(self.coordinator.energy)
+        self._attr_available = value is not None
+        self._attr_native_value = value
