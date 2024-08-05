@@ -86,7 +86,11 @@ OPERATION_LIST = {
     HVACMode.FAN_ONLY: 'Fan'
 }
 
+DOMAIN = "panasonic_cc"
+MANUFACTURER = "Panasonic"
 PANASONIC_DEVICES = "panasonic_devices"
+DATA_COORDINATORS = "data_coordinators"
+ENERGY_COORDINATORS = "energy_coordinators"
 
 COMPONENT_TYPES = [
     "climate", 
@@ -109,3 +113,8 @@ https://github.com/sockless-coding/panasonic_cc/issues
 
 SELECT_HORIZONTAL_SWING = "horizontal_swing"
 SELECT_VERTICAL_SWING = "vertical_swing"
+
+CONF_DEVICE_FETCH_INTERVAL = "device_fetch_interval"
+CONF_ENERGY_FETCH_INTERVAL = "energy_fetch_interval"
+DEFAULT_DEVICE_FETCH_INTERVAL = 30
+DEFAULT_ENERGY_FETCH_INTERVAL = 60

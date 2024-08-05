@@ -6,7 +6,11 @@
         "description": "Enter your Panasonic ID and password",
         "data": {
           "username": "Panasonic ID",
-          "password": "Password"
+          "password": "Password",
+          "enable_daily_energy_sensor": "Enable daily energy sensors",
+          "use_panasonic_preset_names": "Use 'Quiet' and 'Powerful' instead of 'Eco' and 'Boost' Presets",
+          "device_fetch_interval": "Device fetch interval (seconds)",
+          "energy_fetch_interval": "Energy fetch interval (seconds)"
         }
       }
     },
@@ -21,15 +25,17 @@
       "init": {
         "data": {
           "force_outside_sensor": "Force outside sensor",
-          "enable_daily_energy_sensor": "Enable daily energy sensor (requires restart)",
-          "use_panasonic_preset_names": "Use 'Quiet' and 'Powerful' instead of 'Eco' and 'Boost' Presets (requires restart)"
+          "enable_daily_energy_sensor": "Enable daily energy sensors (requires restart)",
+          "use_panasonic_preset_names": "Use 'Quiet' and 'Powerful' instead of 'Eco' and 'Boost' Presets (requires restart)",
+          "device_fetch_interval": "Device fetch interval (seconds)",
+          "energy_fetch_interval": "Energy fetch interval (seconds)"
         }
       }
     }
   },
   "entity": {
     "climate": {
-      "panasonic_climate": {
+      "climate": {
         "state_attributes": {
           "preset_mode": {
             "state": {

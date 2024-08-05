@@ -6,11 +6,12 @@ import logging
 import re
 import aiohttp
 import time
+from datetime import datetime
 from urllib.parse import quote_plus
 
 from . import constants
 from . import panasonicsession
-from .panasonicdevice import PanasonicDevice, PanasonicDeviceInfo
+from .panasonicdevice import PanasonicDevice, PanasonicDeviceInfo, PanasonicDeviceEnergy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,15 +117,137 @@ class ApiClient(panasonicsession.PanasonicSession):
     
     
 
-    async def get_device(self, device_id) -> PanasonicDevice:
-        device_guid = self._device_indexer.get(device_id)
+    async def get_device(self, device_info: PanasonicDeviceInfo) -> PanasonicDevice:
+        json_response = await self.execute_get(self._get_device_status_url(device_info.guid), "get_device", 200)
+        return PanasonicDevice(device_info, json_response)
+    
+    async def try_update_device(self, device: PanasonicDevice) -> bool:
+        device_guid = device.info.guid
+        json_response = await self.execute_get(self._get_device_status_url(device_guid), "try_update", 200)
+        return device.load(json_response)
+    
+    async def async_get_energy(self, device_info: PanasonicDeviceInfo) -> PanasonicDeviceEnergy | None:
+        todays_item = await self._async_get_todays_energy(device_info)
+        if todays_item is None:
+            return None
+        return PanasonicDeviceEnergy(device_info, todays_item)
+    
+    async def async_try_update_energy(self, energy: PanasonicDeviceEnergy) -> bool:
+        todays_item = await self._async_get_todays_energy(energy.info)
+        return energy.load(todays_item)
+    
+    async def _async_get_todays_energy(self, device_info: PanasonicDeviceInfo):
+        today = datetime.now().strftime("%Y%m%d")
+        device_guid = device_info.guid
+        if not device_guid:
+            return None
 
-        if device_guid:
-            json_response = await self.execute_get(self._get_device_status_url(device_guid), "get_device", 200)
-            return PanasonicDevice(device_id, json_response)
-        return None
 
-    async def set_device(self, device_id, **kwargs):
+        payload = {
+            "deviceGuid": device_guid,
+            "dataMode": constants.DataMode.Month.value,
+            "date": today,
+            "osTimezone": get_current_time_zone()
+        }
+
+        history = await self.execute_post(self._get_device_history_url(), payload, "get_todays_energy", 200)
+
+        if history is None:
+            return None
+        if 'historyDataList' not in history:
+            return None
+        history_items = history['historyDataList']
+        todays_item = None
+        for item in history_items:
+            if 'dataTime' not in item:
+                continue
+            if item['dataTime'] != today:
+                continue
+            todays_item = item
+            break
+        return todays_item
+        
+    
+    async def set_horizontal_swing(self, device:PanasonicDevice, new_value: str | constants.AirSwingLR):
+        """ Set horizontal swing"""
+        if isinstance(new_value, str):
+            new_value = constants.AirSwingLR[new_value]
+        fan_auto = (constants.AirSwingAutoMode.AirSwingLR 
+                    if new_value == constants.AirSwingLR.Auto 
+                    else constants.AirSwingAutoMode.Disabled)
+        if device.parameters.vertical_swing_mode == constants.AirSwingUD.Auto:
+            fan_auto = (constants.AirSwingAutoMode.Both 
+                        if new_value == constants.AirSwingLR.Auto 
+                        else constants.AirSwingAutoMode.AirSwingUD)
+
+        await self.set_device_raw(
+            device,
+            { 
+                "operate": constants.Power.On,
+                "airSwingLR": new_value.value,
+                "fanAutoMode": fan_auto.value
+            })
+        
+    async def set_vertical_swing(self, device:PanasonicDevice, new_value: str | constants.AirSwingUD):
+        """ Set vertical swing"""
+        if isinstance(new_value, str):
+            new_value = constants.AirSwingUD[new_value]
+        fan_auto = (constants.AirSwingAutoMode.AirSwingUD 
+                    if new_value == constants.AirSwingUD.Auto 
+                    else constants.AirSwingAutoMode.Disabled)
+        if device.parameters.horizontal_swing_mode == constants.AirSwingLR.Auto:
+            fan_auto = (constants.AirSwingAutoMode.Both 
+                        if new_value == constants.AirSwingUD.Auto 
+                        else constants.AirSwingAutoMode.AirSwingLR)
+
+        await self.set_device_raw(
+            device,
+            { 
+                "operate": constants.Power.On,
+                "airSwingUD": new_value.value,
+                "fanAutoMode": fan_auto.value
+            })
+        
+    async def set_nanoe_mode(self, device:PanasonicDevice, new_value: str | constants.NanoeMode):
+        """ Set Nanoe mode"""
+        if isinstance(new_value, str):
+            new_value = constants.NanoeMode[new_value]
+        await self.set_device_raw(
+            device,
+            {
+                "nanoe", new_value.value
+            })
+        
+    async def set_eco_navi_mode(self, device:PanasonicDevice, new_value: str | constants.EcoNaviMode):
+        """ Set EcoNavi mode"""
+        if isinstance(new_value, str):
+            new_value = constants.EcoNaviMode[new_value]
+        await self.set_device_raw(
+            device,
+            {
+                "ecoNavi", new_value.value
+            })
+        
+    async def set_eco_function_mode(self, device:PanasonicDevice, new_value: str | constants.EcoFunctionMode):
+        """ Set EcoFunction mode"""
+        if isinstance(new_value, str):
+            new_value = constants.EcoFunctionMode[new_value]
+        await self.set_device_raw(
+            device,
+            {
+                "ecoFunctionData", new_value.value
+            })
+
+    async def set_device_raw(self, device:PanasonicDevice, parameters):
+        """ Set parameters of device"""
+        payload = {
+            "deviceGuid": device.info.guid,
+            "parameters": parameters
+        }
+        await self.execute_post(self._get_device_status_control_url(), payload, "set_device", 200)
+
+
+    async def set_device(self, device_info: PanasonicDeviceInfo, **kwargs):
         """ Set parameters of device
 
         Args:
@@ -177,7 +300,7 @@ class ApiClient(panasonicsession.PanasonicSession):
         # routine to set the auto mode of fan (either horizontal, vertical, both or disabled)
         if air_x is not None or air_y is not None:
             fan_auto = 0
-            device = await self.get_device(device_id)
+            device = await self.get_device(device_info)
 
             if device and device.parameters.horizontal_swing_mode == constants.AirSwingLR.Auto:
                 fan_auto = fan_auto | 1
@@ -209,7 +332,7 @@ class ApiClient(panasonicsession.PanasonicSession):
             else:
                 parameters['fanAutoMode'] = constants.AirSwingAutoMode.Disabled.value
 
-        device_guid = self._device_indexer.get(device_id)
+        device_guid = device_info.guid
         if device_guid:
             payload = {
                 "deviceGuid": device_guid,

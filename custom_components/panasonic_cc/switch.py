@@ -1,222 +1,126 @@
 """Support for Panasonic Nanoe."""
 import logging
+from typing import Callable
+from dataclasses import dataclass
 
-from homeassistant.const import EntityCategory
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
-from .panasonic import PanasonicApiDevice
+from homeassistant.core import HomeAssistant
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
 from .pcomfortcloud import constants
-from .pcomfortcloud.panasonicdevice import PanasonicDeviceZone
+from .pcomfortcloud.panasonicdevice import PanasonicDevice
+from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
 
-from . import DOMAIN as PANASONIC_DOMAIN, PANASONIC_DEVICES
+
+from . import DOMAIN
+from .const import DATA_COORDINATORS
+from .coordinator import PanasonicDeviceCoordinator
+from .base import PanasonicDataEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+@dataclass(frozen=True, kw_only=True)
+class PanasonicSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Panasonic Switch entity."""
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+    on_func: Callable[[ChangeRequestBuilder], ChangeRequestBuilder]
+    off_func: Callable[[ChangeRequestBuilder], ChangeRequestBuilder]
+    get_state: Callable[[PanasonicDevice], bool]
+    is_available: Callable[[PanasonicDevice], bool]
+
+
+NANOE_DESCRIPTION = PanasonicSwitchEntityDescription(
+    key="nanoe",
+    translation_key="nanoe",
+    name="Nanoe",
+    icon="mdi:air-conditioner",
+    on_func = lambda builder: builder.set_nanoe_mode(constants.NanoeMode.On),
+    off_func= lambda builder: builder.set_nanoe_mode(constants.NanoeMode.Off),
+    get_state = lambda device: device.parameters.nanoe_mode == constants.NanoeMode.On,
+    is_available = lambda device: device.has_nanoe
+)
+ECONAVI_DESCRIPTION = PanasonicSwitchEntityDescription(
+    key="eco-navi",
+    translation_key="eco-navi",
+    name="ECONAVI",
+    icon="mdi:leaf",
+    on_func = lambda builder: builder.set_eco_navi_mode(constants.EcoNaviMode.On),
+    off_func= lambda builder: builder.set_eco_navi_mode(constants.EcoNaviMode.Off),
+    get_state = lambda device: device.parameters.eco_navi_mode == constants.EcoNaviMode.On,
+    is_available = lambda device: device.has_eco_navi
+)
+ECO_FUNCTION_DESCRIPTION = PanasonicSwitchEntityDescription(
+    key="eco-function",
+    translation_key="eco-function",
+    name="AI ECO",
+    icon="mdi:leaf",
+    on_func = lambda builder: builder.set_eco_function_mode(constants.EcoFunctionMode.On),
+    off_func= lambda builder: builder.set_eco_function_mode(constants.EcoFunctionMode.Off),
+    get_state = lambda device: device.parameters.eco_function_mode == constants.EcoFunctionMode.On,
+    is_available = lambda device: device.has_eco_function
+)
+
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     devices = []
-    device_list: list[PanasonicApiDevice] = hass.data[PANASONIC_DEVICES]
-    
-    for device in device_list:
-        devices.append(PanasonicNanoeSwitch(device))
-        if device.support_eco_navi:
-            devices.append(PanasonicEcoNaviSwitch(device))
-        if device.support_eco_function:
-            devices.append(PanasonicEcoFunctionSwitch(device))
-    add_entities(devices)
+    data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
+    for data_coordinator in data_coordinators:
+        devices.append(PanasonicSwitchEntity(data_coordinator, NANOE_DESCRIPTION))
+        devices.append(PanasonicSwitchEntity(data_coordinator, ECONAVI_DESCRIPTION))
+        devices.append(PanasonicSwitchEntity(data_coordinator, ECO_FUNCTION_DESCRIPTION))
+        if not data_coordinator.device.has_zones:
+            continue
+        for zone in data_coordinator.device.parameters.zones:
+            devices.append(PanasonicSwitchEntity(
+                data_coordinator, 
+                zone, 
+                PanasonicSwitchEntityDescription(
+                    key = f"zone-{zone.id}",
+                    translation_key=f"zone-{zone.id}",
+                    name = zone.name,
+                    icon="mdi:thermostat",
+                    off_func=lambda builder: builder.set_zone_mode(zone.id, constants.ZoneMode.Off),
+                    on_func=lambda builder: builder.set_zone_mode(zone.id, constants.ZoneMode.On),
+                    get_state=lambda device: device.parameters.get_zone(zone.id).mode == constants.ZoneMode.On,
+                    is_available=lambda device: True
+                )))
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    pass
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    devices = []
-    device_list: list[PanasonicApiDevice] = hass.data[PANASONIC_DEVICES]
-    for device in device_list:
-        devices.append(PanasonicNanoeSwitch(device))
-        if device.support_eco_navi:
-            devices.append(PanasonicEcoNaviSwitch(device))
-        if device.support_eco_function:
-            devices.append(PanasonicEcoFunctionSwitch(device))
-        for zone in device.zones:
-            devices.append(PanasonicZoneSwitch(device, zone))
     async_add_entities(devices)
 
-class PanasonicNanoeSwitch(ToggleEntity):
-    """Representation of Nanoe."""
+class PanasonicSwitchEntityBase(SwitchEntity):
+    """Base class for all Panasonic switch entities."""
 
-    def __init__(self, api_device:PanasonicApiDevice):
-        """Initialize the Nanoe."""
-        self._api = api_device
-        self._attr_entity_category = EntityCategory.CONFIG
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    entity_description: PanasonicSwitchEntityDescription
 
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._api.id}-nanoe"
+class PanasonicSwitchEntity(PanasonicDataEntity, PanasonicSwitchEntityBase):
+    """Representation of a Panasonic switch."""
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:air-filter"
+    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicSwitchEntityDescription):
+        """Initialize the Switch."""
+        self.entity_description = description
+        super().__init__(coordinator, description.key)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._api.name} Nanoe"
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.entity_description.is_available(self.coordinator.device)
 
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._api.nanoe_mode == self._api.constants.NanoeMode.On
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self._api.update()
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = self.entity_description.is_available(self.coordinator.device)
+        self._attr_is_on = self.entity_description.get_state(self.coordinator.device)
+        
 
     async def async_turn_on(self, **kwargs):
-        """Turn on nanoe."""
-        await self._api.set_nanoe_mode(self._api.constants.NanoeMode.On.name)
+        """Turn on the Switch."""
+        builder = self.coordinator.get_change_request_builder()
+        self.entity_description.on_func(builder)
+        await self.coordinator.async_apply_changes(builder)
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Turn off nanoe."""
-        await self._api.set_nanoe_mode(self._api.constants.NanoeMode.Off.name)
-
-class PanasonicEcoNaviSwitch(ToggleEntity):
-    """Representation of ECONAVI."""
-
-    def __init__(self, api_device:PanasonicApiDevice):
-        """Initialize the zone."""
-        self._api = api_device
-        self._attr_entity_category = EntityCategory.CONFIG
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._api.id}-eco-navi"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:leaf"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._api.name} ECONAVI"
-
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._api.eco_navi_mode == self._api.constants.EcoNaviMode.On
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self._api.update()
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on ECONAVI."""
-        await self._api.set_eco_navi_mode(constants.EcoNaviMode.On)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off ECONAVI."""
-        await self._api.set_eco_navi_mode(constants.EcoNaviMode.Off)
-
-class PanasonicEcoFunctionSwitch(ToggleEntity):
-    """Representation of Eco Function."""
-
-    def __init__(self, api_device:PanasonicApiDevice):
-        """Initialize the zone."""
-        self._api = api_device
-        self._attr_entity_category = EntityCategory.CONFIG
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._api.id}-eco-function"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:leaf"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._api.name} AI ECO"
-
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._api.eco_function_mode == self._api.constants.EcoFunctionMode.On
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self._api.update()
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on AI ECO."""
-        await self._api.set_eco_function_mode(constants.EcoFunctionMode.On)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off AI ECO."""
-        await self._api.set_eco_function_mode(constants.EcoFunctionMode.Off)
-
-class PanasonicZoneSwitch(ToggleEntity):
-    """Representation of a zone."""
-
-    def __init__(self, api_device:PanasonicApiDevice, zone: PanasonicDeviceZone):
-        """Initialize the zone."""
-        self._api = api_device
-        self._zone = zone
-        self._attr_entity_category = EntityCategory.CONFIG
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._api.id}-zone-{self._zone.id}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:thermostat"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._api.name} {self._zone.name}"
-
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._zone.mode == constants.ZoneMode.On
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self._api.update()
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on zone."""
-        await self._api.set_zone(self._zone.id, mode=constants.ZoneMode.On)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off zone."""
-        await self._api.set_zone(self._zone.id, mode=constants.ZoneMode.Off)
+        """Turn off the Switch."""
+        builder = self.coordinator.get_change_request_builder()
+        self.entity_description.off_func(builder)
+        await self.coordinator.async_apply_changes(builder)
+        self._attr_is_on = False
+        self.async_write_ha_state()
