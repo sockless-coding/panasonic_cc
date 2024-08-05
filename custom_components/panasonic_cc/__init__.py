@@ -15,8 +15,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 
 from .const import (
-    CONF_FORCE_OUTSIDE_SENSOR,
-    DEFAULT_FORCE_OUTSIDE_SENSOR,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_USE_PANASONIC_PRESET_NAMES,

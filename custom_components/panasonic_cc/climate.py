@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import logging
 
 import voluptuous as vol
-from typing import Optional, List
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription, HVACAction, HVACMode, ATTR_HVAC_MODE
@@ -17,6 +16,7 @@ from .base import PanasonicDataEntity
 from .coordinator import PanasonicDeviceCoordinator
 from .pcomfortcloud import constants
 from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
+from .pcomfortcloud.panasonicdevice import PanasonicDeviceParameters
 
 from .const import (
     SUPPORT_FLAGS,
@@ -70,6 +70,29 @@ def convert_hvac_mode_to_operation_mode(hvac_mode: HVACMode) -> constants.Operat
             return constants.OperationMode.Fan
         case HVACMode.HEAT:
             return constants.OperationMode.Heat
+        
+def convert_state_to_hvac_action(state: PanasonicDeviceParameters) -> HVACAction | None:
+    """Convert state to HVAC action."""
+    if state.power == constants.Power.Off:
+        return HVACAction.OFF
+    
+    match state.mode:
+        case constants.OperationMode.Auto:
+            auto_diff = state.target_temperature - state.inside_temperature
+            if auto_diff >= 1:
+                return HVACAction.HEATING
+            elif auto_diff <= -1:
+                return HVACAction.COOLING
+            return HVACAction.IDLE
+        case constants.OperationMode.Cool:
+            return HVACAction.COOLING if state.target_temperature < state.inside_temperature else HVACAction.IDLE
+        case constants.OperationMode.Dry:
+            return HVACAction.DRYING
+        case constants.OperationMode.Fan:
+            return HVACAction.FAN
+        case constants.OperationMode.Heat:
+            return HVACAction.HEATING if state.target_temperature > state.inside_temperature else HVACAction.IDLE
+        
 
 
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
@@ -157,6 +180,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             self._attr_preset_mode = PRESET_POWERFUL
         else:
             self._attr_preset_mode = PRESET_NONE
+        if self.coordinator.device.has_inside_temperature:
+            self._attr_hvac_action = convert_state_to_hvac_action(state)
+        
 
     def _set_temp_range(self) -> None:
         """Set new target temperature range."""

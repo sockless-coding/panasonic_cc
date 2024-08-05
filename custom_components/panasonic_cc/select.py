@@ -1,7 +1,6 @@
 from typing import Callable
 from dataclasses import dataclass
 
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 
