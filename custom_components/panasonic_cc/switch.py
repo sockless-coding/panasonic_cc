@@ -4,16 +4,13 @@ from typing import Callable
 from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
-from homeassistant.const import EntityCategory
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from .pcomfortcloud import constants
-from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
+from .pcomfortcloud.panasonicdevice import PanasonicDevice
 from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
-from .pcomfortcloud.apiclient import ApiClient
 
 
-from . import DOMAIN, PANASONIC_DEVICES
+from . import DOMAIN
 from .const import DATA_COORDINATORS
 from .coordinator import PanasonicDeviceCoordinator
 from .base import PanasonicDataEntity
@@ -28,6 +25,7 @@ class PanasonicSwitchEntityDescription(SwitchEntityDescription):
     off_func: Callable[[ChangeRequestBuilder], ChangeRequestBuilder]
     get_state: Callable[[PanasonicDevice], bool]
     is_available: Callable[[PanasonicDevice], bool]
+
 
 NANOE_DESCRIPTION = PanasonicSwitchEntityDescription(
     key="nanoe",
@@ -67,6 +65,22 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
         devices.append(PanasonicSwitchEntity(data_coordinator, NANOE_DESCRIPTION))
         devices.append(PanasonicSwitchEntity(data_coordinator, ECONAVI_DESCRIPTION))
         devices.append(PanasonicSwitchEntity(data_coordinator, ECO_FUNCTION_DESCRIPTION))
+        if not data_coordinator.device.has_zones:
+            continue
+        for zone in data_coordinator.device.parameters.zones:
+            devices.append(PanasonicSwitchEntity(
+                data_coordinator, 
+                zone, 
+                PanasonicSwitchEntityDescription(
+                    key = f"zone-{zone.id}",
+                    translation_key=f"zone-{zone.id}",
+                    name = zone.name,
+                    icon="mdi:thermostat",
+                    off_func=lambda builder: builder.set_zone_mode(zone.id, constants.ZoneMode.Off),
+                    on_func=lambda builder: builder.set_zone_mode(zone.id, constants.ZoneMode.On),
+                    get_state=lambda device: device.parameters.get_zone(zone.id).mode == constants.ZoneMode.On,
+                    is_available=lambda device: True
+                )))
 
     async_add_entities(devices)
 
@@ -110,50 +124,3 @@ class PanasonicSwitchEntity(PanasonicDataEntity, PanasonicSwitchEntityBase):
         await self.coordinator.async_apply_changes(builder)
         self._attr_is_on = False
         self.async_write_ha_state()
-
-
-class PanasonicZoneSwitch(ToggleEntity):
-    """Representation of a zone."""
-
-    def __init__(self, api_device, zone: PanasonicDeviceZone):
-        """Initialize the zone."""
-        self._api = api_device
-        self._zone = zone
-        self._attr_entity_category = EntityCategory.CONFIG
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._api.id}-zone-{self._zone.id}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:thermostat"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._api.name} {self._zone.name}"
-
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._zone.mode == constants.ZoneMode.On
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self._api.update()
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on zone."""
-        await self._api.set_zone(self._zone.id, mode=constants.ZoneMode.On)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off zone."""
-        await self._api.set_zone(self._zone.id, mode=constants.ZoneMode.Off)

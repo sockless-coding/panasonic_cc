@@ -512,6 +512,9 @@ class PanasonicDeviceParameters:
     @property
     def zones(self):
         return self._zones
+    
+    def get_zone(self, zone_id: int):
+        return self._zone_index[zone_id]
 
     def load(self, json) -> bool:
         _LOGGER.debug('Loading device parameters, has data: %s', json is not None)

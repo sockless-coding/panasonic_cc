@@ -154,6 +154,23 @@ class ChangeRequestBuilder:
         self._request["operate"] = new_value.value
         return self
     
+    def set_zone_mode(self, zone_id: int, new_value: str | constants.ZoneMode):
+        """ Set Zone mode"""
+        if isinstance(new_value, str):
+            new_value = constants.ZoneMode[new_value]
+        if "zoneParameters" not in self._request:
+            self._request["zoneParameters"] = []
+        zone_parameters = None
+        for zone in self._request["zoneParameters"]:
+            if zone["zoneId"] == zone_id:
+                zone_parameters = zone
+                break
+        if zone_parameters == None:
+            zone_parameters = { "zoneId": zone_id }
+            self._request["zoneParameters"].append(zone_parameters)
+        zone_parameters["zoneOnOff"] = new_value.value
+        return self
+    
     def _ensure_powered_on(self) -> None:
         """ Ensure that the device is powered on"""
         if self._device.parameters.power == constants.Power.On:
