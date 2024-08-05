@@ -83,11 +83,28 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
+        
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema({
                     vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str
+                    vol.Required(CONF_PASSWORD): str,                    
+                    vol.Optional(
+                        CONF_ENABLE_DAILY_ENERGY_SENSOR,
+                        default=DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+                    ): bool,
+                    vol.Optional(
+                        CONF_USE_PANASONIC_PRESET_NAMES,
+                        default=DEFAULT_USE_PANASONIC_PRESET_NAMES,
+                    ): bool,
+                    vol.Optional(
+                        CONF_DEVICE_FETCH_INTERVAL,
+                        default=DEFAULT_DEVICE_FETCH_INTERVAL,
+                    ): int,
+                    vol.Optional(
+                        CONF_ENERGY_FETCH_INTERVAL,
+                        default=DEFAULT_ENERGY_FETCH_INTERVAL,
+                    ): int,
                 })
             )
         return await self._create_device(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])

@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription, HVACAction, HVACMode, ATTR_HVAC_MODE
 from homeassistant.helpers import config_validation as cv, entity_platform
-
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
 
 
@@ -28,7 +28,8 @@ from .const import (
     PRESET_QUIET, 
     PRESET_POWERFUL,
     DOMAIN,
-    DATA_COORDINATORS)
+    DATA_COORDINATORS,
+    CONF_USE_PANASONIC_PRESET_NAMES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,11 +96,12 @@ def convert_state_to_hvac_action(state: PanasonicDeviceParameters) -> HVACAction
         
 
 
-async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     entities = []
     data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
+    use_panasonic_preset_names = entry.options.get(CONF_USE_PANASONIC_PRESET_NAMES, False)
     for coordinator in data_coordinators:
-        entities.append(PanasonicClimateEntity(coordinator, PANASONIC_CLIMATE_DESCRIPTION))
+        entities.append(PanasonicClimateEntity(coordinator, PANASONIC_CLIMATE_DESCRIPTION, use_panasonic_preset_names))
         
     async_add_entities(entities)
 
@@ -122,7 +124,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_fan_modes = [f.name for f in constants.FanSpeed]
 
-    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicClimateEntityDescription):
+    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicClimateEntityDescription, use_panasonic_preset_names: bool):
         """Initialize the climate entity."""
         self.entity_description = description
         self._attr_name = coordinator.device.info.name        
@@ -140,18 +142,19 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             hvac_modes += [HVACMode.HEAT]
         self._attr_hvac_modes = hvac_modes
 
+        self._quiet_preset = PRESET_QUIET if use_panasonic_preset_names else PRESET_ECO
+        self._powerful_preset = PRESET_POWERFUL if use_panasonic_preset_names else PRESET_BOOST
+
         preset_modes = [PRESET_NONE]
         if device.features.quiet_mode:
-            preset_modes += [PRESET_QUIET]
+            preset_modes += [self._quiet_preset]
         if device.features.powerful_mode:
-            preset_modes += [PRESET_POWERFUL]
+            preset_modes += [self._powerful_preset]
         if device.features.summer_house > 0:
             preset_modes += [PRESET_8_15]
         self._attr_preset_modes = preset_modes
         
         self._attr_swing_modes = [opt.name for opt in constants.AirSwingUD if opt != constants.AirSwingUD.Auto or device.features.auto_swing_ud]
-        
-        
 
         super().__init__(coordinator, description.key)
         _LOGGER.info(f"Registing Climate entity: '{self._attr_unique_id}'")
@@ -175,9 +178,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         if self.coordinator.device.in_summer_house_mode:
             self._attr_preset_mode = PRESET_8_15
         elif state.eco_mode == constants.EcoMode.Quiet:
-            self._attr_preset_mode = PRESET_QUIET
+            self._attr_preset_mode = self._quiet_preset
         elif state.eco_mode == constants.EcoMode.Powerful:
-            self._attr_preset_mode = PRESET_POWERFUL
+            self._attr_preset_mode = self._powerful_preset
         else:
             self._attr_preset_mode = PRESET_NONE
         if self.coordinator.device.has_inside_temperature:
@@ -206,9 +209,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
                 
         if builder.eco_mode:
             if builder.eco_mode.name in (PRESET_QUIET, PRESET_ECO):
-                self._attr_preset_mode = PRESET_QUIET
+                self._attr_preset_mode = self._quiet_preset
             elif builder.eco_mode.name in (PRESET_POWERFUL, PRESET_BOOST):
-                self._attr_preset_mode = PRESET_POWERFUL
+                self._attr_preset_mode = self._powerful_preset
             else:
                 self._attr_preset_mode = PRESET_NONE
 
