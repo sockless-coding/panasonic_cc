@@ -65,7 +65,8 @@ LAST_UPDATE_TIME_DESCRIPTION = PanasonicSensorEntityDescription(
     state_class=None,
     native_unit_of_measurement=None,
     get_state=lambda device: device.last_update,
-    is_available=lambda device: True
+    is_available=lambda device: True,
+    entity_registry_enabled_default=False,
 )
 DAILY_ENERGY_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     key="daily_energy_sensor",
