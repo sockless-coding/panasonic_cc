@@ -7,7 +7,9 @@
 
 This is a custom component to allow control of Panasonic Comfort Cloud devices in [HomeAssistant](https://home-assistant.io).
 
-![Example entities](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/entities.png)
+![Example controls](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/controls.png)
+![Example sensors](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/sensors.png)
+![Example diagnostics](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/diagnostics.png)
 
 ## IMPORTANT
 Before installing this integration, you **must** have **completed** the **2FA** process using the Panasonic Comfort Cloud app.
@@ -17,9 +19,12 @@ Before installing this integration, you **must** have **completed** the **2FA** 
 * Climate component for Panasonic airconditioners and heatpumps
 * Horizontal swing mode selection
 * Sensors for inside and outside temperature (where available)
-* Switch for toggling Nanoe
+* Switch for toggling Nanoe mode (where available)
+* Switch for toggling ECONAVI mode (where available)
+* Switch for toggling AI ECO mode (where available)
 * Daily energy sensor (optional)
 * Current Power sensor (Calculated from energy reading)
+* Zone controls (where available)
 
 ## Installation
 
@@ -37,15 +42,15 @@ Clone or copy this repository and copy the folder 'custom_components/panasonic_c
 
 Once installed, the Panasonic Comfort Cloud integration can be configured via the Home Assistant integration interface where it will let you enter your Panasonic ID and Password.
 
-![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/setup_dlg.png)
+![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/setup.png)
 
-After inital setup, additional options are available
+After inital setup, the following options are available:
 
-![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/options_dlg.png)
+![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/configuration.png)
 
 ## Known issues
 
-- Setting the Horizontal swing mode to LefMid will break the component, you will need to use the Comfort Cloud app to change the mode to something else.
+- The authentication process can be fiddly and may require resetting the MFA by logging in / out from the Panasonic app.
 
 ## Support Development
 - :coffee:&nbsp;&nbsp;[Buy me a coffee](https://www.buymeacoffee.com/sockless)
