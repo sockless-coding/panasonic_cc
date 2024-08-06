@@ -7,9 +7,11 @@
 
 This is a custom component to allow control of Panasonic Comfort Cloud devices in [HomeAssistant](https://home-assistant.io).
 
-![Example controls](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/controls.png)
-![Example sensors](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/sensors.png)
-![Example diagnostics](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/diagnostics.png)
+<p>
+    <img src="https://github.com/sockless-coding/panasonic_cc/raw/master/doc/controls.png" alt="Example controls" style="vertical-align: top;max-width:100%" />
+    <img src="https://github.com/sockless-coding/panasonic_cc/raw/master/doc/sensors.png" alt="Example sensors" style="vertical-align: top;max-width:100%" />
+    <img src="https://github.com/sockless-coding/panasonic_cc/raw/master/doc/diagnostics.png" alt="Example diagnostics" style="vertical-align: top;max-width:100%" />
+</p>
 
 ## IMPORTANT
 Before installing this integration, you **must** have **completed** the **2FA** process using the Panasonic Comfort Cloud app.
