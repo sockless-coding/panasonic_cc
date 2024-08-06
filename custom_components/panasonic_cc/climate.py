@@ -136,8 +136,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             hvac_modes += [HVACMode.COOL]
         if device.features.dry_mode:
             hvac_modes += [HVACMode.DRY]
-        if device.features.fan_mode:
-            hvac_modes += [HVACMode.FAN_ONLY]
+        hvac_modes += [HVACMode.FAN_ONLY]
         if device.features.heat_mode:
             hvac_modes += [HVACMode.HEAT]
         self._attr_hvac_modes = hvac_modes
