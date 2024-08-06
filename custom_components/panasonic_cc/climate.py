@@ -48,7 +48,7 @@ def convert_operation_mode_to_hvac_mode(operation_mode: constants.OperationMode)
     """Convert OperationMode to HVAC mode."""
     match operation_mode:
         case constants.OperationMode.Auto:
-            return HVACMode.AUTO
+            return HVACMode.HEAT_COOL
         case constants.OperationMode.Cool:
             return HVACMode.COOL
         case constants.OperationMode.Dry:
@@ -61,7 +61,7 @@ def convert_operation_mode_to_hvac_mode(operation_mode: constants.OperationMode)
 def convert_hvac_mode_to_operation_mode(hvac_mode: HVACMode) -> constants.OperationMode | None:
     """Convert HVAC mode to OperationMode."""
     match hvac_mode:
-        case HVACMode.AUTO:
+        case HVACMode.HEAT_COOL:
             return constants.OperationMode.Auto
         case HVACMode.COOL:
             return constants.OperationMode.Cool
