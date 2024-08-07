@@ -534,13 +534,14 @@ class PanasonicDeviceParameters:
         self.eco_navi_mode = read_enum(json, 'ecoNavi', constants.EcoNaviMode, self.eco_navi_mode)
         self.eco_function_mode = read_enum(json, 'ecoFunctionData', constants.EcoFunctionMode, self.eco_function_mode)
         
-        has_changed = self._has_changed or self._load_zones(json)
+        self._load_zones(json)
+        has_changed = self._has_changed
         self._has_changed = False
         return has_changed
 
-    def _load_zones(self, json) -> bool:
+    def _load_zones(self, json):
         if 'zoneParameters' not in json:
-            return False
+            return
         has_changed = False
 
         for zone in json['zoneParameters']:
@@ -553,7 +554,8 @@ class PanasonicDeviceParameters:
             self._zone_index[id] = PanasonicDeviceZone(zone)
             self._zones.append(self._zone_index[id])
             has_changed = True
-        return has_changed
+        if has_changed:
+           self._has_changed = True
         
 
     def _load_temperature(self, json):
