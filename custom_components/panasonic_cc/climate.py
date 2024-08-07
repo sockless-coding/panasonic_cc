@@ -313,7 +313,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             builder.set_eco_mode(constants.EcoMode.Powerful)
         elif preset_mode == PRESET_8_15:
             await self._async_enter_summer_house_mode(builder)
-                
+        await self.coordinator.async_apply_changes(builder)
         self._update_attributes(builder)
         
     async def async_set_fan_mode(self, fan_mode: str) -> None:
