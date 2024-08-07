@@ -36,7 +36,7 @@ VERTICAL_SWING_DESCRIPTION = PanasonicSelectEntityDescription(
     translation_key=SELECT_VERTICAL_SWING,
     icon="mdi:swap-vertical",
     name="Vertical Swing Mode",
-    get_options= lambda device: [opt.name for opt in constants.AirSwingUD if opt != constants.AirSwingUD.Auto or device.features.auto_swing_ud],
+    get_options= lambda device: [opt.name for opt in constants.AirSwingUD if opt != constants.AirSwingUD.Swing or device.features.auto_swing_ud],
     set_option = lambda builder, new_value : builder.set_vertical_swing(new_value),
     get_current_option = lambda device : device.parameters.vertical_swing_mode.name,
     is_available = lambda device : True

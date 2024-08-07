@@ -151,7 +151,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             preset_modes += [PRESET_8_15]
         self._attr_preset_modes = preset_modes
         
-        self._attr_swing_modes = [opt.name for opt in constants.AirSwingUD if opt != constants.AirSwingUD.Auto or device.features.auto_swing_ud]
+        self._attr_swing_modes = [opt.name for opt in constants.AirSwingUD if opt != constants.AirSwingUD.Swing or device.features.auto_swing_ud]
 
         super().__init__(coordinator, description.key)
         _LOGGER.info(f"Registing Climate entity: '{self._attr_unique_id}'")
