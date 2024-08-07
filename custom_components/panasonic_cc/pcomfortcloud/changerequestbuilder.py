@@ -82,7 +82,8 @@ class ChangeRequestBuilder:
                         if new_value == constants.AirSwingLR.Auto 
                         else constants.AirSwingAutoMode.AirSwingUD)
         self._ensure_powered_on()
-        self._request["airSwingLR"] = new_value.value
+        if new_value != constants.AirSwingLR.Auto:
+            self._request["airSwingLR"] = new_value.value
         self._request["fanAutoMode"] = fan_auto.value
         return self
     
@@ -106,7 +107,8 @@ class ChangeRequestBuilder:
                         if new_value == constants.AirSwingUD.Auto 
                         else constants.AirSwingAutoMode.AirSwingLR)
         self._ensure_powered_on()
-        self._request["airSwingUD"] = new_value.value
+        if new_value != constants.AirSwingUD.Auto:
+            self._request["airSwingUD"] = new_value.value
         self._request["fanAutoMode"] = fan_auto.value
         return self
     
