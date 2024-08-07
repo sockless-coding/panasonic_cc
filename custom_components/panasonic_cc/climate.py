@@ -40,8 +40,6 @@ class PanasonicClimateEntityDescription(ClimateEntityDescription):
 PANASONIC_CLIMATE_DESCRIPTION = PanasonicClimateEntityDescription(
     key="climate",
     translation_key="climate",
-    unit_of_measurement=UnitOfTemperature.CELSIUS,
-    
 )
 
 def convert_operation_mode_to_hvac_mode(operation_mode: constants.OperationMode) -> HVACMode | None:
