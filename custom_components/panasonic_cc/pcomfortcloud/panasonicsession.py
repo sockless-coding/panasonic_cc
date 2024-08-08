@@ -2,6 +2,7 @@ import json
 import os
 import aiohttp
 import logging
+import asyncio
 
 import aiohttp.client_exceptions
 import aiohttp.http_exceptions
@@ -40,6 +41,7 @@ class PanasonicSession:
         self._app_version = CCAppVersion(client, self._settings)
         self._authentication = PanasonicAuthentication(client, self._settings, self._app_version)
         self._raw = raw
+        self._request_semaphore = asyncio.Semaphore(1)
 
     async def start_session(self):
         _LOGGER.debug("Starting Session")
@@ -87,60 +89,62 @@ class PanasonicSession:
         await self._app_version.refresh()
 
     async def execute_post(self, url, json_data, function_description, expected_status_code):
-        await self._ensure_valid_token()
+        async with self._request_semaphore:
+            await self._ensure_valid_token()
 
-        try:
-            response = await self._client.post(
-                url,
-                json = json_data,
-                headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
-            )
-            if await has_new_version_been_published(response):
-                _LOGGER.info("New version of acc client id has been published")
-                await self._app_version.refresh()
+            try:
                 response = await self._client.post(
                     url,
                     json = json_data,
                     headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
                 )
-        except (aiohttp.client_exceptions.ClientError,
-                aiohttp.http_exceptions.HttpProcessingError,
-                aiohttp.web_exceptions.HTTPError) as ex:
-            _LOGGER.error("POST url: %s, data: %s", url, json_data)
-            raise exceptions.RequestError(ex)
+                if await has_new_version_been_published(response):
+                    _LOGGER.info("New version of acc client id has been published")
+                    await self._app_version.refresh()
+                    response = await self._client.post(
+                        url,
+                        json = json_data,
+                        headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
+                    )
+            except (aiohttp.client_exceptions.ClientError,
+                    aiohttp.http_exceptions.HttpProcessingError,
+                    aiohttp.web_exceptions.HTTPError) as ex:
+                _LOGGER.error("POST url: %s, data: %s", url, json_data)
+                raise exceptions.RequestError(ex)
 
-        
-        self._print_response_if_raw_is_set(response, function_description)
-        await check_response(response, function_description, expected_status_code, payload=json_data)
-        response_text = await response.text()
-        _LOGGER.debug("POST url: %s, data: %s, response: %s", url, json_data, response_text)
-        return json.loads(response_text)
+            
+            self._print_response_if_raw_is_set(response, function_description)
+            await check_response(response, function_description, expected_status_code, payload=json_data)
+            response_text = await response.text()
+            _LOGGER.debug("POST url: %s, data: %s, response: %s", url, json_data, response_text)
+            return json.loads(response_text)
 
     async def execute_get(self, url, function_description, expected_status_code):
-        await self._ensure_valid_token()
+        async with self._request_semaphore:
+            await self._ensure_valid_token()
 
-        try:
-            response = await self._client.get(
-                url,
-                headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
-            )
-            if await has_new_version_been_published(response):
-                 _LOGGER.info("New version of acc client id has been published")
-                 await self._app_version.refresh()
-                 response = await self._client.get(
+            try:
+                response = await self._client.get(
                     url,
                     headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
                 )
-        except (aiohttp.client_exceptions.ClientError,
-                aiohttp.http_exceptions.HttpProcessingError,
-                aiohttp.web_exceptions.HTTPError) as ex:
-            raise exceptions.RequestError(ex)
+                if await has_new_version_been_published(response):
+                    _LOGGER.info("New version of acc client id has been published")
+                    await self._app_version.refresh()
+                    response = await self._client.get(
+                        url,
+                        headers = await PanasonicRequestHeader.get(self._settings, self._app_version)
+                    )
+            except (aiohttp.client_exceptions.ClientError,
+                    aiohttp.http_exceptions.HttpProcessingError,
+                    aiohttp.web_exceptions.HTTPError) as ex:
+                raise exceptions.RequestError(ex)
 
-        self._print_response_if_raw_is_set(response, function_description)
-        await check_response(response, function_description, expected_status_code)
-        response_text = await response.text()
-        _LOGGER.debug("GET url: %s, response: %s", url, response_text)
-        return json.loads(response_text)
+            self._print_response_if_raw_is_set(response, function_description)
+            await check_response(response, function_description, expected_status_code)
+            response_text = await response.text()
+            _LOGGER.debug("GET url: %s, response: %s", url, response_text)
+            return json.loads(response_text)
 
     def _print_response_if_raw_is_set(self, response, function_description):
         if self._raw:
