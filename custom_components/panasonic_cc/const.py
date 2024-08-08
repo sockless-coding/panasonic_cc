@@ -97,7 +97,8 @@ COMPONENT_TYPES = [
     "sensor", 
     "switch",
     "button",
-    "select"
+    "select",
+    "number"
     ]
 
 STARTUP = """

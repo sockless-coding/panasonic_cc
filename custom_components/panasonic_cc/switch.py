@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from homeassistant.core import HomeAssistant
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
 from .pcomfortcloud import constants
-from .pcomfortcloud.panasonicdevice import PanasonicDevice
+from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
 from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
 
 
@@ -58,6 +58,18 @@ ECO_FUNCTION_DESCRIPTION = PanasonicSwitchEntityDescription(
     is_available = lambda device: device.has_eco_function
 )
 
+def create_zone_mode_description(zone: PanasonicDeviceZone):
+    return PanasonicSwitchEntityDescription(
+        key = f"zone-{zone.id}",
+        translation_key=f"zone-{zone.id}",
+        name = zone.name,
+        icon="mdi:thermostat",
+        off_func=lambda builder: builder.set_zone_mode(zone.id, constants.ZoneMode.Off),
+        on_func=lambda builder: builder.set_zone_mode(zone.id, constants.ZoneMode.On),
+        get_state=lambda device: device.parameters.get_zone(zone.id).mode == constants.ZoneMode.On,
+        is_available=lambda device: True
+    )
+
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     devices = []
     data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
@@ -65,22 +77,11 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
         devices.append(PanasonicSwitchEntity(data_coordinator, NANOE_DESCRIPTION))
         devices.append(PanasonicSwitchEntity(data_coordinator, ECONAVI_DESCRIPTION))
         devices.append(PanasonicSwitchEntity(data_coordinator, ECO_FUNCTION_DESCRIPTION))
-        if not data_coordinator.device.has_zones:
-            continue
-        for zone in data_coordinator.device.parameters.zones:
-            devices.append(PanasonicSwitchEntity(
-                data_coordinator, 
-                zone, 
-                PanasonicSwitchEntityDescription(
-                    key = f"zone-{zone.id}",
-                    translation_key=f"zone-{zone.id}",
-                    name = zone.name,
-                    icon="mdi:thermostat",
-                    off_func=lambda builder: builder.set_zone_mode(zone.id, constants.ZoneMode.Off),
-                    on_func=lambda builder: builder.set_zone_mode(zone.id, constants.ZoneMode.On),
-                    get_state=lambda device: device.parameters.get_zone(zone.id).mode == constants.ZoneMode.On,
-                    is_available=lambda device: True
-                )))
+        if data_coordinator.device.has_zones:
+            for zone in data_coordinator.device.parameters.zones:
+                devices.append(PanasonicSwitchEntity(
+                    data_coordinator,
+                    create_zone_mode_description(zone)))
 
     async_add_entities(devices)
 

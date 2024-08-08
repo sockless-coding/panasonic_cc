@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription
 )
 
-from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceEnergy
+from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceEnergy, PanasonicDeviceZone
 
 from .const import (
     DOMAIN,
@@ -129,6 +129,19 @@ HEATING_POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     get_state=lambda energy: energy.heating_power
 )
 
+def create_zone_temperature_description(zone: PanasonicDeviceZone):
+    return PanasonicSensorEntityDescription(
+        key = f"zone-{zone.id}-temperature",
+        translation_key=f"zone-{zone.id}-temperature",
+        name = f"{zone.name} Temperature",
+        icon="mdi:thermometer",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        get_state=lambda device: zone.temperature,
+        is_available=lambda device: zone.has_temperature
+    )
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
@@ -138,6 +151,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(PanasonicSensorEntity(coordinator, INSIDE_TEMPERATURE_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, OUTSIDE_TEMPERATURE_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, LAST_UPDATE_TIME_DESCRIPTION))
+        if coordinator.device.has_zones:
+            for zone in coordinator.device.parameters.zones:
+                entities.append(PanasonicSensorEntity(
+                    coordinator,
+                    create_zone_temperature_description(zone)))
 
     for coordinator in energy_coordinators:
         entities.append(PanasonicEnergySensorEntity(coordinator, DAILY_ENERGY_DESCRIPTION))

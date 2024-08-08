@@ -160,6 +160,17 @@ class ChangeRequestBuilder:
         """ Set Zone mode"""
         if isinstance(new_value, str):
             new_value = constants.ZoneMode[new_value]
+        zone_parameters = self._ensure_zone(new_value)
+        zone_parameters["zoneOnOff"] = new_value.value
+        return self
+    
+    def set_zone_damper(self, zone_id: int, new_value: int):
+        """ Set Zone damper"""
+        zone_parameters = self._ensure_zone(new_value)
+        zone_parameters["zoneLevel"] = new_value
+        return self
+
+    def _ensure_zone(self, zone_id: int):
         if "zoneParameters" not in self._request:
             self._request["zoneParameters"] = []
         zone_parameters = None
@@ -170,8 +181,7 @@ class ChangeRequestBuilder:
         if zone_parameters == None:
             zone_parameters = { "zoneId": zone_id }
             self._request["zoneParameters"].append(zone_parameters)
-        zone_parameters["zoneOnOff"] = new_value.value
-        return self
+        return zone_parameters
     
     def _ensure_powered_on(self) -> None:
         """ Ensure that the device is powered on"""
