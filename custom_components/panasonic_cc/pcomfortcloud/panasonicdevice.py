@@ -663,6 +663,10 @@ class PanasonicDeviceZone:
         self._has_changed = True
         self._temperature = value
 
+    @property
+    def has_temperature(self):
+        return self._temperature is not None
+
     def load(self, json) -> bool:
         if not json:
             return False
