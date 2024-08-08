@@ -69,8 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
             continue
         for zone in data_coordinator.device.parameters.zones:
             devices.append(PanasonicSwitchEntity(
-                data_coordinator, 
-                zone, 
+                data_coordinator,
                 PanasonicSwitchEntityDescription(
                     key = f"zone-{zone.id}",
                     translation_key=f"zone-{zone.id}",

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import math
 
 from . import constants
+from . import testdata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -521,6 +522,7 @@ class PanasonicDeviceParameters:
         if not json:
             return False
         self._has_changed = False
+        #testdata.inject_zone_data(json)
 
         self.power = read_enum(json, 'operate', constants.Power, self.power)
         self.mode = read_enum(json, 'operationMode', constants.OperationMode, self.mode)
