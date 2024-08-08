@@ -121,11 +121,11 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     _attr_target_temperature_step = 0.5
     _attr_supported_features = SUPPORT_FLAGS
     _attr_fan_modes = [f.name for f in constants.FanSpeed]
+    _attr_name = None
 
     def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicClimateEntityDescription, use_panasonic_preset_names: bool):
         """Initialize the climate entity."""
-        self.entity_description = description
-        self._attr_name = coordinator.device.info.name        
+        self.entity_description = description     
         device = coordinator.device
         hvac_modes = [HVACMode.OFF]
         if device.features.auto_mode:
