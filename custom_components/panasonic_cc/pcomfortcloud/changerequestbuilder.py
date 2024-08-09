@@ -160,13 +160,13 @@ class ChangeRequestBuilder:
         """ Set Zone mode"""
         if isinstance(new_value, str):
             new_value = constants.ZoneMode[new_value]
-        zone_parameters = self._ensure_zone(new_value)
+        zone_parameters = self._ensure_zone(zone_id)
         zone_parameters["zoneOnOff"] = new_value.value
         return self
     
     def set_zone_damper(self, zone_id: int, new_value: int):
         """ Set Zone damper"""
-        zone_parameters = self._ensure_zone(new_value)
+        zone_parameters = self._ensure_zone(zone_id)
         zone_parameters["zoneLevel"] = new_value
         return self
 
