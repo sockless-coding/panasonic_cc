@@ -84,23 +84,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     for device in devices:
         try:
-            data_coordinators.append(PanasonicDeviceCoordinator(hass, conf, api, device))
+            device_coordinator = PanasonicDeviceCoordinator(hass, conf, api, device)
+            await device_coordinator.async_config_entry_first_refresh()
+            data_coordinators.append(device_coordinator)
             if enable_daily_energy_sensor:
                 energy_coordinators.append(PanasonicDeviceEnergyCoordinator(hass, conf, api, device))
         except Exception as e:
-            _LOGGER.warning(f"Failed to setup device: {device.name} ({e})")
+            _LOGGER.warning(f"Failed to setup device: {device.name} ({e})", exc_info=e)
 
     hass.data[DOMAIN][DATA_COORDINATORS] = data_coordinators
     hass.data[DOMAIN][ENERGY_COORDINATORS] = energy_coordinators
     await asyncio.gather(
         *(
             data.async_config_entry_first_refresh()
-            for data in data_coordinators
-        ),
-        *(
-            data.async_config_entry_first_refresh()
             for data in energy_coordinators
         ),
+        return_exceptions=True
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, COMPONENT_TYPES)
