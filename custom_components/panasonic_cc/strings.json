@@ -8,6 +8,7 @@
           "username": "Panasonic ID",
           "password": "Password",
           "enable_daily_energy_sensor": "Enable daily energy sensors",
+          "force_enable_nanoe": "Enable Nanoe switch for all devices",
           "use_panasonic_preset_names": "Use 'Quiet' and 'Powerful' instead of 'Eco' and 'Boost' Presets",
           "device_fetch_interval": "Device fetch interval (seconds)",
           "energy_fetch_interval": "Energy fetch interval (seconds)"
@@ -26,6 +27,7 @@
         "data": {
           "force_outside_sensor": "Force outside sensor",
           "enable_daily_energy_sensor": "Enable daily energy sensors (requires restart)",
+          "force_enable_nanoe": "Enable Nanoe switch for all devices (requires restart)",
           "use_panasonic_preset_names": "Use 'Quiet' and 'Powerful' instead of 'Eco' and 'Boost' Presets (requires restart)",
           "device_fetch_interval": "Device fetch interval (seconds)",
           "energy_fetch_interval": "Energy fetch interval (seconds)"

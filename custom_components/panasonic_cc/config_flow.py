@@ -21,7 +21,9 @@ from .const import (
     CONF_DEVICE_FETCH_INTERVAL,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     CONF_ENERGY_FETCH_INTERVAL,
-    DEFAULT_ENERGY_FETCH_INTERVAL)
+    DEFAULT_ENERGY_FETCH_INTERVAL,
+    CONF_FORCE_ENABLE_NANOE,
+    DEFAULT_FORCE_ENABLE_NANOE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +52,7 @@ class FlowHandler(config_entries.ConfigFlow):
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
             CONF_FORCE_OUTSIDE_SENSOR: False,
+            CONF_FORCE_ENABLE_NANOE: DEFAULT_FORCE_ENABLE_NANOE,
             CONF_ENABLE_DAILY_ENERGY_SENSOR: DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
             CONF_USE_PANASONIC_PRESET_NAMES: DEFAULT_USE_PANASONIC_PRESET_NAMES,
             CONF_DEVICE_FETCH_INTERVAL: DEFAULT_DEVICE_FETCH_INTERVAL,
@@ -92,6 +95,10 @@ class FlowHandler(config_entries.ConfigFlow):
                     vol.Optional(
                         CONF_ENABLE_DAILY_ENERGY_SENSOR,
                         default=DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+                    ): bool,
+                    vol.Optional(
+                        CONF_FORCE_ENABLE_NANOE,
+                        default=False,
                     ): bool,
                     vol.Optional(
                         CONF_USE_PANASONIC_PRESET_NAMES,
@@ -139,6 +146,12 @@ class PanasonicOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_ENABLE_DAILY_ENERGY_SENSOR,
                         default=self.config_entry.options.get(
                             CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_FORCE_ENABLE_NANOE,
+                        default=self.config_entry.options.get(
+                            CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE
                         ),
                     ): bool,
                     vol.Optional(
