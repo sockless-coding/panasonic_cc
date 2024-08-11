@@ -4,6 +4,7 @@ from typing import Callable
 from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
 from .pcomfortcloud import constants
 from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
@@ -11,7 +12,7 @@ from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
 
 
 from . import DOMAIN
-from .const import DATA_COORDINATORS
+from .const import DATA_COORDINATORS, CONF_FORCE_ENABLE_NANOE,DEFAULT_FORCE_ENABLE_NANOE
 from .coordinator import PanasonicDeviceCoordinator
 from .base import PanasonicDataEntity
 
@@ -70,11 +71,12 @@ def create_zone_mode_description(zone: PanasonicDeviceZone):
         is_available=lambda device: True
     )
 
-async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     devices = []
     data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
+    force_enable_nanoe = entry.options.get(CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE)
     for data_coordinator in data_coordinators:
-        devices.append(PanasonicSwitchEntity(data_coordinator, NANOE_DESCRIPTION))
+        devices.append(PanasonicSwitchEntity(data_coordinator, NANOE_DESCRIPTION, always_available=force_enable_nanoe))
         devices.append(PanasonicSwitchEntity(data_coordinator, ECONAVI_DESCRIPTION))
         devices.append(PanasonicSwitchEntity(data_coordinator, ECO_FUNCTION_DESCRIPTION))
         if data_coordinator.device.has_zones:
@@ -94,15 +96,16 @@ class PanasonicSwitchEntityBase(SwitchEntity):
 class PanasonicSwitchEntity(PanasonicDataEntity, PanasonicSwitchEntityBase):
     """Representation of a Panasonic switch."""
 
-    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicSwitchEntityDescription):
+    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicSwitchEntityDescription, always_available: bool = False):
         """Initialize the Switch."""
         self.entity_description = description
+        self._always_available = always_available
         super().__init__(coordinator, description.key)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.entity_description.is_available(self.coordinator.device)
+        return self._always_available or self.entity_description.is_available(self.coordinator.device)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
