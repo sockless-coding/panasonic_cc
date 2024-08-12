@@ -1,0 +1,96 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Panasonic Comfort Cloud",
+          "description": "Geben Sie Ihre Panasonic-ID und Ihr Passwort ein",
+          "data": {
+            "username": "Panasonic ID",
+            "password": "Passwort",
+            "enable_daily_energy_sensor": "Tägliche Energiesensoren freischalten",
+            "force_enable_nanoe": "Einschalte Nanoe für alle Geräte",
+            "use_panasonic_preset_names": "'Leise' und 'Stark' anstelle von 'Eco' und 'Boost' verwenden",
+            "device_fetch_interval": "Abrufintervall für Gerät (Sekunden)",
+            "energy_fetch_interval": "Abrufintervall für Energie (Sekunden)"
+          }
+        }
+      },
+      "abort": {
+        "device_timeout": "Zeitüberschreitung beim Verbinden mit dem Gerät.",
+        "device_fail": "Unerwarteter Fehler beim Erstellen des Geräts.",
+        "already_configured": "Gerät ist bereits konfiguriert"
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "data": {
+            "force_outside_sensor": "Force outside sensor",
+            "enable_daily_energy_sensor": "Tägliche Energiesensoren freischalten (Neustart erforderlich)",
+            "force_enable_nanoe": "Einschalte Nanoe für alle GeräteEinschalte Nanoe für alle Geräte (Neustart erforderlich)",
+            "use_panasonic_preset_names": "'Leise' und 'Stark' anstelle von 'Eco' und 'Boost' verwenden",
+            "device_fetch_interval": "Abrufintervall für Gerät (Sekunden)",
+            "energy_fetch_interval": "Abrufintervall für Energie (Sekunden)"
+          }
+        }
+      }
+    },
+    "entity": {
+      "climate": {
+        "climate": {
+          "state_attributes": {
+            "preset_mode": {
+              "state": {
+                "+8/15": "+8/15°C",
+                "none": "Kein",
+                "quiet": "Leise",
+                "powerful": "Stark"
+              }
+            },
+            "swing_mode":{
+              "state": {
+                "Auto": "Auto",
+                "Up": "Oben",
+                "UpMid": "Oben-Mitte",
+                "Mid": "Mitte",
+                "DownMid": "Unten-Mitte",
+                "Down": "Unten",
+                "Swing": "Schwingen"
+              }
+            },
+            "fan_mode":{
+              "state": {
+                "Low": "Niedrig",
+                "LowMid": "Niedrig-Mittel",
+                "Mid": "Mittel",
+                "HighMid": "Mittel-Hoch",
+                "High": "Niedrig"
+              }
+            }
+          }
+        }
+      },
+      "select": {
+        "horizontal_swing":{
+          "state": {
+            "Auto": "Auto",
+            "Left": "Links",
+            "LeftMid": "Mitte-Links",
+            "Mid": "Mitte",
+            "RightMid": "Mitte-Rechts",
+            "Right": "Rechts"
+          }
+        },
+        "vertical_swing":{
+          "state": {
+            "Auto": "Auto",
+            "Up": "Oben",
+            "UpMid": "Oben-Mitte",
+            "Mid": "Mitte",
+            "DownMid": "Unten-Mitte",
+            "Down": "Unten"
+          }
+        }
+      }
+    }
+  }
