@@ -42,6 +42,7 @@
           "preset_mode": {
             "state": {
               "+8/15": "+8/15°C",
+              "none": "None",
               "quiet": "Quiet",
               "powerful": "Powerful"
             }
