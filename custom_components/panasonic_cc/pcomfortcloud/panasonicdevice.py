@@ -111,6 +111,10 @@ class PanasonicDevice:
         return self._parameters.outside_temperature is not None
     
     @property
+    def has_iautox(self):
+        return self.features.iAutoX and self._parameters.iautox_mode!= constants.IAutoXMode.Unavailable
+    
+    @property
     def in_summer_house_mode(self):        
         temp = self._parameters.target_temperature
         i = 1 if temp - 8 > 0 else (0 if temp -8 else -1)
@@ -383,6 +387,7 @@ class PanasonicDeviceParameters:
         self._target_temperature: float = None
         self._inside_temperature: float = None
         self._outside_temperature: float = None
+        self._iautox_mode = constants.IAutoXMode.Unavailable
         self._zones: list[PanasonicDeviceZone] = []
         self._zone_index: dict[int, PanasonicDeviceZone] = {}
         self._has_changed = False
@@ -513,6 +518,16 @@ class PanasonicDeviceParameters:
         self._has_changed = True
 
     @property
+    def iautox_mode(self):
+        return self._iautox_mode
+    @iautox_mode.setter
+    def iautox_mode(self, value):
+        if self._iautox_mode == value:
+            return
+        self._iautox_mode = value
+        self._has_changed = True
+
+    @property
     def zones(self):
         return self._zones
     
@@ -537,6 +552,7 @@ class PanasonicDeviceParameters:
         self.nanoe_mode = read_enum(json, 'nanoe', constants.NanoeMode, self.nanoe_mode)
         self.eco_navi_mode = read_enum(json, 'ecoNavi', constants.EcoNaviMode, self.eco_navi_mode)
         self.eco_function_mode = read_enum(json, 'ecoFunctionData', constants.EcoFunctionMode, self.eco_function_mode)
+        self.iautox_mode = read_enum(json, 'iAuto', constants.IAutoXMode, self.iautox_mode)
         
         self._load_zones(json)
         has_changed = self._has_changed

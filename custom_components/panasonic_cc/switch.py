@@ -32,7 +32,7 @@ NANOE_DESCRIPTION = PanasonicSwitchEntityDescription(
     key="nanoe",
     translation_key="nanoe",
     name="Nanoe",
-    icon="mdi:air-conditioner",
+    icon="mdi:virus-off",
     on_func = lambda builder: builder.set_nanoe_mode(constants.NanoeMode.On),
     off_func= lambda builder: builder.set_nanoe_mode(constants.NanoeMode.Off),
     get_state = lambda device: device.parameters.nanoe_mode == constants.NanoeMode.On,
@@ -58,6 +58,16 @@ ECO_FUNCTION_DESCRIPTION = PanasonicSwitchEntityDescription(
     get_state = lambda device: device.parameters.eco_function_mode == constants.EcoFunctionMode.On,
     is_available = lambda device: device.has_eco_function
 )
+IAUTOX_DESCRIPTION = PanasonicSwitchEntityDescription(
+    key="iauto-x",
+    translation_key="iauto-x",
+    name="iAUTO-X",
+    icon="mdi:snowflake",
+    on_func = lambda builder: builder.set_iautox_mode(constants.IAutoXMode.On),
+    off_func= lambda builder: builder.set_iautox_mode(constants.IAutoXMode.Off),
+    get_state = lambda device: device.parameters.iautox_mode == constants.IAutoXMode.On,
+    is_available = lambda device: device.has_iautox
+)
 
 def create_zone_mode_description(zone: PanasonicDeviceZone):
     return PanasonicSwitchEntityDescription(
@@ -79,6 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         devices.append(PanasonicSwitchEntity(data_coordinator, NANOE_DESCRIPTION, always_available=force_enable_nanoe))
         devices.append(PanasonicSwitchEntity(data_coordinator, ECONAVI_DESCRIPTION))
         devices.append(PanasonicSwitchEntity(data_coordinator, ECO_FUNCTION_DESCRIPTION))
+        devices.append(PanasonicSwitchEntity(data_coordinator, IAUTOX_DESCRIPTION))
         if data_coordinator.device.has_zones:
             for zone in data_coordinator.device.parameters.zones:
                 devices.append(PanasonicSwitchEntity(
