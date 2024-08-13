@@ -128,7 +128,8 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         self.entity_description = description     
         device = coordinator.device
         hvac_modes = [HVACMode.OFF]
-        if device.features.auto_mode:
+        
+        if device.features.auto_mode or device.features.iAutoX:
             hvac_modes += [HVACMode.HEAT_COOL]
         if device.features.cool_mode:
             hvac_modes += [HVACMode.COOL]
