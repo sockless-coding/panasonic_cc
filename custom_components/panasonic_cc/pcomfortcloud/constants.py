@@ -85,6 +85,11 @@ class ZoneMode(Enum):
     Off = 0
     On = 1
 
+class IAutoXMode(Enum):
+    Unavailable = 0
+    Off = 1
+    On = 2
+
 INVALID_TEMPERATURE = 126
 
 DEFAULT_X_APP_VERSION = "1.21.0"

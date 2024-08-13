@@ -156,6 +156,17 @@ class ChangeRequestBuilder:
         self._request["operate"] = new_value.value
         return self
     
+    @property
+    def iautox_mode(self) -> constants.IAutoXMode | None:
+        return constants.IAutoXMode(self._request["iauto"]) if "iauto" in self._request else None
+    
+    def set_iautox_mode(self, new_value: str  | constants.IAutoXMode):
+        """ Set IAutoX mode"""
+        if isinstance(new_value, str):
+            new_value = constants.IAutoXMode[new_value]
+        self._request["iauto"] = new_value.value
+        return self
+    
     def set_zone_mode(self, zone_id: int, new_value: str | constants.ZoneMode):
         """ Set Zone mode"""
         if isinstance(new_value, str):
