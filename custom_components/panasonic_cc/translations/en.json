@@ -57,6 +57,16 @@
               "Down": "Bottom",
               "Swing": "Swing"
             }
+          },
+          "fan_mode":{
+            "state": {
+              "Auto": "Auto",
+              "Low": "Low",
+              "LowMid": "Medium-Low",
+              "Mid": "Medium",
+              "HighMid": "Medium-High",
+              "High": "High"
+            }
           }
         }
       }
