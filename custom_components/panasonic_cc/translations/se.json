@@ -1,0 +1,97 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Fyll i ditt Panasonic ID och lösenord",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Lösenord",
+          "enable_daily_energy_sensor": "Aktivera dagliga energisensorer",
+          "force_enable_nanoe": "Aktivera Nanoe switch för alla enheter",
+          "use_panasonic_preset_names": "Använd "Tyst" och "Kraftfull" istället för "Eco" och "Boost" läge",
+          "device_fetch_interval": "Enhetshämtningsintervall (sekunder)",
+          "energy_fetch_interval": "Energihämtningsintervall (sekunder)"
+        }
+      }
+    },
+    "abort": {
+      "device_timeout": "Timeout för anslutning till enheten.",
+      "device_fail": "Oväntat fel när enheten skapas.",
+      "already_configured": "Enheten är redan konfigurerad."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "force_outside_sensor": "Forcera yttre sensor",
+          "enable_daily_energy_sensor": "Aktivera dagliga energisensorer (kräver omstart)",
+          "force_enable_nanoe": "Aktivera Nanoe switch för alla enheter (kräver omstart)",
+          "use_panasonic_preset_names": "Använd "Tyst" och "Kraftfull" istället för "Eco" och "Boost" läge (kräver omstart)",
+          "device_fetch_interval": "Enhetshämtningsintervall (sekunder)",
+          "energy_fetch_interval": "Energihämtningsintervall (sekunder)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "+8/15": "+8/15°C",
+              "none": "Standard",
+              "quiet": "Tyst",
+              "powerful": "Kraftfull"
+            }
+          },
+          "swing_mode":{
+            "state": {
+              "Auto": "Auto",
+              "Up": "Upp",
+              "UpMid": "Mitt-upp",
+              "Mid": "Mitten",
+              "DownMid": "Mitt-Neråt",
+              "Down": "Neråt",
+              "Swing": "Svängande"
+            }
+          },
+          "fan_mode":{
+            "state": {
+              "Auto": "Auto",
+              "Low": "Låg",
+              "LowMid": "Medium-Låg",
+              "Mid": "Medium",
+              "HighMid": "Medium-Hög",
+              "High": "Hög"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing":{
+        "state": {
+          "Auto": "Auto",
+          "Left": "Vänster",
+          "LeftMid": "Mitten vänster",
+          "Mid": "Mitten",
+          "RightMid": "Mitten höger",
+          "Right": "Höger"
+        }
+      },
+      "vertical_swing":{
+        "state": {
+          "Auto": "Auto",
+          "Up": "Upp",
+          "UpMid": "Mitt-upp",
+          "Mid": "Mitten",
+          "DownMid": "Mitt-Neråt",
+          "Down": "Neråt"
+        }
+      }
+    }
+  }
+}
