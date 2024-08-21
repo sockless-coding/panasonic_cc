@@ -35,7 +35,7 @@ NANOE_DESCRIPTION = PanasonicSwitchEntityDescription(
     icon="mdi:virus-off",
     on_func = lambda builder: builder.set_nanoe_mode(constants.NanoeMode.On),
     off_func= lambda builder: builder.set_nanoe_mode(constants.NanoeMode.Off),
-    get_state = lambda device: device.parameters.nanoe_mode == constants.NanoeMode.On,
+    get_state = lambda device: device.parameters.nanoe_mode in [constants.NanoeMode.On, constants.NanoeMode.ModeG, constants.NanoeMode.All],
     is_available = lambda device: device.has_nanoe
 )
 ECONAVI_DESCRIPTION = PanasonicSwitchEntityDescription(

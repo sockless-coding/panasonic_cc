@@ -70,8 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     enable_daily_energy_sensor = entry.options.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
-    use_panasonic_preset_names = entry.options.get(CONF_USE_PANASONIC_PRESET_NAMES, False)
-
+    
     client = async_get_clientsession(hass)
     api = pcomfortcloud.ApiClient(username, password, client)
     await api.start_session()
