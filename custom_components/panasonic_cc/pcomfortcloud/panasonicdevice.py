@@ -111,8 +111,8 @@ class PanasonicDevice:
         return self._parameters.outside_temperature is not None
     
     @property
-    def has_iautox(self):
-        return self.features.iAutoX and self._parameters.iautox_mode!= constants.IAutoXMode.Unavailable
+    def has_iauto_x(self):
+        return self.features.iauto_x_mode and self._parameters.iautox_mode!= constants.IAutoXMode.Unavailable
     
     @property
     def in_summer_house_mode(self):        
@@ -151,7 +151,7 @@ class PanasonicDeviceFeatures:
     def __init__(self, json = None) -> None:
         self._permission = 0
         self._summer_house = 0
-        self._iAutoX = False
+        self._iauto_x_mode = False
         self._nanoe = False
         self._nanoe_stand_alone = False
         self._auto_mode = False
@@ -194,13 +194,13 @@ class PanasonicDeviceFeatures:
         self._has_changed = True
 
     @property
-    def iAutoX(self):
-        return self._iAutoX
-    @iAutoX.setter
-    def iAutoX(self, value):
-        if self._iAutoX == value:
+    def iauto_x_mode(self):
+        return self._iauto_x_mode
+    @iauto_x_mode.setter
+    def iauto_x_mode(self, value):
+        if self._iauto_x_mode == value:
             return
-        self._iAutoX = value
+        self._iauto_x_mode = value
         self._has_changed = True
 
     @property
@@ -342,7 +342,7 @@ class PanasonicDeviceFeatures:
         if 'summerHouse' in json:
             self.summer_house = json['summerHouse']
         if 'iAutoX' in json:
-            self.iAutoX = json['iAutoX']
+            self.iauto_x_mode = json['iAutoX']
         if 'nanoe' in json:
             self.nanoe = json['nanoe']
         if 'nanoeStandAlone' in json:
@@ -387,7 +387,7 @@ class PanasonicDeviceParameters:
         self._target_temperature: float = None
         self._inside_temperature: float = None
         self._outside_temperature: float = None
-        self._iautox_mode = constants.IAutoXMode.Unavailable
+        self._iauto_x_mode = constants.IAutoXMode.Unavailable
         self._zones: list[PanasonicDeviceZone] = []
         self._zone_index: dict[int, PanasonicDeviceZone] = {}
         self._has_changed = False
@@ -519,12 +519,12 @@ class PanasonicDeviceParameters:
 
     @property
     def iautox_mode(self):
-        return self._iautox_mode
+        return self._iauto_x_mode
     @iautox_mode.setter
     def iautox_mode(self, value):
-        if self._iautox_mode == value:
+        if self._iauto_x_mode == value:
             return
-        self._iautox_mode = value
+        self._iauto_x_mode = value
         self._has_changed = True
 
     @property

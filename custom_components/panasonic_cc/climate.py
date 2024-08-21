@@ -42,11 +42,11 @@ PANASONIC_CLIMATE_DESCRIPTION = PanasonicClimateEntityDescription(
     translation_key="climate",
 )
 
-def convert_operation_mode_to_hvac_mode(operation_mode: constants.OperationMode) -> HVACMode | None:
+def convert_operation_mode_to_hvac_mode(operation_mode: constants.OperationMode, iauto: bool) -> HVACMode | None:
     """Convert OperationMode to HVAC mode."""
     match operation_mode:
         case constants.OperationMode.Auto:
-            return HVACMode.HEAT_COOL
+            return HVACMode.COOL if iauto else HVACMode.HEAT_COOL
         case constants.OperationMode.Cool:
             return HVACMode.COOL
         case constants.OperationMode.Dry:
@@ -164,7 +164,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         state = self.coordinator.device.parameters
         self._attr_hvac_mode = (HVACMode.OFF 
                                 if state.power == constants.Power.Off 
-                                else convert_operation_mode_to_hvac_mode(state.mode))
+                                else convert_operation_mode_to_hvac_mode(state.mode, state.iautox_mode))
         
 
         self._set_temp_range()
@@ -217,7 +217,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         if builder.vertical_swing:
             self._attr_swing_mode = builder.vertical_swing.name
         if builder.hvac_mode:
-            self._attr_hvac_mode = convert_operation_mode_to_hvac_mode(builder.hvac_mode)
+            self._attr_hvac_mode = convert_operation_mode_to_hvac_mode(builder.hvac_mode, False)
         self.async_write_ha_state()
 
 

@@ -164,6 +164,7 @@ class ChangeRequestBuilder:
         """ Set IAutoX mode"""
         if isinstance(new_value, str):
             new_value = constants.IAutoXMode[new_value]
+        self.set_hvac_mode(constants.OperationMode.Auto if new_value == constants.IAutoXMode.On else constants.OperationMode.Cool)
         self._request["iauto"] = new_value.value
         return self
     
