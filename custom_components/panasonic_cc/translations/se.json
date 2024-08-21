@@ -15,10 +15,17 @@
         }
       }
     },
+    "error":{
+      "no_devices": "Ingen enheter hittades. Kontrollera ditt Panasonic Konto i CFC Appen och försök igen.",
+      "device_timeout": "Timeout för anslutning till API:et.",
+      "device_fail": "Oväntat fel vid anslutning till API:et.",
+      "invalid_user_password": "Felaktigt Panasonic ID eller lösenord."
+    },
     "abort": {
       "device_timeout": "Timeout för anslutning till enheten.",
       "device_fail": "Oväntat fel när enheten skapas.",
-      "already_configured": "Enheten är redan konfigurerad."
+      "already_configured": "Enheten är redan konfigurerad.",
+      "reauth_successful": "Återautentisering lyckades."
     }
   },
   "options": {
