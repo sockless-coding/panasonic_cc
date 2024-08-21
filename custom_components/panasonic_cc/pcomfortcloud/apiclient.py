@@ -54,6 +54,10 @@ class ApiClient(panasonicsession.PanasonicSession):
             await self.reauthenticate()
             await self._get_groups()
 
+    async def reauthenticate(self):
+        await super().reauthenticate()
+        await self._get_groups()    
+
 
     async def refresh_token(self):
         await super().start_session()

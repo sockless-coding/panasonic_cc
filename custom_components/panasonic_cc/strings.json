@@ -13,12 +13,27 @@
           "device_fetch_interval": "Device fetch interval (seconds)",
           "energy_fetch_interval": "Energy fetch interval (seconds)"
         }
+      },
+      "reconfigure_confirm": {
+        "title": "Reconfigure Panasonic Comfort Cloud",
+        "description": "Enter your Panasonic ID and password to re-authenticate",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Password"
+        }
       }
+    },
+    "error":{
+      "no_devices": "No devices found. Please check your the account and CFC app and try again.",
+      "device_timeout": "Timeout connecting to the API.",
+      "device_fail": "Unexpected error connecting to the API.",
+      "invalid_user_password": "Invalid Panasonic ID or password."
     },
     "abort": {
       "device_timeout": "Timeout connecting to the device.",
       "device_fail": "Unexpected error creating device.",
-      "already_configured": "Device is already configured"
+      "already_configured": "Device is already configured",
+      "reauth_successful": "Re-authentication successful."
     }
   },
   "options": {
