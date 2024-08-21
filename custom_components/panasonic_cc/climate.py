@@ -232,7 +232,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         stored_data['fanSpeed'] = device.parameters.fan_speed
         await self.coordinator.async_store_data(stored_data)
 
-        builder.set_hvac_mode(HVACMode.HEAT)
+        builder.set_hvac_mode(constants.OperationMode.Heat)
         builder.set_eco_mode(constants.EcoMode.Powerful)
         builder.set_target_temperature(8)
         builder.set_fan_speed(constants.FanSpeed.High)
