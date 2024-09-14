@@ -4,24 +4,109 @@
       "user": {
         "title": "Panasonic Comfort Cloud",
         "description": "Zadejte vaše Panasonic ID a heslo",
-        "data": { "username": "Panasonic ID", "password": "Heslo" }
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Heslo",
+          "enable_daily_energy_sensor": "Povolit měření denní energie",
+          "force_enable_nanoe": "Povolit přepínač Nanoe pro všechna zařízení",
+          "use_panasonic_preset_names": "Použít režimy 'Tichý' a 'Výkonný' místo 'Eco' a 'Boost'",
+          "device_fetch_interval": "Prodleva vyčítání zařízení (sekunda)",
+          "energy_fetch_interval": "Prodleva vyčítání energie (sekunda)"
+        }
+      },
+      "reconfigure_confirm": {
+        "title": "Překonfigurace Panasonic Comfort Cloud",
+        "description": "Zadejte vaše Panasonic ID a heslo pro opětovné ověření",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Heslo"
+        }
       }
+    },
+    "error": {
+      "no_devices": "Nebyla nalezena jákákoliv zařízení. Prosíme zkontrolujte váš účet a aplikaci CFC a zkuste to znovu.",
+      "device_timeout": "Vypršel čas pro připojení k API.",
+      "device_fail": "Neočekávaná chyba při připojování k API.",
+      "invalid_user_password": "Neplatný Panasonic ID nebo heslo."
     },
     "abort": {
       "device_timeout": "Vypršel čas pro připojení k zařízení.",
       "device_fail": "Neočekávaná chyba při vytváření zařízení.",
-      "already_configured": "Zařízení je již nastavené"
+      "already_configured": "Zařízení je již nastavené",
+      "reauth_successful": "Opětovné ověření bylo úspěšné."
     }
   },
   "options": {
     "step": {
-        "init": {
-            "data": {
-              "force_outside_sensor": "Vynutit povolení venkovního teploměru",
-              "enable_daily_energy_sensor": "Povolit měření denní energie (vyžaduje restart)"
-            }
+      "init": {
+        "data": {
+          "force_outside_sensor": "Vynutit povolení venkovního teploměru",
+          "enable_daily_energy_sensor": "Povolit měření denní energie (vyžaduje restart)",
+          "force_enable_nanoe": "Povolit přepínač Nanoe pro všechna zařízení (vyžaduje restart)",
+          "use_panasonic_preset_names": "Použít režimy 'Tichý' a 'Výkonný' místo 'Eco' a 'Boost' (vyžaduje restart)",
+          "device_fetch_interval": "Prodleva vyčítání zařízení (sekunda)",
+          "energy_fetch_interval": "Prodleva vyčítání energie (sekunda)"
         }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "+8/15": "+8/15 °C",
+              "none": "Žádný",
+              "quiet": "Tichý",
+              "powerful": "Výkonný"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Up": "Nahoru",
+              "UpMid": "Středně nahoru",
+              "Mid": "Střed",
+              "DownMid": "Středně dolů",
+              "Down": "Dolů",
+              "Swing": "Kmitání"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Low": "Nejslabší",
+              "LowMid": "Slabší",
+              "Mid": "Střední",
+              "HighMid": "Silnější",
+              "High": "Nejsilnější"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Left": "Vlevo",
+          "LeftMid": "Středně vlevo",
+          "Mid": "Střed",
+          "RightMid": "Středně vpravo",
+          "Right": "Vpravo"
+        }
+      },
+      "vertical_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Up": "Nahoru",
+          "UpMid": "Středně nahoru",
+          "Mid": "Střed",
+          "DownMid": "Středně dolů",
+          "Down": "Dolů"
+        }
+      }
     }
   }
 }
-  
