@@ -7,7 +7,8 @@ import re
 import aiohttp
 import time
 from datetime import datetime
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlencode
+
 
 from . import constants
 from . import panasonicsession
@@ -122,12 +123,12 @@ class ApiClient(panasonicsession.PanasonicSession):
     
 
     async def get_device(self, device_info: PanasonicDeviceInfo) -> PanasonicDevice:
-        json_response = await self.execute_get(self._get_device_status_url(device_info.guid), "get_device", 200)
+        json_response = await self.execute_get(self._get_device_status_now_url(device_info.guid), "get_device", 200)
         return PanasonicDevice(device_info, json_response)
     
     async def try_update_device(self, device: PanasonicDevice) -> bool:
         device_guid = device.info.guid
-        json_response = await self.execute_get(self._get_device_status_url(device_guid), "try_update", 200)
+        json_response = await self.execute_get(self._get_device_status_now_url(device_guid), "try_update", 200)
         return device.load(json_response)
     
     async def async_get_energy(self, device_info: PanasonicDeviceInfo) -> PanasonicDeviceEnergy | None:
@@ -405,13 +406,13 @@ class ApiClient(panasonicsession.PanasonicSession):
     def _get_device_status_url(self, guid):
         return '{base_url}/deviceStatus/{guid}'.format(
             base_url=constants.BASE_PATH_ACC,
-            guid=re.sub(r'(?i)\%2f', 'f', quote_plus(guid))
+            guid=self._prepare_device_guid(guid)
         )
 
     def _get_device_status_now_url(self, guid):
         return '{base_url}/deviceStatus/now/{guid}'.format(
             base_url=constants.BASE_PATH_ACC,
-            guid=re.sub(r'(?i)\%2f', 'f', quote_plus(guid))
+            guid=self._prepare_device_guid(guid)
         )
 
     def _get_device_status_control_url(self):
@@ -423,3 +424,7 @@ class ApiClient(panasonicsession.PanasonicSession):
         return '{base_url}/deviceHistoryData'.format(
             base_url=constants.BASE_PATH_ACC,
         )
+    
+    def _prepare_device_guid(self, device_guid: str):
+        device_guid = device_guid.replace("/", "f")
+        return quote_plus(device_guid, encoding='utf-8')
