@@ -1,0 +1,58 @@
+name: Feature Request
+description: Template for submitting feature requests for Panasonic Comfort Cloud
+labels: ['feature request', 'enhancement']
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request
+
+        **Is your feature request related to a problem? Please describe.**
+        A clear and concise description of what the problem is.
+
+  - type: textarea
+    id: problem_description
+    attributes:
+      label: Problem Description
+      description: Describe the problem your feature request is related to.
+      placeholder: Describe the problem...
+
+  - type: markdown
+    attributes:
+      value: |
+        **Describe the solution you'd like**
+        A clear and concise description of what you want to happen.
+
+  - type: textarea
+    id: solution_description
+    attributes:
+      label: Solution Description
+      description: Describe the solution you'd like.
+      placeholder: Describe the solution...
+
+  - type: markdown
+    attributes:
+      value: |
+        **Describe alternatives you've considered**
+        A clear and concise description of any alternative solutions or features you've considered.
+
+  - type: textarea
+    id: alternatives_description
+    attributes:
+      label: Alternatives Description
+      description: Describe any alternative solutions or features you've considered.
+      placeholder: Describe the alternatives...
+
+  - type: markdown
+    attributes:
+      value: |
+        **Additional context**
+        Add any other context or screenshots about the feature request here.
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other context or screenshots about the feature request.
+      placeholder: Add any other context...
