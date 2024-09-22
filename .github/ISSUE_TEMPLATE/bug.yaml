@@ -1,0 +1,44 @@
+---
+name: "Report an issue with Panasonic Comfort Cloud"
+description: "Report an issue with Panasonic Comfort Cloud"
+labels: "bug"
+body:
+- type: markdown
+  attributes:
+    value: Before you open a new issue, search through the existing issues to see if others have had the same problem.
+- type: markdown
+  attributes:
+    value: |
+      ## Environment
+- type: checkboxes
+  attributes:
+    label: Checklist
+    options:
+      - label: I have verified that the account and device works in the Comfort Cloud App.
+        required: true
+      - label: This issue only contains 1 issue (if you have multiple issues, open one issue for each issue).
+        required: true
+      - label: This issue is not a duplicate issue of currently [previous issues](https://github.com/sockless-coding/panasonic_cc/issues?q=is%3Aissue+label%3A"bug"+)..
+        required: true
+- type: input
+  id: version
+  validations:
+    required: true
+  attributes:
+    label: What version of Home Assistant Core?
+    placeholder: core-
+    description: >
+      Can be found in: [Settings ⇒ System ⇒ Repairs ⇒ Three Dots in Upper Right ⇒ System information](https://my.home-assistant.io/redirect/system_health/).
+
+      [![Open your Home Assistant instance and show the system information.](https://my.home-assistant.io/badges/system_health.svg)](https://my.home-assistant.io/redirect/system_health/)
+- type: textarea
+  attributes:
+    label: "Describe the issue"
+    description: "A clear and concise description of what the issue is."
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: "Error/Debug Logs"
+    description: "If applicable, add error or debug logs to help explain your problem."
+    render: text
