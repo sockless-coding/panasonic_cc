@@ -19,7 +19,10 @@ class CCAppVersion:
         return self._settings._version
     
     async def refresh(self):
-        await self._update_playstore()
+        try:
+            await self._update_playstore()
+        except:
+            await self._update_appbrain()
 
     async def _update_gist(self):        
         _LOGGER.debug("Fetching latest app version from gist")
