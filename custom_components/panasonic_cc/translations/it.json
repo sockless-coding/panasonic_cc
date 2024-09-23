@@ -1,0 +1,112 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Inserisci il tuo ID Panasonic e password",
+        "data": {
+          "username": "ID Panasonic",
+          "password": "Password",
+          "enable_daily_energy_sensor": "Abilita tutti i sensori di energia giornalieri.",
+          "force_enable_nanoe": "Ablita Nanoe per tutti i dispositivi.",
+          "use_panasonic_preset_names": "Usa i profili 'Quiet' e 'Powerful' invece di 'Eco' e 'Boost'",
+          "device_fetch_interval": "Intervallo interrogazione dispositivo (secondi)",
+          "energy_fetch_interval": "Intervallo interrogazione energia (secondi)"
+        }
+      },
+      "reconfigure_confirm": {
+        "title": "Riconfigura Panasonic Comfort Cloud",
+        "description": "Inserisci il tuo ID Panasonic e password per riconnettersi",
+        "data": {
+          "username": "ID Panasonic",
+          "password": "Password"
+        }
+      }
+    },
+    "error":{
+      "no_devices": "Nessun dispositivo trovato. Controlla il tuo account e l'app CFC e riprova.",
+      "device_timeout": "Timeout scaduto connessione alle API.",
+      "device_fail": "Errore inatteso connessione alle API.",
+      "invalid_user_password": "ID Panasonic o password non corretta."
+    },
+    "abort": {
+      "device_timeout": "Timeout connessione al dispositivo.",
+      "device_fail": "Errore inatteso durante la creazione del dispositivo.",
+      "already_configured": "Dispositivo già configurato.",
+      "reauth_successful": "Riconnessione avvenuta con successo."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "force_outside_sensor": "Forza sensore esterno",
+          "enable_daily_energy_sensor": "Abilita i sensori energia giornalieri (riavvio necessario)",
+          "force_enable_nanoe": "Abilita Nonoe per tutti i dispositivi (riavvio necessario)",
+          "use_panasonic_preset_names": "Usa i profili 'Quiet' e 'Powerful' invece di 'Eco' e 'Boost' (riavvio necessario)",
+          "device_fetch_interval": "Intervallo interrogazione dispositivo (secondi)",
+          "energy_fetch_interval": "Intervallo interrogazione energia (secondi)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "+8/15": "+8/15°C",
+              "none": "Nessuno",
+              "quiet": "Quiet",
+              "powerful": "Powerful"
+            }
+          },
+          "swing_mode":{
+            "state": {
+              "Auto": "Automatico",
+              "Up": "Alto",
+              "UpMid": "Medio-alto",
+              "Mid": "Medio",
+              "DownMid": "Medio-basso",
+              "Down": "Basso",
+              "Swing": "Oscilla"
+            }
+          },
+          "fan_mode":{
+            "state": {
+              "Auto": "Automatica",
+              "Low": "Bassa",
+              "LowMid": "Medio-Bassa",
+              "Mid": "Media",
+              "HighMid": "Medio-Alta",
+              "High": "Alta"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing":{
+        "state": {
+          "Auto": "Automatico",
+          "Left": "Sinistra",
+          "LeftMid": "Centro sinistra",
+          "Mid": "Centro",
+          "RightMid": "Centro destra",
+          "Right": "Destra"
+        }
+      },
+      "vertical_swing":{
+        "state": {
+          "Auto": "Automatico",
+          "Up": "Alto",
+          "UpMid": "Medio-alto",
+          "Mid": "Medio",
+          "DownMid": "Medio-basso",
+          "Down": "Basso"
+        }
+      }
+    }
+  }
+}
