@@ -33,6 +33,7 @@ class PanasonicDeviceInfo:
         self.group = 'My House'
         self.model = ''
         self._has_parameters = False
+        self._raw = None
         self.load(json)
 
 
@@ -48,10 +49,15 @@ class PanasonicDeviceInfo:
         self.group = read_value(json, 'groupName', self.group)
         self.model = read_value(json, 'deviceModuleNumber', self.model)
         self._has_parameters = 'parameters' in json
+        self._raw = json
 
     @property
     def is_valid(self):
         return self.id is not None and self.guid is not None and self._has_parameters
+    
+    @property
+    def raw(self):
+        return self._raw
         
 
 class PanasonicDevice:

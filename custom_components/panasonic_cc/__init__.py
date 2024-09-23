@@ -75,7 +75,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     api = pcomfortcloud.ApiClient(username, password, client)
     await api.start_session()
     devices = api.get_devices()
+    
+    if api.has_unknown_devices:
+
+        _LOGGER.warning(f"""Found {len(api.unknown_devices)} unknown device(s):
+{"\n ".join(obj.raw for obj in api.unknown_devices)}
+Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310
+""")
+        for device in api.unknown_devices:
+            try:
+                json = await api.get_aquarea_device(device)
+                _LOGGER.warning(f"""Got aquarea device info for: {device.raw}:
+{json}
+Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310""")
+            except Exception as e:
+                _LOGGER.warning(f"""Failed to get aquarea device info for {device.raw}
+Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310""", exc_info=e)
+
+        
    
+    if len(devices) == 0:
+        _LOGGER.error("Could not find any Panasonic Comfort Cloud Heat Pumps")
+        return False
+
     _LOGGER.info("Got %s devices", len(devices))
     data_coordinators: list[PanasonicDeviceCoordinator] = []
     energy_coordinators: list[PanasonicDeviceEnergyCoordinator] = []
