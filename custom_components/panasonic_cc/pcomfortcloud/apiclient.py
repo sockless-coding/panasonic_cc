@@ -6,7 +6,8 @@ import logging
 import aiohttp
 import time
 from datetime import datetime
-from urllib.parse import quote_plus, urlencode
+from urllib.parse import quote_plus
+import json
 
 
 from . import constants
@@ -107,6 +108,23 @@ class ApiClient(panasonicsession.PanasonicSession):
         if device_guid:
             return self.execute_get(self._get_device_status_url(device_guid), "dump", 200)
         return None
+    
+    async def check_aquarea(self):
+        if self.has_unknown_devices:
+
+            _LOGGER.warning(f"""Found {len(self.unknown_devices)} unknown device(s):
+{"\n ".join(json.dumps(obj.raw) for obj in self.unknown_devices)}
+Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310
+""")
+            for device in self.unknown_devices:
+                try:
+                    aqua_device = await self.get_aquarea_device(device)
+                    _LOGGER.warning(f"""Got aquarea device info for: {device.guid}:
+{json.dumps(aqua_device)}
+Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310""")
+                except Exception as e:
+                    _LOGGER.warning(f"""Failed to get aquarea device info for {device.guid}
+Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310""", exc_info=e)
 
     async def history(self, device_id, mode, date, time_zone=""):
         device_guid = self._device_indexer.get(device_id)
