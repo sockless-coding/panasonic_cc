@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 )
 
 from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceEnergy, PanasonicDeviceZone
+from .pcomfortcloud import constants
 
 from .const import (
     DOMAIN,
@@ -67,6 +68,32 @@ LAST_UPDATE_TIME_DESCRIPTION = PanasonicSensorEntityDescription(
     get_state=lambda device: device.last_update,
     is_available=lambda device: True,
     entity_registry_enabled_default=False,
+)
+DATA_AGE_DESCRIPTION = PanasonicSensorEntityDescription(
+    key="data_age",
+    translation_key="data_age",
+    name="Data Age",
+    icon="mdi:clock-outline",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=None,
+    native_unit_of_measurement=None,
+    get_state=lambda device: device.timestamp,
+    is_available=lambda device: True,
+    entity_registry_enabled_default=True,
+)
+DATA_MODE_DESCRIPTION = PanasonicSensorEntityDescription(
+    key="status_data_mode",
+    translation_key="status_data_mode",
+    name="Data Mode",
+    options=[opt.name for opt in constants.StatusDataMode],
+    device_class=SensorDeviceClass.ENUM,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=None,
+    native_unit_of_measurement=None,
+    get_state=lambda device: device.info.status_data_mode.name,
+    is_available=lambda device: True,
+    entity_registry_enabled_default=True,
 )
 DAILY_ENERGY_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     key="daily_energy_sensor",
@@ -151,6 +178,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(PanasonicSensorEntity(coordinator, INSIDE_TEMPERATURE_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, OUTSIDE_TEMPERATURE_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, LAST_UPDATE_TIME_DESCRIPTION))
+        entities.append(PanasonicSensorEntity(coordinator, DATA_AGE_DESCRIPTION))
+        entities.append(PanasonicSensorEntity(coordinator, DATA_MODE_DESCRIPTION))
         if coordinator.device.has_zones:
             for zone in coordinator.device.parameters.zones:
                 entities.append(PanasonicSensorEntity(

@@ -16,7 +16,7 @@ def read_enum(json, key, type, default_value):
     try:
         return type(json[key])
     except Exception as es:
-        _LOGGER.warn("Error reading property '%s' with value '%s'", key, json[key], exc_info= es)
+        _LOGGER.warning("Error reading property '%s' with value '%s'", key, json[key], exc_info= es)
     return default_value
 
 def read_value(json, key, default_value):
@@ -34,6 +34,7 @@ class PanasonicDeviceInfo:
         self.model = ''
         self._has_parameters = False
         self._raw = None
+        self._status_data_mode = constants.StatusDataMode.LIVE
         self.load(json)
 
 
@@ -58,6 +59,17 @@ class PanasonicDeviceInfo:
     @property
     def raw(self):
         return self._raw
+    
+    @property
+    def status_data_mode(self):
+        return self._status_data_mode
+    @status_data_mode.setter
+    def status_data_mode(self, value: constants.StatusDataMode):
+        self._status_data_mode = value
+    
+    
+    
+
         
 
 class PanasonicDevice:
@@ -66,11 +78,16 @@ class PanasonicDevice:
         self._features: PanasonicDeviceFeatures = None
         self._parameters: PanasonicDeviceParameters = None
         self._last_update = datetime.now(timezone.utc)
+        self._timestamp: datetime = None
         self.load(json)
 
     @property
     def id(self)->str:
         return self.info.id
+    
+    @property
+    def timestamp(self)->datetime:
+        return self._timestamp
 
     @property
     def info(self) -> PanasonicDeviceInfo:
@@ -150,6 +167,7 @@ class PanasonicDevice:
             has_changed = True if self._parameters.load(json_parameters) else has_changed
         if has_changed:
             self._last_update = datetime.now(timezone.utc)
+        self._timestamp = datetime.fromtimestamp(json['timestamp'] / 1000, timezone.utc)
         return has_changed
 
 

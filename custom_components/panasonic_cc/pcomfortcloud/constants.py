@@ -90,6 +90,10 @@ class IAutoXMode(Enum):
     Off = 1
     On = 2
 
+class StatusDataMode(Enum):
+    LIVE = 0
+    CACHED = 1
+
 INVALID_TEMPERATURE = 126
 
 DEFAULT_X_APP_VERSION = "1.21.0"
