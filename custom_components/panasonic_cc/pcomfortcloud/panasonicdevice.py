@@ -63,6 +63,11 @@ class PanasonicDeviceInfo:
     @property
     def status_data_mode(self):
         return self._status_data_mode
+    @status_data_mode.setter
+    def status_data_mode(self, value: constants.StatusDataMode):
+        self._status_data_mode = value
+    
+    
     
 
         
