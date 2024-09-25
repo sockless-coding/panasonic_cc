@@ -4,6 +4,7 @@ import string
 
 from .panasonicsettings import PanasonicSettings
 from .ccappversion import CCAppVersion
+from .constants import AUTH_BROWSER_USER_AGENT
 
 class PanasonicRequestHeader:
 
@@ -23,6 +24,19 @@ class PanasonicRequestHeader:
             }
         if (include_client_id and settings.clientId):
             headers["x-client-id"] = settings.clientId
+        return headers
+    
+    @staticmethod
+    def get_aqua_headers(content_type: str = "application/x-www-form-urlencoded", referer:str = "https://aquarea-smart.panasonic.com/"):
+        headers={
+                "Cache-Control": "max-age=0",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Encoding": "deflate, br",
+                "Upgrade-Insecure-Requests": "1",
+                "User-Agent": AUTH_BROWSER_USER_AGENT,
+                "content-type": content_type,
+                "referer": referer
+            }
         return headers
         
     @staticmethod
