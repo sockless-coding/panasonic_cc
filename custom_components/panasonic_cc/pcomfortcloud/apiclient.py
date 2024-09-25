@@ -176,8 +176,21 @@ Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310"""
         return device.load(json_response)
     
     async def get_aquarea_device(self, device_info: PanasonicDeviceInfo):
-        json_response = await self.execute_get(self._get_aquarea_device_info_url(device_info.guid), "get_aquarea_device", 200)
-        return json_response
+        id_cookies = dict(selectedGwid=device_info.guid)
+        id_response = await self.execute_aqua_post(
+            url="https://aquarea-smart.panasonic.com/remote/contract",
+            function_description="Get Aquarea device id",
+            expected_status_code=200,
+            cookies=id_cookies,
+        )
+        device_id = id_response.cookies.get("selectedDeviceId").value
+        _LOGGER.debug("Aquarea Device ID fro {} is {}".format(device_info.guid, device_id))
+        status_response = await self.execute_aqua_get(
+            self._get_aquarea_device_info_url(device_id), 
+            "Get Aquarea device info", 200)
+        response_text = await status_response.text()
+        _LOGGER.debug("Got response: %s", response_text)
+        return json.loads(response_text)
     
     async def async_get_energy(self, device_info: PanasonicDeviceInfo) -> PanasonicDeviceEnergy | None:
         todays_item = await self._async_get_todays_energy(device_info)
@@ -463,10 +476,10 @@ Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310"""
             guid=self._prepare_device_guid(guid)
         )
     
-    def _get_aquarea_device_info_url(self, guid):
-        return '{base_url}/device/a2wInfo/{guid}'.format(
-            base_url=constants.BASE_PATH_ACC,
-            guid=self._prepare_device_guid(guid)
+    def _get_aquarea_device_info_url(self, device_id):
+        return '{base_url}/remote/v1/api/devices/{device_id}?var.deviceDirect=1'.format(
+            base_url="https://aquarea-smart.panasonic.com",
+            device_id=device_id
         )
 
     def _get_device_status_control_url(self):

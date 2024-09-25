@@ -145,6 +145,58 @@ class PanasonicSession:
             response_text = await response.text()
             _LOGGER.debug("GET url: %s, response: %s", url, response_text)
             return json.loads(response_text)
+        
+    async def execute_aqua_get(
+            self, 
+            url, 
+            function_description, 
+            expected_status_code,
+            content_type: str = "application/x-www-form-urlencoded",
+            cookies: dict = {}):
+        async with self._request_semaphore:
+            await self._ensure_valid_token()
+
+            try:
+                cookies["accessToken"] = self._settings.access_token
+                response = await self._client.get(
+                    url,
+                    headers = PanasonicRequestHeader.get_aqua_headers(content_type=content_type),
+                    cookies=cookies
+                )
+            except (aiohttp.client_exceptions.ClientError,
+                    aiohttp.http_exceptions.HttpProcessingError,
+                    aiohttp.web_exceptions.HTTPError) as ex:
+                raise exceptions.RequestError(ex)
+
+            self._print_response_if_raw_is_set(response, function_description)
+            await check_response(response, function_description, expected_status_code)
+            return response
+    
+    async def execute_aqua_post(
+            self, 
+            url, 
+            function_description, 
+            expected_status_code,
+            content_type: str = "application/x-www-form-urlencoded",
+            cookies: dict = {}):
+        async with self._request_semaphore:
+            await self._ensure_valid_token()
+
+            try:
+                cookies["accessToken"] = self._settings.access_token
+                response = await self._client.post(
+                    url,
+                    headers = PanasonicRequestHeader.get_aqua_headers(content_type=content_type),
+                    cookies=cookies
+                )
+            except (aiohttp.client_exceptions.ClientError,
+                    aiohttp.http_exceptions.HttpProcessingError,
+                    aiohttp.web_exceptions.HTTPError) as ex:
+                raise exceptions.RequestError(ex)
+
+            self._print_response_if_raw_is_set(response, function_description)
+            await check_response(response, function_description, expected_status_code)
+            return response
 
     def _print_response_if_raw_is_set(self, response, function_description):
         if self._raw:
