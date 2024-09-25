@@ -46,7 +46,6 @@ class ChangeRequestBuilder:
         """ Set fan speed """
         if isinstance(new_value, str):
             new_value = constants.FanSpeed[new_value]
-        self._ensure_powered_on()
         self._request["fanSpeed"] = new_value.value
         return self
 
