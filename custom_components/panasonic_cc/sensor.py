@@ -72,15 +72,15 @@ LAST_UPDATE_TIME_DESCRIPTION = PanasonicSensorEntityDescription(
 DATA_AGE_DESCRIPTION = PanasonicSensorEntityDescription(
     key="data_age",
     translation_key="data_age",
-    name="Data Age",
+    name="Cached Data Age",
     icon="mdi:clock-outline",
     device_class=SensorDeviceClass.TIMESTAMP,
     entity_category=EntityCategory.DIAGNOSTIC,
     state_class=None,
     native_unit_of_measurement=None,
     get_state=lambda device: device.timestamp,
-    is_available=lambda device: True,
-    entity_registry_enabled_default=True,
+    is_available=lambda device: device.info.status_data_mode == constants.StatusDataMode.CACHED,
+    entity_registry_enabled_default=False,
 )
 DATA_MODE_DESCRIPTION = PanasonicSensorEntityDescription(
     key="status_data_mode",
