@@ -164,7 +164,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         state = self.coordinator.device.parameters
         self._attr_hvac_mode = (HVACMode.OFF 
                                 if state.power == constants.Power.Off 
-                                else convert_operation_mode_to_hvac_mode(state.mode, state.iautox_mode))
+                                else convert_operation_mode_to_hvac_mode(
+                                    state.mode, 
+                                    state.iautox_mode == constants.IAutoXMode.On))
         
 
         self._set_temp_range()

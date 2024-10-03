@@ -10,9 +10,10 @@ from urllib.parse import quote_plus
 import json
 
 
-from . import constants
+from . import constants, testdata
 from . import panasonicsession
 from .panasonicdevice import PanasonicDevice, PanasonicDeviceInfo, PanasonicDeviceEnergy
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +102,8 @@ class ApiClient(panasonicsession.PanasonicSession):
                             self._devices.append(device_info)
                         else:
                             self._unknown_devices.append(device_info)
+
+            #self._unknown_devices.append(PanasonicDeviceInfo(get_dummy_aquarea_device_json()))
         return self._devices
 
     def dump(self, device_id):
@@ -184,7 +187,7 @@ Submit this log to https://github.com/sockless-coding/panasonic_cc/issues/310"""
             cookies=id_cookies,
         )
         device_id = id_response.cookies.get("selectedDeviceId").value
-        _LOGGER.debug("Aquarea Device ID fro {} is {}".format(device_info.guid, device_id))
+        _LOGGER.debug("Aquarea Device ID for {} is {}".format(device_info.guid, device_id))
         status_response = await self.execute_aqua_get(
             self._get_aquarea_device_info_url(device_id), 
             "Get Aquarea device info", 200)
