@@ -14,7 +14,7 @@ class PanasonicRequestHeader:
 
     @staticmethod
     async def get(settings: PanasonicSettings, app_version: CCAppVersion, include_client_id = True):
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(datetime.UTC)
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")        
         headers={
                 "content-type": "application/json;charset=utf-8",
