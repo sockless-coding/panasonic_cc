@@ -15,7 +15,9 @@ class PanasonicRequestHeader:
     @staticmethod
     async def get(settings: PanasonicSettings, app_version: CCAppVersion, include_client_id = True):
         now = datetime.datetime.now()
-        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")        
+        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")    
+        api_key = PanasonicRequestHeader._get_api_key(timestamp, settings.access_token)  
+        _LOGGER.debug(f"Request Timestamp: {timestamp} key: {api_key}")
         headers={
                 "content-type": "application/json;charset=utf-8",
                 "user-agent": "G-RAC",
@@ -23,7 +25,7 @@ class PanasonicRequestHeader:
                 "x-app-timestamp": timestamp,
                 "x-app-type": "1",
                 "x-app-version": await app_version.get(),
-                "x-cfc-api-key": PanasonicRequestHeader._get_api_key(timestamp, settings.access_token),
+                "x-cfc-api-key": api_key,
                 "x-user-authorization-v2": "Bearer " + settings.access_token
             }
         if (include_client_id and settings.clientId):
@@ -47,7 +49,7 @@ class PanasonicRequestHeader:
     def _get_api_key(timestamp, token):
         try:
             date = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
-            timestamp_ms = str(int(date.timestamp() * 1000))
+            timestamp_ms = str(int(date.replace(tzinfo=datetime.timezone.utc).timestamp() * 1000))
             
             components = [
                 'Comfort Cloud'.encode('utf-8'),
