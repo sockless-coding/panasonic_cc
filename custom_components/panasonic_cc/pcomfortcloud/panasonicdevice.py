@@ -140,7 +140,7 @@ class PanasonicDevice:
     @property
     def in_summer_house_mode(self):        
         temp = self._parameters.target_temperature
-        i = 1 if temp - 8 > 0 else (0 if temp -8 else -1)
+        i = 1 if temp - 8 > 0 else (0 if temp -8 == 0 else -1)
         match self._features.summer_house:
             case 1:
                 return i == 0 or temp == 10

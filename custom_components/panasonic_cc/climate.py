@@ -199,12 +199,13 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         """Update attributes."""
         if builder.power_mode == constants.Power.Off:
             self._attr_hvac_mode = HVACMode.OFF
+        default_preset = PRESET_NONE
         if builder.target_temperature:
             self._attr_target_temperature = builder.target_temperature
             if builder.target_temperature > 15 and self._attr_preset_mode == PRESET_8_15:
-                self._attr_preset_mode = PRESET_NONE
+                self._attr_preset_mode = default_preset
             elif builder.target_temperature < 15 and self._attr_preset_mode != PRESET_8_15:
-                self._attr_preset_mode = PRESET_8_15
+                self._attr_preset_mode = default_preset = PRESET_8_15
                 
         if builder.eco_mode:
             if builder.eco_mode.name in (PRESET_QUIET, PRESET_ECO):
@@ -212,7 +213,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             elif builder.eco_mode.name in (PRESET_POWERFUL, PRESET_BOOST):
                 self._attr_preset_mode = self._powerful_preset
             else:
-                self._attr_preset_mode = PRESET_NONE
+                self._attr_preset_mode = default_preset
 
         if builder.fan_speed:
             self._attr_fan_mode = builder.fan_speed.name
@@ -228,10 +229,10 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         device = self.coordinator.device
         stored_data = await self.coordinator.async_get_stored_data()
 
-        stored_data['mode'] = device.parameters.mode
-        stored_data['ecoMode'] = device.parameters.eco_mode
+        stored_data['mode'] = device.parameters.mode.value
+        stored_data['ecoMode'] = device.parameters.eco_mode.value
         stored_data['targetTemperature'] = device.parameters.target_temperature
-        stored_data['fanSpeed'] = device.parameters.fan_speed
+        stored_data['fanSpeed'] = device.parameters.fan_speed.value
         await self.coordinator.async_store_data(stored_data)
 
         builder.set_hvac_mode(constants.OperationMode.Heat)
@@ -249,10 +250,20 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         if not self.coordinator.device.in_summer_house_mode:
             return
         stored_data = await self.coordinator.async_get_stored_data()
-        hvac_mode = stored_data['mode'] if 'mode' in stored_data else constants.OperationMode.Heat
-        eco_mode = stored_data['ecoMode'] if 'ecoMode' in stored_data else constants.EcoMode.Auto
+        try:
+            hvac_mode = constants.OperationMode(stored_data['mode']) if 'mode' in stored_data else constants.OperationMode.Heat
+        except:
+            hvac_mode = constants.OperationMode.Heat
+        try:
+            eco_mode = constants.EcoMode(stored_data['ecoMode']) if 'ecoMode' in stored_data else constants.EcoMode.Auto
+        except:
+            eco_mode = constants.EcoMode.Auto        
         target_temperature = stored_data['targetTemperature'] if 'targetTemperature' in stored_data else 20
-        fan_speed = stored_data['fanSpeed'] if 'fanSpeed' in stored_data else constants.FanSpeed.Auto
+        try:
+            fan_speed = constants.FanSpeed(stored_data['fanSpeed']) if 'fanSpeed' in stored_data else constants.FanSpeed.Auto
+        except:
+            fan_speed = constants.FanSpeed.Auto
+
         builder.set_hvac_mode(hvac_mode)
         builder.set_eco_mode(eco_mode)
         builder.set_target_temperature(target_temperature)
@@ -317,6 +328,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             await self._async_enter_summer_house_mode(builder)
         await self.coordinator.async_apply_changes(builder)
         self._update_attributes(builder)
+        await self.coordinator.async_request_refresh()
         
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
