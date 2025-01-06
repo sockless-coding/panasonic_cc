@@ -1,9 +1,13 @@
+import random
 
 def inject_zone_data(json):
     if 'zoneParameters' not in json:
         json['zoneParameters']= []
+    
+
+
     json['zoneParameters'].append({
-        "zoneOnOff": 0,
+        "zoneOnOff": 1 if random.random() >= 0.5 else 0,
         "zoneLevel": 100,
         "zoneTemperature": -255,
         "zoneSpill": 0,
@@ -11,7 +15,7 @@ def inject_zone_data(json):
         "zoneName": "Zone 1"
       })
     json['zoneParameters'].append({
-        "zoneOnOff": 1,
+        "zoneOnOff": 1 if random.random() >= 0.5 else 0,
         "zoneLevel": 100,
         "zoneTemperature": 24,
         "zoneSpill": 0,
@@ -19,7 +23,7 @@ def inject_zone_data(json):
         "zoneName": "Zone 2"
       })
     json['zoneParameters'].append({
-        "zoneOnOff": 1,
+        "zoneOnOff": 1 if random.random() >= 0.5 else 0,
         "zoneLevel": 50,
         "zoneTemperature": -255,
         "zoneSpill": 0,

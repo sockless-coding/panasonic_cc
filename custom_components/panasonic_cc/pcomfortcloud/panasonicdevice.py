@@ -593,7 +593,7 @@ class PanasonicDeviceParameters:
                 continue
             id = zone['zoneId']
             if id in self._zone_index:
-                has_changed = has_changed or self._zone_index[id].load(zone)
+                has_changed = self._zone_index[id].load(zone) or has_changed 
                 continue
             self._zone_index[id] = PanasonicDeviceZone(zone)
             self._zones.append(self._zone_index[id])
