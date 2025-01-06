@@ -22,6 +22,7 @@ _current_time_zone_date = None
 
 def get_current_time_zone():
     global _current_time_zone
+    global _current_time_zone_date
     today_date = datetime.now().date()
     if _current_time_zone is not None and today_date == _current_time_zone_date:
         return _current_time_zone
