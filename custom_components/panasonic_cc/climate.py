@@ -10,6 +10,7 @@ from homeassistant.components.climate import ClimateEntity, ClimateEntityDescrip
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
+from homeassistant.components.climate.const import ClimateEntityFeature
 
 
 from .base import PanasonicDataEntity
@@ -153,6 +154,10 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         
         self._attr_swing_modes = [opt.name for opt in constants.AirSwingUD if opt != constants.AirSwingUD.Swing or device.features.auto_swing_ud]
 
+        if device.has_horizontal_swing:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            self._attr_swing_horizontal_modes = [opt.name for opt in constants.AirSwingLR if opt != constants.AirSwingLR.Unavailable]
+
         super().__init__(coordinator, description.key)
         _LOGGER.info(f"Registing Climate entity: '{self._attr_unique_id}'")
         
@@ -174,6 +179,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         self._attr_target_temperature = state.target_temperature
         self._attr_fan_mode = state.fan_speed.name
         self._attr_swing_mode = state.vertical_swing_mode.name
+        if self.coordinator.device.has_horizontal_swing:
+            self._attr_swing_horizontal_mode = state.horizontal_swing_mode.name
+
         if self.coordinator.device.in_summer_house_mode:
             self._attr_preset_mode = PRESET_8_15
         elif state.eco_mode == constants.EcoMode.Quiet:
@@ -219,6 +227,8 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             self._attr_fan_mode = builder.fan_speed.name
         if builder.vertical_swing:
             self._attr_swing_mode = builder.vertical_swing.name
+        if builder.horizontal_swing:
+            self._attr_swing_horizontal_mode = builder.horizontal_swing.name
         if builder.hvac_mode:
             self._attr_hvac_mode = convert_operation_mode_to_hvac_mode(builder.hvac_mode, False)
         self.async_write_ha_state()
@@ -347,5 +357,15 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         
         builder = self.coordinator.get_change_request_builder()
         builder.set_vertical_swing(swing_mode)
+        await self.coordinator.async_apply_changes(builder)
+        self._update_attributes(builder)
+
+    async def async_set_swing_horizontal_mode(self, swing_mode: str):
+        """Set new target swing mode."""
+        if swing_mode not in self.swing_horizontal_modes:
+            raise ValueError(f"Unsupported swing mode '{swing_mode}'")
+        
+        builder = self.coordinator.get_change_request_builder()
+        builder.set_horizontal_swing(swing_mode)
         await self.coordinator.async_apply_changes(builder)
         self._update_attributes(builder)

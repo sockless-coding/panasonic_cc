@@ -73,6 +73,16 @@
               "Swing": "Swing"
             }
           },
+          "swing_horizontal_mode":{
+            "state": {
+              "Auto": "Auto",
+              "Left": "Left",
+              "LeftMid": "Center left",
+              "Mid": "Center",
+              "RightMid": "Center right",
+              "Right": "Right"
+            }
+          },
           "fan_mode":{
             "state": {
               "Auto": "Auto",

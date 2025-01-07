@@ -65,6 +65,16 @@
               "Swing": "Svängande"
             }
           },
+          "swing_horizontal_mode":{
+            "state": {
+              "Auto": "Auto",
+              "Left": "Vänster",
+              "LeftMid": "Mitten vänster",
+              "Mid": "Mitten",
+              "RightMid": "Mitten höger",
+              "Right": "Höger"
+            }
+          },
           "fan_mode":{
             "state": {
               "Auto": "Auto",
