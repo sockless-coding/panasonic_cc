@@ -73,6 +73,16 @@
               "Swing": "Oscilla"
             }
           },
+          "swing_horizontal_mode":{
+            "state": {
+              "Auto": "Automatico",
+              "Left": "Sinistra",
+              "LeftMid": "Centro sinistra",
+              "Mid": "Centro",
+              "RightMid": "Centro destra",
+              "Right": "Destra"
+            }
+          },
           "fan_mode":{
             "state": {
               "Auto": "Automatica",

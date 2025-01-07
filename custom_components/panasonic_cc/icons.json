@@ -22,6 +22,16 @@
                     "Swing": "mdi:shuffle"
                   }
                 },
+                "swing_horizontal_mode":{
+                  "state": {
+                    "Auto": "mdi:compare-horizontal",
+                    "Left": "mdi:arrow-left-thin",
+                    "LeftMid": "mdi:arrow-bottom-left-thin",
+                    "Mid": "mdi:arrow-down-thin",
+                    "RightMid": "mdi:arrow-bottom-right-thin",
+                    "Right": "mdi:arrow-right-thin"
+                  }
+                },
                 "fan_mode":{
                   "state": {
                     "Auto": "mdi:alpha-a-circle-outline",

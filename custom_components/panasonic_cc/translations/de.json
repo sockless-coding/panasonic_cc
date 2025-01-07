@@ -58,6 +58,16 @@
                 "Swing": "Schwingen"
               }
             },
+            "swing_horizontal_mode":{
+              "state": {
+                "Auto": "Auto",
+                "Left": "Links",
+                "LeftMid": "Mitte-Links",
+                "Mid": "Mitte",
+                "RightMid": "Mitte-Rechts",
+                "Right": "Rechts"
+              }
+            },
             "fan_mode":{
               "state": {
                 "Low": "Niedrig",

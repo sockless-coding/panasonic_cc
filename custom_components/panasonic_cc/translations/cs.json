@@ -73,6 +73,16 @@
               "Swing": "Kmitání"
             }
           },
+          "swing_horizontal_mode":{
+            "state": {
+              "Auto": "Auto",
+              "Left": "Vlevo",
+              "LeftMid": "Středně vlevo",
+              "Mid": "Střed",
+              "RightMid": "Středně vpravo",
+              "Right": "Vpravo"
+            }
+          },
           "fan_mode": {
             "state": {
               "Auto": "Auto",
