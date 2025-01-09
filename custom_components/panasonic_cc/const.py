@@ -86,6 +86,7 @@ MANUFACTURER = "Panasonic"
 PANASONIC_DEVICES = "panasonic_devices"
 DATA_COORDINATORS = "data_coordinators"
 ENERGY_COORDINATORS = "energy_coordinators"
+AQUAREA_COORDINATORS = "aquarea_coorinators"
 
 COMPONENT_TYPES = [
     "climate", 
