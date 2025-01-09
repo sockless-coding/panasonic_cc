@@ -15,9 +15,7 @@ from homeassistant.components.climate.const import ClimateEntityFeature
 
 from .base import PanasonicDataEntity
 from .coordinator import PanasonicDeviceCoordinator
-from .pcomfortcloud import constants
-from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
-from .pcomfortcloud.panasonicdevice import PanasonicDeviceParameters
+from aio_panasonic_comfort_cloud import PanasonicDeviceParameters, ChangeRequestBuilder, constants
 
 from .const import (
     SUPPORT_FLAGS,

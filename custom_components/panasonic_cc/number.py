@@ -11,8 +11,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 
-from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
-from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
+from aio_panasonic_comfort_cloud import PanasonicDevice, PanasonicDeviceZone, ChangeRequestBuilder
 
 from . import DOMAIN
 from .const import DATA_COORDINATORS

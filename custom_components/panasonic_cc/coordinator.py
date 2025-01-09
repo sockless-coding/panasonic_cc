@@ -6,9 +6,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.storage import Store
 
-from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceInfo, PanasonicDeviceEnergy
-from .pcomfortcloud.apiclient import ApiClient
-from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
+from aio_panasonic_comfort_cloud import ApiClient, PanasonicDevice, PanasonicDeviceInfo, PanasonicDeviceEnergy, ChangeRequestBuilder
 from .const import DOMAIN,MANUFACTURER, DEFAULT_DEVICE_FETCH_INTERVAL, CONF_DEVICE_FETCH_INTERVAL, CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)

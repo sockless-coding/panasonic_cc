@@ -10,8 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription
 )
 
-from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceEnergy, PanasonicDeviceZone
-from .pcomfortcloud import constants
+from aio_panasonic_comfort_cloud import PanasonicDevice, PanasonicDeviceEnergy, PanasonicDeviceZone, constants
 
 from .const import (
     DOMAIN,

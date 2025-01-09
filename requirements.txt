@@ -1,5 +1,2 @@
-requests
-urllib3
-bs4
-aiofiles
 aiohttp
+aio-panasonic-comfort-cloud>=2025.1.2
