@@ -6,7 +6,7 @@
                 "preset_mode": {
                     "state": {
                         "none": "mdi:air-filter",
-                        "+8/15": "mdi:weather-sunny",
+                        "heat_8_15": "mdi:weather-sunny",
                         "quiet": "mdi:leaf",
                         "powerful": "mdi:arm-flex"
                     }

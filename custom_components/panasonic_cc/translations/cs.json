@@ -56,7 +56,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "+8/15": "+8/15 °C",
+              "heat_8_15": "+8/15 °C",
               "none": "Žádný",
               "quiet": "Tichý",
               "powerful": "Výkonný"
