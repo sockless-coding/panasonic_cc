@@ -119,5 +119,21 @@
         }
       }
     }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+        "name": "Set the horizontal swing mode",
+        "description": "Set the horizontal swing mode for climate device.",
+        "fields": {
+            "entity_id": {
+                "name": "Entity id",
+                "description": "Name(s) of entities to change."
+            },
+            "swing_mode": {
+                "name": "Swing mode",
+                "description": "New horizontal swing mode."
+            }
+        }
+    }
   }
 }
