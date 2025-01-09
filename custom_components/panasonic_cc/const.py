@@ -31,7 +31,7 @@ DEFAULT_USE_PANASONIC_PRESET_NAMES = True
 
 SENSOR_TYPE_TEMPERATURE = "temperature"
 
-PRESET_8_15 = "+8/15"
+PRESET_8_15 = "heat_8_15"
 PRESET_QUIET = "quiet"
 PRESET_POWERFUL = "powerful"
 
@@ -70,12 +70,7 @@ SUPPORT_FLAGS = (
     ClimateEntityFeature.TURN_ON
     )
 
-PRESET_LIST = {
-    PRESET_NONE: 'Auto',
-    PRESET_BOOST: 'Powerful',
-    PRESET_ECO: 'Quiet',
-    PRESET_8_15: '+8/15'
-}
+
 
 OPERATION_LIST = {
     HVACMode.OFF: 'Off',
