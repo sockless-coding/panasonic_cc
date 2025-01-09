@@ -13,6 +13,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
+from aio_panasonic_comfort_cloud import ApiClient
 
 from .const import (
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
@@ -61,7 +62,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Establish connection with Comfort Cloud."""
-    from . import pcomfortcloud
+    
 
     conf = entry.data
     if PANASONIC_DEVICES not in hass.data:
@@ -72,13 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     enable_daily_energy_sensor = entry.options.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
     
     client = async_get_clientsession(hass)
-    api = pcomfortcloud.ApiClient(username, password, client)
+    api = ApiClient(username, password, client)
     await api.start_session()
     devices = api.get_devices()
     
-    await api.check_aquarea()
-
-        
+       
    
     if len(devices) == 0:
         _LOGGER.error("Could not find any Panasonic Comfort Cloud Heat Pumps")

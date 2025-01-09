@@ -5,9 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 
 from .const import DOMAIN, DATA_COORDINATORS, SELECT_HORIZONTAL_SWING, SELECT_VERTICAL_SWING
-from .pcomfortcloud import constants
-from .pcomfortcloud.panasonicdevice import PanasonicDevice
-from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
+from aio_panasonic_comfort_cloud import PanasonicDevice, ChangeRequestBuilder, constants
 
 from .coordinator import PanasonicDeviceCoordinator
 from .base import PanasonicDataEntity

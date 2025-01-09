@@ -10,7 +10,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .pcomfortcloud.apiclient import ApiClient
+from aio_panasonic_comfort_cloud import ApiClient
 from . import DOMAIN as PANASONIC_DOMAIN
 from .const import (
     KEY_DOMAIN,

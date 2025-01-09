@@ -6,9 +6,7 @@ from dataclasses import dataclass
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
-from .pcomfortcloud import constants
-from .pcomfortcloud.panasonicdevice import PanasonicDevice, PanasonicDeviceZone
-from .pcomfortcloud.changerequestbuilder import ChangeRequestBuilder
+from aio_panasonic_comfort_cloud import constants, PanasonicDevice, PanasonicDeviceZone, ChangeRequestBuilder
 
 
 from . import DOMAIN

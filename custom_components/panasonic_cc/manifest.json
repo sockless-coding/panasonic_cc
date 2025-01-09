@@ -10,5 +10,5 @@
     "integration_type": "hub",
     "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/sockless-coding/panasonic_cc/issues",
-    "requirements": ["requests","urllib3","bs4","aiofiles","aiohttp"]
+    "requirements": ["aiohttp","aio-panasonic-comfort-cloud"]
   }
