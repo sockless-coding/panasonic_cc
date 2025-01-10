@@ -8,7 +8,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from aio_panasonic_comfort_cloud import ApiClient, PanasonicDevice, PanasonicDeviceInfo, PanasonicDeviceEnergy, ChangeRequestBuilder
-from aioaquarea import Client as AquareaApiClient, Device as AquareaDevice
+from aioaquarea import Client as AquareaApiClient, Device as AquareaDevice, AquareaEnvironment
 from aioaquarea.data import DeviceInfo as AquareaDeviceInfo
 
 from .const import DOMAIN,MANUFACTURER, DEFAULT_DEVICE_FETCH_INTERVAL, CONF_DEVICE_FETCH_INTERVAL, CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL
@@ -163,6 +163,7 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator):
         self._aquarea_device_info = device_info
         self._device:AquareaDevice = None
         self._update_id = 0
+        self._is_demo = api_client._environment == AquareaEnvironment.DEMO
 
     @property
     def device(self) -> AquareaDevice:
@@ -174,13 +175,13 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator):
     
     @property
     def device_id(self) -> str:
-        return self._device.device_id
+        return self._device.device_id if not self._is_demo else "demo-house"
 
     
     @property
     def device_info(self)->DeviceInfo:
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device.device_id )},
+            identifiers={(DOMAIN, self.device_id)},
             manufacturer=self._device.manufacturer,
             model="",
             name=self._device.name,

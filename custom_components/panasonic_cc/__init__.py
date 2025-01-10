@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 from aio_panasonic_comfort_cloud import ApiClient
-from aioaquarea import Client as AquareaApiClient
+from aioaquarea import Client as AquareaApiClient, AquareaEnvironment
 
 from .const import (
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
@@ -48,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+AQUAREA_DEMO = False
 
 def setup(hass, config):
     pass
@@ -101,14 +102,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except Exception as e:
             _LOGGER.warning(f"Failed to setup device: {device.name} ({e})", exc_info=e)
 
-    if api.has_unknown_devices:
+    if api.has_unknown_devices or AQUAREA_DEMO:
         try:
-            aquarea_api_client = AquareaApiClient(client, username, password)
-            await aquarea_api_client.login()
+            
+            if not AQUAREA_DEMO:
+                aquarea_api_client = AquareaApiClient(client, username, password)
+                await aquarea_api_client.login()
+            else:
+                aquarea_api_client = AquareaApiClient(client, environment=AquareaEnvironment.DEMO)
+                aquarea_api_client._access_token = 'dummy'
+                aquarea_api_client._token_expiration = None
             aquarea_devices = await aquarea_api_client.get_devices(include_long_id=True)
             for aquarea_device in aquarea_devices:
                 try:
-                    aquarea_device_coordinator = AquareaDeviceCoordinator(hass, conf, api, aquarea_device)
+                    aquarea_device_coordinator = AquareaDeviceCoordinator(hass, conf, aquarea_api_client, aquarea_device)
                     await aquarea_device_coordinator.async_config_entry_first_refresh()
                     aquarea_coordinators.append(aquarea_device_coordinator)
                 except Exception as e:
