@@ -1,5 +1,5 @@
 """Constants for Panasonic Cloud."""
-from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, Platform
 from homeassistant.components.climate.const import (
     HVACMode, ClimateEntityFeature,
     PRESET_ECO, PRESET_NONE, PRESET_BOOST)
@@ -15,6 +15,8 @@ ATTR_SWING_LR_MODES = "horizontal_swing_modes"
 
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
+
+STATE_HEATING = "heating"
 
 SERVICE_SET_SWING_LR_MODE = "set_horizontal_swing_mode"
 
@@ -89,12 +91,13 @@ ENERGY_COORDINATORS = "energy_coordinators"
 AQUAREA_COORDINATORS = "aquarea_coorinators"
 
 COMPONENT_TYPES = [
-    "climate", 
-    "sensor", 
-    "switch",
-    "button",
-    "select",
-    "number"
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.BUTTON,
+    Platform.SELECT,
+    Platform.NUMBER,
+    Platform.WATER_HEATER
     ]
 
 STARTUP = """
