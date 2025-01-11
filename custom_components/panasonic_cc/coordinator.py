@@ -5,8 +5,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from aio_panasonic_comfort_cloud import ApiClient, PanasonicDevice, PanasonicDeviceInfo, PanasonicDeviceEnergy, ChangeRequestBuilder
+from aioaquarea import Client as AquareaApiClient, Device as AquareaDevice, AquareaEnvironment
+from aioaquarea.data import DeviceInfo as AquareaDeviceInfo
+
 from .const import DOMAIN,MANUFACTURER, DEFAULT_DEVICE_FETCH_INTERVAL, CONF_DEVICE_FETCH_INTERVAL, CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,5 +143,65 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
                return self._update_id
         except BaseException as e:
             _LOGGER.error("Error fetching energy data from API: %s", e, exc_info=e)
+            raise UpdateFailed(f"Invalid response from API: {e}") from e
+        return self._update_id
+    
+
+class AquareaDeviceCoordinator(DataUpdateCoordinator):
+
+    def __init__(self, hass: HomeAssistant, config: dict, api_client: AquareaApiClient, device_info: AquareaApiClient):
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Aquarea Device Coordinator",
+            update_interval=timedelta(seconds=config.get(CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL)),
+            update_method=self._fetch_device_data,
+        )
+        self._hass = hass
+        self._config = config
+        self._api_client = api_client
+        self._aquarea_device_info = device_info
+        self._device:AquareaDevice = None
+        self._update_id = 0
+        self._is_demo = api_client._environment == AquareaEnvironment.DEMO
+
+    @property
+    def device(self) -> AquareaDevice:
+        return self._device
+    
+    @property
+    def api_client(self) -> AquareaApiClient:
+        return self._api_client
+    
+    @property
+    def device_id(self) -> str:
+        return self._device.device_id if not self._is_demo else "demo-house"
+
+    
+    @property
+    def device_info(self)->DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device_id)},
+            manufacturer=self._device.manufacturer,
+            model="",
+            name=self._device.name,
+            sw_version=self._device.version,
+        )
+
+    async def _fetch_device_data(self)->int:
+        try:
+            if self._device is None:
+                self._device = await self._api_client.get_device(
+                    device_info=self._aquarea_device_info,
+                    consumption_refresh_interval=timedelta(seconds=self._config.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL)),
+                    timezone=dt_util.DEFAULT_TIME_ZONE)
+                
+                self._update_id = 1
+                return self._update_id
+            await self._device.refresh_data()
+            self._update_id = self._update_id + 1
+            return self._update_id
+        except BaseException as e:
+            _LOGGER.error("Error fetching device data from API: %s", e, exc_info=e)
             raise UpdateFailed(f"Invalid response from API: {e}") from e
         return self._update_id
