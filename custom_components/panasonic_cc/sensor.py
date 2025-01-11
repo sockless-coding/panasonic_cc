@@ -11,14 +11,16 @@ from homeassistant.components.sensor import (
 )
 
 from aio_panasonic_comfort_cloud import PanasonicDevice, PanasonicDeviceEnergy, PanasonicDeviceZone, constants
+from aioaquarea import Device as AquareaDevice
 
 from .const import (
     DOMAIN,
     DATA_COORDINATORS,
-    ENERGY_COORDINATORS
+    ENERGY_COORDINATORS,
+    AQUAREA_COORDINATORS
     )
-from .base import PanasonicDataEntity, PanasonicEnergyEntity
-from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator
+from .base import PanasonicDataEntity, PanasonicEnergyEntity, AquareaDataEntity
+from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator, AquareaDeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +34,12 @@ class PanasonicSensorEntityDescription(SensorEntityDescription):
 class PanasonicEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Panasonic sensor entity."""
     get_state: Callable[[PanasonicDeviceEnergy], Any] = None
+
+@dataclass(frozen=True, kw_only=True)
+class AquareaSensorEntityDescription(SensorEntityDescription):
+    """Describes Aquarea sensor entity."""
+    get_state: Callable[[AquareaDevice], Any] = None
+    is_available: Callable[[AquareaDevice], bool] = None
 
 INSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     key="inside_temperature",
@@ -155,6 +163,18 @@ HEATING_POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     get_state=lambda energy: energy.heating_power
 )
 
+AQUAREA_OUTSIDE_TEMPERATURE_DESCRIPTION = AquareaSensorEntityDescription(
+    key="outside_temperature",
+    translation_key="outside_temperature",
+    name="Outside Temperature",
+    icon="mdi:thermometer",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    get_state=lambda device: device.temperature_outdoor,
+    is_available=lambda device: device.temperature_outdoor is not None,
+)
+
 def create_zone_temperature_description(zone: PanasonicDeviceZone):
     return PanasonicSensorEntityDescription(
         key = f"zone-{zone.id}-temperature",
@@ -173,6 +193,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
     energy_coordinators: list[PanasonicDeviceEnergyCoordinator] = hass.data[DOMAIN][ENERGY_COORDINATORS]
+    aquarea_coordinators: list[AquareaDeviceCoordinator] = hass.data[DOMAIN][AQUAREA_COORDINATORS]
+
     for coordinator in data_coordinators:
         entities.append(PanasonicSensorEntity(coordinator, INSIDE_TEMPERATURE_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, OUTSIDE_TEMPERATURE_DESCRIPTION))
@@ -192,6 +214,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(PanasonicEnergySensorEntity(coordinator, POWER_DESCRIPTION))
         entities.append(PanasonicEnergySensorEntity(coordinator, COOLING_POWER_DESCRIPTION))
         entities.append(PanasonicEnergySensorEntity(coordinator, HEATING_POWER_DESCRIPTION))
+
+    for coordinator in aquarea_coordinators:
+        entities.append(AquareaSensorEntity(coordinator, AQUAREA_OUTSIDE_TEMPERATURE_DESCRIPTION))
 
     async_add_entities(entities)
 
@@ -234,3 +259,21 @@ class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
         value = self.entity_description.get_state(self.coordinator.energy)
         self._attr_available = value is not None
         self._attr_native_value = value
+
+class AquareaSensorEntity(AquareaDataEntity, SensorEntity):
+    
+    entity_description: AquareaSensorEntityDescription
+
+    def __init__(self, coordinator: AquareaDeviceCoordinator, description: AquareaSensorEntityDescription):
+        self.entity_description = description
+        super().__init__(coordinator, description.key)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.entity_description.is_available(self.coordinator.device)
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = self.entity_description.is_available(self.coordinator.device)
+        self._attr_native_value = self.entity_description.get_state(self.coordinator.device)

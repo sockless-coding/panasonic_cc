@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 from aio_panasonic_comfort_cloud import ApiClient
+from aioaquarea import Client as AquareaApiClient, AquareaEnvironment
 
 from .const import (
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
@@ -23,9 +24,10 @@ from .const import (
     COMPONENT_TYPES,
     STARTUP,
     DATA_COORDINATORS,
-    ENERGY_COORDINATORS)
+    ENERGY_COORDINATORS,
+    AQUAREA_COORDINATORS)
 
-from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator
+from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator, AquareaDeviceCoordinator
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+AQUAREA_DEMO = False
 
 def setup(hass, config):
     pass
@@ -79,13 +82,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     
        
    
-    if len(devices) == 0:
+    if len(devices) == 0 and not api.has_unknown_devices:
         _LOGGER.error("Could not find any Panasonic Comfort Cloud Heat Pumps")
         return False
 
     _LOGGER.info("Got %s devices", len(devices))
     data_coordinators: list[PanasonicDeviceCoordinator] = []
     energy_coordinators: list[PanasonicDeviceEnergyCoordinator] = []
+    aquarea_coordinators: list[AquareaDeviceCoordinator] = []
 
 
     for device in devices:
@@ -98,8 +102,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except Exception as e:
             _LOGGER.warning(f"Failed to setup device: {device.name} ({e})", exc_info=e)
 
+    if api.has_unknown_devices or AQUAREA_DEMO:
+        try:
+            
+            if not AQUAREA_DEMO:
+                aquarea_api_client = AquareaApiClient(client, username, password)
+                await aquarea_api_client.login()
+            else:
+                aquarea_api_client = AquareaApiClient(client, environment=AquareaEnvironment.DEMO)
+                aquarea_api_client._access_token = 'dummy'
+                aquarea_api_client._token_expiration = None
+            aquarea_devices = await aquarea_api_client.get_devices(include_long_id=True)
+            for aquarea_device in aquarea_devices:
+                try:
+                    aquarea_device_coordinator = AquareaDeviceCoordinator(hass, conf, aquarea_api_client, aquarea_device)
+                    await aquarea_device_coordinator.async_config_entry_first_refresh()
+                    aquarea_coordinators.append(aquarea_device_coordinator)
+                except Exception as e:
+                    _LOGGER.warning(f"Failed to setup Aquarea device: {aquarea_device.name} ({e})", exc_info=e)
+        except Exception as e:
+            _LOGGER.warning(f"Failed to setup Aquarea: {e}", exc_info=e)
+
+
     hass.data[DOMAIN][DATA_COORDINATORS] = data_coordinators
     hass.data[DOMAIN][ENERGY_COORDINATORS] = energy_coordinators
+    hass.data[DOMAIN][AQUAREA_COORDINATORS] = aquarea_coordinators
     await asyncio.gather(
         *(
             data.async_config_entry_first_refresh()

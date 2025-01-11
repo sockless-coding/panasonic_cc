@@ -68,10 +68,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
             await api.start_session()
             devices = api.get_devices()
 
-            await api.check_aquarea()
-
-            if not devices:
-                _LOGGER.debug("Not devices found")
+            if not devices and not api.unknown_devices:
+                _LOGGER.debug("No devices found")
                 return self.async_abort(reason="No devices")
 
         except asyncio.TimeoutError as te:
@@ -142,7 +140,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
             await api.reauthenticate()
             devices = api.get_devices()
 
-            if not devices:
+            if not devices and not api.unknown_devices:
                 return {"base": "no_devices"}
         except asyncio.TimeoutError as te:
             _LOGGER.exception("TimeoutError", te)
