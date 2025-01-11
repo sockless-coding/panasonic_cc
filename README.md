@@ -54,6 +54,16 @@ After inital setup, the following options are available:
 
 - The authentication process can be fiddly and may require resetting the MFA by logging in / out from the Panasonic app.
 
+## Dependencies
+
+This integration uses the following modules:
+
+- [`aio-panasonic-comfort-cloud`](https://github.com/sockless-coding/aio-panasonic-comfort-cloud): For Panasonic Heatpumps.
+- [`aioaquarea`](https://github.com/cjaliaga/aioaquarea): For Panasonic Aquarea devices.
+
+
+
+
 ## Support Development
 - :coffee:&nbsp;&nbsp;[Buy me a coffee](https://www.buymeacoffee.com/sockless)
 
