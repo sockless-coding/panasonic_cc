@@ -4,13 +4,16 @@ from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature, STATE_OFF, STATE_IDLE, PRECISION_WHOLE, ATTR_TEMPERATURE
+from homeassistant.const import UnitOfTemperature, STATE_OFF, STATE_IDLE, PRECISION_WHOLE, ATTR_TEMPERATURE, MAJOR_VERSION
 from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     WaterHeaterEntity,
-    WaterHeaterEntityFeature,
-    WaterHeaterEntityDescription
+    WaterHeaterEntityFeature
 )
+if MAJOR_VERSION >= 2025:
+    from homeassistant.components.water_heater import WaterHeaterEntityDescription
+else:
+    from homeassistant.components.water_heater import WaterHeaterEntityEntityDescription as WaterHeaterEntityDescription
 
 from .base import AquareaDataEntity
 from .coordinator import AquareaDeviceCoordinator
