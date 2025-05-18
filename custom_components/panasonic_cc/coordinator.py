@@ -29,13 +29,15 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         self._config = config
         self._api_client = api_client
         self._panasonic_device_info = device_info
-        self._device:PanasonicDevice = None
+        self._device:PanasonicDevice | None = None
         self._store = Store(hass, version=1, key=f"panasonic_cc_{device_info.id}")
         self._update_id = 0
         
         
     @property
     def device(self) -> PanasonicDevice:
+        if self._device is None:
+            raise ValueError("device has not been initialized")
         return self._device
     
     @property
@@ -58,10 +60,10 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         )
     
     def get_change_request_builder(self):
-        return ChangeRequestBuilder(self._device)
+        return ChangeRequestBuilder(self.device)
     
     async def async_apply_changes(self, request_builder: ChangeRequestBuilder):
-        await self._api_client.set_device_raw(self._device, request_builder.build())
+        await self._api_client.set_device_raw(self.device, request_builder.build())
 
     async def async_get_stored_data(self):
         data = await self._store.async_load()
@@ -107,7 +109,7 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
         self._config = config
         self._api_client = api_client
         self._panasonic_device_info = device_info
-        self._energy: PanasonicDeviceEnergy = None
+        self._energy: PanasonicDeviceEnergy | None = None
         self._update_id = 0
 
     @property
@@ -119,7 +121,7 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
         return self._panasonic_device_info.id
     
     @property
-    def energy(self) -> PanasonicDeviceEnergy:
+    def energy(self) -> PanasonicDeviceEnergy | None:
         return self._energy
     
     @property
@@ -149,7 +151,7 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
 
 class AquareaDeviceCoordinator(DataUpdateCoordinator):
 
-    def __init__(self, hass: HomeAssistant, config: dict, api_client: AquareaApiClient, device_info: AquareaApiClient):
+    def __init__(self, hass: HomeAssistant, config: dict, api_client: AquareaApiClient, device_info: AquareaDeviceInfo):
         super().__init__(
             hass,
             _LOGGER,
@@ -161,12 +163,14 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator):
         self._config = config
         self._api_client = api_client
         self._aquarea_device_info = device_info
-        self._device:AquareaDevice = None
+        self._device:AquareaDevice | None = None
         self._update_id = 0
         self._is_demo = api_client._environment == AquareaEnvironment.DEMO
 
     @property
     def device(self) -> AquareaDevice:
+        if self._device is None:
+            raise ValueError("device has not been initialized")
         return self._device
     
     @property
@@ -175,17 +179,17 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator):
     
     @property
     def device_id(self) -> str:
-        return self._device.device_id if not self._is_demo else "demo-house"
+        return self.device.device_id if not self._is_demo else "demo-house"
 
     
     @property
     def device_info(self)->DeviceInfo:
         return DeviceInfo(
             identifiers={(DOMAIN, self.device_id)},
-            manufacturer=self._device.manufacturer,
+            manufacturer=self.device.manufacturer,
             model="",
-            name=self._device.name,
-            sw_version=self._device.version,
+            name=self.device.name,
+            sw_version=self.device.version,
         )
 
     async def _fetch_device_data(self)->int:
