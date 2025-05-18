@@ -100,7 +100,7 @@ class PanasonicSwitchEntityBase(SwitchEntity):
     """Base class for all Panasonic switch entities."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
-    entity_description: PanasonicSwitchEntityDescription
+    entity_description: PanasonicSwitchEntityDescription # type: ignore[override]
 
 class PanasonicSwitchEntity(PanasonicDataEntity, PanasonicSwitchEntityBase):
     """Representation of a Panasonic switch."""
