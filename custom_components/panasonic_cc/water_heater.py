@@ -40,6 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     entities = []
     aquarea_coordinators: list[AquareaDeviceCoordinator] = hass.data[DOMAIN][AQUAREA_COORDINATORS]
     for aquarea_coordinator in aquarea_coordinators:
+        if aquarea_coordinator.device.tank is None:
+            continue
         entities.append(AquareaWaterHeater(aquarea_coordinator, AQUAREA_WATER_TANK_DESCRIPTION))
     async_add_entities(entities)
 
@@ -62,6 +64,10 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
     def _async_update_attrs(self) -> None:
         """Update attributes."""
         device = self.coordinator.device
+
+        if device.tank is None:
+            self._attr_available = False
+            return
 
         self._attr_min_temp = device.tank.heat_min
         self._attr_max_temp = device.tank.heat_max
