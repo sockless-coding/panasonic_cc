@@ -89,10 +89,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.info("Updating configuration")
         updated_config = dict(entry.data)
         updated_config[CONF_UPDATE_INTERVAL_VERSION] = 2
-        if conf[CONF_DEVICE_FETCH_INTERVAL] <= 31:
+        if CONF_DEVICE_FETCH_INTERVAL not in conf or conf[CONF_DEVICE_FETCH_INTERVAL] <= 31:
             updated_config[CONF_DEVICE_FETCH_INTERVAL] = DEFAULT_DEVICE_FETCH_INTERVAL
             _LOGGER.info(f"Setting default fetch interval to {DEFAULT_DEVICE_FETCH_INTERVAL}")        
-        if conf[CONF_ENERGY_FETCH_INTERVAL] <= 61:
+        if CONF_ENERGY_FETCH_INTERVAL not in conf or conf[CONF_ENERGY_FETCH_INTERVAL] <= 61:
             updated_config[CONF_ENERGY_FETCH_INTERVAL] = DEFAULT_ENERGY_FETCH_INTERVAL
             _LOGGER.info(f"Setting default energy fetch interval to {DEFAULT_ENERGY_FETCH_INTERVAL}")
         hass.config_entries.async_update_entry(entry, data=updated_config)
