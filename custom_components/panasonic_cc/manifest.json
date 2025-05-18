@@ -2,7 +2,7 @@
     "domain": "panasonic_cc",
     "name": "Panasonic Comfort Cloud",
     "after_dependencies": ["http"],
-    "version": "2025.1.2",
+    "version": "2025.5.0",
     "config_flow": true,
     "documentation": "https://github.com/sockless-coding/panasonic_cc/",
     "dependencies": [],
@@ -10,6 +10,6 @@
     "integration_type": "hub",
     "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/sockless-coding/panasonic_cc/issues",
-    "requirements": ["aiohttp","aio-panasonic-comfort-cloud==2025.5.0","aioaquarea==0.7.2"],
+    "requirements": ["aiohttp","aio-panasonic-comfort-cloud==2025.5.1","aioaquarea==0.7.2"],
     "quality_scale": "silver"
   }
