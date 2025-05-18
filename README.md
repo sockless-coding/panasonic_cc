@@ -7,14 +7,21 @@
 
 This is a custom component to allow control of Panasonic Comfort Cloud devices in [HomeAssistant](https://home-assistant.io).
 
+> [!IMPORTANT]
+> Before installing this integration, please ensure the following steps have been completed in the Panasonic Comfort Cloud App:
+>
+> - **Set Up Two-Factor Authentication (2FA):** Complete the entire 2FA setup process.  
+> - **Select the SMS Option:** It is crucial to choose the SMS option for 2FA. Failing to do so will result in the error “Missing required parameter: code.”  
+>
+> For optimal operation, it is also recommended that you use separate accounts for Home Assistant and the Comfort Cloud App.
+
 <p>
     <img src="https://github.com/sockless-coding/panasonic_cc/raw/master/doc/controls.png" alt="Example controls" style="vertical-align: top;max-width:100%" align="top" />
     <img src="https://github.com/sockless-coding/panasonic_cc/raw/master/doc/sensors.png" alt="Example sensors" style="vertical-align: top;max-width:100%" align="top" />
     <img src="https://github.com/sockless-coding/panasonic_cc/raw/master/doc/diagnostics.png" alt="Example diagnostics" style="vertical-align: top;max-width:100%" align="top" />
 </p>
 
-## IMPORTANT
-Before installing this integration, you **must** have **completed** the **2FA** process using the Panasonic Comfort Cloud app.
+
 
 ## Features
 
