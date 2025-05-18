@@ -27,19 +27,19 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass(frozen=True, kw_only=True)
 class PanasonicSensorEntityDescription(SensorEntityDescription):
     """Describes Panasonic sensor entity."""
-    get_state: Callable[[PanasonicDevice], Any] = None
-    is_available: Callable[[PanasonicDevice], bool] = None
+    get_state: Callable[[PanasonicDevice], Any] | None = None
+    is_available: Callable[[PanasonicDevice], bool] | None = None
 
 @dataclass(frozen=True, kw_only=True)
 class PanasonicEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Panasonic sensor entity."""
-    get_state: Callable[[PanasonicDeviceEnergy], Any] = None
+    get_state: Callable[[PanasonicDeviceEnergy], Any]| None = None
 
 @dataclass(frozen=True, kw_only=True)
 class AquareaSensorEntityDescription(SensorEntityDescription):
     """Describes Aquarea sensor entity."""
-    get_state: Callable[[AquareaDevice], Any] = None
-    is_available: Callable[[AquareaDevice], bool] = None
+    get_state: Callable[[AquareaDevice], Any] | None = None
+    is_available: Callable[[AquareaDevice], bool]| None = None
 
 INSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     key="inside_temperature",
@@ -223,7 +223,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class PanasonicSensorEntityBase(SensorEntity):
     """Base class for all sensor entities."""
-    entity_description: PanasonicSensorEntityDescription
+    entity_description: PanasonicSensorEntityDescription # type: ignore[override]
 
 class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
     
@@ -234,18 +234,22 @@ class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
+        if self.entity_description.is_available is None:
+            return False        
         return self.entity_description.is_available(self.coordinator.device)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_available = self.entity_description.is_available(self.coordinator.device)
-        self._attr_native_value = self.entity_description.get_state(self.coordinator.device)
+        if self.entity_description.is_available:
+            self._attr_available = self.entity_description.is_available(self.coordinator.device)
+        if self.entity_description.get_state:
+            self._attr_native_value = self.entity_description.get_state(self.coordinator.device)
 
 class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
     
-    entity_description: PanasonicEnergySensorEntityDescription
+    entity_description: PanasonicEnergySensorEntityDescription # type: ignore[override]
 
-    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicEnergySensorEntityDescription):
+    def __init__(self, coordinator: PanasonicDeviceEnergyCoordinator, description: PanasonicEnergySensorEntityDescription):
         self.entity_description = description
         super().__init__(coordinator, description.key)
 
@@ -271,9 +275,12 @@ class AquareaSensorEntity(AquareaDataEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.entity_description.is_available(self.coordinator.device)
+        value = self.entity_description.is_available(self.coordinator.device) if self.entity_description.is_available else None 
+        return value if value is not None else False
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_available = self.entity_description.is_available(self.coordinator.device)
-        self._attr_native_value = self.entity_description.get_state(self.coordinator.device)
+        if self.entity_description.is_available:
+            self._attr_available = self.entity_description.is_available(self.coordinator.device)
+        if self.entity_description.get_state:
+            self._attr_native_value = self.entity_description.get_state(self.coordinator.device)
