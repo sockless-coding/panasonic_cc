@@ -17,7 +17,12 @@ from aio_panasonic_comfort_cloud import ApiClient
 from aioaquarea import Client as AquareaApiClient, AquareaEnvironment
 
 from .const import (
+    CONF_UPDATE_INTERVAL_VERSION,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
+    CONF_DEVICE_FETCH_INTERVAL,
+    CONF_ENERGY_FETCH_INTERVAL,
+    DEFAULT_DEVICE_FETCH_INTERVAL,
+    DEFAULT_ENERGY_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_USE_PANASONIC_PRESET_NAMES,
     PANASONIC_DEVICES,
@@ -80,7 +85,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await api.start_session()
     devices = api.get_devices()
     
-       
+    if CONF_UPDATE_INTERVAL_VERSION not in conf or conf[CONF_UPDATE_INTERVAL_VERSION] < 2:
+        _LOGGER.info("Updating configuration")
+        updated_config = dict(entry.data)
+        updated_config[CONF_UPDATE_INTERVAL_VERSION] = 2
+        if conf[CONF_DEVICE_FETCH_INTERVAL] <= 31:
+            updated_config[CONF_DEVICE_FETCH_INTERVAL] = DEFAULT_DEVICE_FETCH_INTERVAL
+            _LOGGER.info(f"Setting default fetch interval to {DEFAULT_DEVICE_FETCH_INTERVAL}")        
+        if conf[CONF_ENERGY_FETCH_INTERVAL] <= 61:
+            updated_config[CONF_ENERGY_FETCH_INTERVAL] = DEFAULT_ENERGY_FETCH_INTERVAL
+            _LOGGER.info(f"Setting default energy fetch interval to {DEFAULT_ENERGY_FETCH_INTERVAL}")
+        hass.config_entries.async_update_entry(entry, data=updated_config)
+
    
     if len(devices) == 0 and not api.has_unknown_devices:
         _LOGGER.error("Could not find any Panasonic Comfort Cloud Heat Pumps")
