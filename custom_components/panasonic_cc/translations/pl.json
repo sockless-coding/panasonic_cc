@@ -1,0 +1,138 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Wprowadź swoje Panasonic ID i hasło",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Hasło",
+          "enable_daily_energy_sensor": "Włącz dzienne czujniki energii",
+          "force_enable_nanoe": "Włącz przełącznik Nanoe dla wszystkich urządzeń",
+          "use_panasonic_preset_names": "Używaj 'Cichy' i 'Mocny' zamiast 'Eco' i 'Boost'",
+          "device_fetch_interval": "Interwał pobierania urządzenia (sekundy)",
+          "energy_fetch_interval": "Interwał pobierania energii (sekundy)"
+        }
+      },
+      "reconfigure_confirm": {
+        "title": "Ponowna konfiguracja Panasonic Comfort Cloud",
+        "description": "Wprowadź swoje Panasonic ID i hasło, aby ponownie uwierzytelnić",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Hasło"
+        }
+      }
+    },
+    "error": {
+      "no_devices": "Nie znaleziono urządzeń. Sprawdź konto i aplikację CFC, a następnie spróbuj ponownie.",
+      "device_timeout": "Przekroczono czas oczekiwania na połączenie z API.",
+      "device_fail": "Nieoczekiwany błąd podczas połączenia z API.",
+      "invalid_user_password": "Nieprawidłowe Panasonic ID lub hasło."
+    },
+    "abort": {
+      "device_timeout": "Przekroczono czas oczekiwania na połączenie z urządzeniem.",
+      "device_fail": "Nieoczekiwany błąd podczas tworzenia urządzenia.",
+      "already_configured": "Urządzenie jest już skonfigurowane.",
+      "reauth_successful": "Ponowne uwierzytelnienie zakończone sukcesem."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "force_outside_sensor": "Wymuś czujnik zewnętrzny",
+          "enable_daily_energy_sensor": "Włącz dzienne czujniki energii (wymaga ponownego uruchomienia)",
+          "force_enable_nanoe": "Włącz przełącznik Nanoe dla wszystkich urządzeń (wymaga ponownego uruchomienia)",
+          "use_panasonic_preset_names": "Używaj 'Cichy' i 'Mocny' zamiast 'Eco' i 'Boost' (wymaga ponownego uruchomienia)",
+          "device_fetch_interval": "Interwał pobierania urządzenia (sekundy)",
+          "energy_fetch_interval": "Interwał pobierania energii (sekundy)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat_8_15": "+8/15°C",
+              "none": "Brak",
+              "quiet": "Cichy",
+              "powerful": "Mocny"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Up": "Wysoki",
+              "UpMid": "Średniowysoki",
+              "Mid": "Średni",
+              "DownMid": "Średnioniski",
+              "Down": "Niski",
+              "Swing": "Wahadłowy"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Left": "Lewo",
+              "LeftMid": "Lewy środek",
+              "Mid": "Środek",
+              "RightMid": "Prawy środek",
+              "Right": "Prawo"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Low": "Niski",
+              "LowMid": "Średnioniski",
+              "Mid": "Średni",
+              "HighMid": "Średniowysoki",
+              "High": "Wysoki"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Left": "Lewo",
+          "LeftMid": "Lewy środek",
+          "Mid": "Środek",
+          "RightMid": "Prawy środek",
+          "Right": "Prawo"
+        }
+      },
+      "vertical_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Up": "Wysoki",
+          "UpMid": "Średniowysoki",
+          "Mid": "Średni",
+          "DownMid": "Średnioniski",
+          "Down": "Niski"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+        "name": "Ustaw poziomy kierunek nawiewu",
+        "description": "Ustaw poziomy kierunek nawiewu dla urządzenia klimatyzacyjnego.",
+        "fields": {
+            "entity_id": {
+                "name": "Identyfikator urządzenia",
+                "description": "Nazwa urządzenia, dla którego ma zostać zmieniony kierunek nawiewu."
+            },
+            "swing_mode": {
+                "name": "Kierunek nawiewu",
+                "description": "Nowy poziomy kierunek nawiewu."
+            }
+        }
+    }
+  }
+}
