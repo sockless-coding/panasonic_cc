@@ -33,7 +33,7 @@
       "device_timeout": "Tidsavbrudd ved tilkobling til enheten.",
       "device_fail": "Uventet feil ved opprettelse av enhet.",
       "already_configured": "Enheten er allerede konfigurert",
-      "reauth_successful": "Reautorisering vellykket."
+      "reauth_successful": "Reautentisering vellykket."
     }
   },
   "options": {
