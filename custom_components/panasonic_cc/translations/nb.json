@@ -4,23 +4,135 @@
       "user": {
         "title": "Panasonic Comfort Cloud",
         "description": "Skriv inn Panasonic ID og passord",
-        "data": { "username": "Panasonic ID", "password": "Passord" }
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Passord",
+          "enable_daily_energy_sensor": "Aktiver daglige energisensorer",
+          "force_enable_nanoe": "Aktiver Nanoe-brytteren for alle enheter",
+          "use_panasonic_preset_names": "Bruk 'Stille' og 'Kraftig' i stedet for 'Øko' og 'Boost'",
+          "device_fetch_interval": "Oppdateringsfrekvens (sekunder)",
+          "energy_fetch_interval": "Oppdateringsfrekvens (sekunder)"
+        }
+      },
+      "reconfigure_confirm": {
+        "title": "Rekonfigurer Panasonic Comfort Cloud",
+        "description": "Skriv inn din Panasonic ID og passord for å autentisere på nytt",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Passord"
+        }
       }
     },
+    "error": {
+      "no_devices": "Ingen enheter funnet. Vennligst sjekk kontoen og CFC-applikasjonen og prøv igjen.",
+      "device_timeout": "Tidsavbrudd ved tilkobling til API.",
+      "device_fail": "Uventet feil ved tilkobling til API.",
+      "invalid_user_password": "Ugyldig Panasonic ID eller passord."
+    },
     "abort": {
-      "device_timeout": "Tidsavbrudd for tilkobling til enheten.",
-      "device_fail": "Uventet feil under oppretting av enhet.",
-      "already_configured": "Enheten er allerede konfigurert"
+      "device_timeout": "Tidsavbrudd ved tilkobling til enheten.",
+      "device_fail": "Uventet feil ved opprettelse av enhet.",
+      "already_configured": "Enheten er allerede konfigurert",
+      "reauth_successful": "Reautentisering vellykket."
     }
   },
   "options": {
     "step": {
-        "init": {
-            "data": {
-              "force_outside_sensor": "Tving utvendig sensor",
-              "enable_daily_energy_sensor": "Aktiver daglig energisensor (krever omstart)"
-            }
+      "init": {
+        "data": {
+          "force_outside_sensor": "Tving utendørssensor",
+          "enable_daily_energy_sensor": "Aktiver daglige energisensorer (krever omstart)",
+          "force_enable_nanoe": "Aktiver Nanoe-brytteren for alle enheter (krever omstart)",
+          "use_panasonic_preset_names": "Bruk 'Stille' og 'Kraftig' i stedet for 'Øko' og 'Boost' (krever omstart)",
+          "device_fetch_interval": "Oppdateringsfrekvens (sekunder)",
+          "energy_fetch_interval": "Oppdateringsfrekvens (sekunder)"
         }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat_8_15": "+8/15°C",
+              "none": "Ingen",
+              "quiet": "Stille",
+              "powerful": "Kraftig"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Up": "Topp",
+              "UpMid": "Midt-topp",
+              "Mid": "Midten",
+              "DownMid": "Midt-bunn",
+              "Down": "Bunn",
+              "Swing": "Sving"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Left": "Venstre",
+              "LeftMid": "Midt-venstre",
+              "Mid": "Midten",
+              "RightMid": "Midt-høyre",
+              "Right": "Høyre"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Low": "Lav",
+              "LowMid": "Midt-lav",
+              "Mid": "Midten",
+              "HighMid": "Midt-høy",
+              "High": "Høy"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Left": "Venstre",
+          "LeftMid": "Midt-venstre",
+          "Mid": "Midten",
+          "RightMid": "Midt-høyre",
+          "Right": "Høyre"
+        }
+      },
+      "vertical_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Up": "Topp",
+          "UpMid": "Midt-topp",
+          "Mid": "Midten",
+          "DownMid": "Midt-bunn",
+          "Down": "Bunn"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+      "name": "Sett horisontal svingmodus",
+      "description": "Sett horisontal svingmodus for klimaenhet.",
+      "fields": {
+        "entity_id": {
+          "name": "Enhets-ID",
+          "description": "Navn på enheter som skal endres."
+        },
+        "swing_mode": {
+          "name": "Svingmodus",
+          "description": "Ny horisontal svingmodus."
+        }
+      }
     }
   }
 }
