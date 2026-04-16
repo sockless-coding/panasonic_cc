@@ -46,7 +46,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
         """Register new entry."""
         # Check if ip already is registered
         for entry in self._async_current_entries():
-            if entry.data[KEY_DOMAIN] == PANASONIC_DOMAIN:
+            if entry.data.get(KEY_DOMAIN) == PANASONIC_DOMAIN:
                 return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(title="", data={
