@@ -25,6 +25,9 @@ from .const import (
     DEFAULT_ENERGY_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_USE_PANASONIC_PRESET_NAMES,
+    DEFAULT_USE_PANASONIC_PRESET_NAMES,
+    CONF_FORCE_ENABLE_NANOE,
+    DEFAULT_FORCE_ENABLE_NANOE,
     PANASONIC_DEVICES,
     COMPONENT_TYPES,
     STARTUP,
@@ -76,6 +79,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if PANASONIC_DEVICES not in hass.data:
         hass.data[PANASONIC_DEVICES] = []
 
+    # Migrate initial setup options from entry.data to entry.options
+    # so that all consumers can read from entry.options consistently.
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                CONF_ENABLE_DAILY_ENERGY_SENSOR: conf.get(
+                    CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+                ),
+                CONF_FORCE_ENABLE_NANOE: conf.get(
+                    CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE
+                ),
+                CONF_USE_PANASONIC_PRESET_NAMES: conf.get(
+                    CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES
+                ),
+                CONF_DEVICE_FETCH_INTERVAL: conf.get(
+                    CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL
+                ),
+                CONF_ENERGY_FETCH_INTERVAL: conf.get(
+                    CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL
+                ),
+            },
+        )
+        
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     enable_daily_energy_sensor = entry.options.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
