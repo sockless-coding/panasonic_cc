@@ -42,7 +42,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
         """Get the options flow for this handler."""
         return PanasonicOptionsFlowHandler(config_entry)
 
-    async def _create_entry(self, username, password):
+    async def _create_entry(self, user_input):
         """Register new entry."""
         # Check if ip already is registered
         for entry in self._async_current_entries():
@@ -50,21 +50,21 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(title="", data={
-            CONF_USERNAME: username,
-            CONF_PASSWORD: password,
+            CONF_USERNAME: user_input[CONF_USERNAME],
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
             CONF_FORCE_OUTSIDE_SENSOR: False,
-            CONF_FORCE_ENABLE_NANOE: DEFAULT_FORCE_ENABLE_NANOE,
-            CONF_ENABLE_DAILY_ENERGY_SENSOR: DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
-            CONF_USE_PANASONIC_PRESET_NAMES: DEFAULT_USE_PANASONIC_PRESET_NAMES,
-            CONF_DEVICE_FETCH_INTERVAL: DEFAULT_DEVICE_FETCH_INTERVAL,
-            CONF_ENERGY_FETCH_INTERVAL: DEFAULT_ENERGY_FETCH_INTERVAL,
+            CONF_FORCE_ENABLE_NANOE: user_input.get(CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE),
+            CONF_ENABLE_DAILY_ENERGY_SENSOR: user_input.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR),
+            CONF_USE_PANASONIC_PRESET_NAMES: user_input.get(CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES),
+            CONF_DEVICE_FETCH_INTERVAL: user_input.get(CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL),
+            CONF_ENERGY_FETCH_INTERVAL: user_input.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL),
         })
 
-    async def _create_device(self, username, password):
+    async def _create_device(self, user_input):
         """Create device."""
         try:
             client = async_get_clientsession(self.hass)
-            api = ApiClient(username, password, client)
+            api = ApiClient(user_input[CONF_USERNAME], user_input[CONF_PASSWORD], client)
             await api.start_session()
             devices = api.get_devices()
 
@@ -82,16 +82,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
             _LOGGER.exception("Unexpected error creating device", e)
             return self.async_abort(reason="device_fail")
 
-        return await self._create_entry(username, password)
+        return await self._create_entry(user_input)
 
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
-        
+
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema({
                     vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,                    
+                    vol.Required(CONF_PASSWORD): str,
                     vol.Optional(
                         CONF_ENABLE_DAILY_ENERGY_SENSOR,
                         default=DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
@@ -114,15 +114,15 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
                     ): int,
                 })
             )
-        return await self._create_device(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        return await self._create_device(user_input)
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
         username = user_input.get(CONF_USERNAME)
         if not username:
             return await self.async_step_user()
-        return await self._create_device(username, user_input[CONF_PASSWORD])
-    
+        return await self._create_device(user_input)
+
     async def async_step_reconfigure(
         self, entry_data: Mapping[str, Any]
     ) -> config_entries.ConfigFlowResult:
