@@ -40,7 +40,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return PanasonicOptionsFlowHandler(config_entry)
+        return PanasonicOptionsFlowHandler()
 
     async def _create_entry(self, user_input):
         """Register new entry."""
