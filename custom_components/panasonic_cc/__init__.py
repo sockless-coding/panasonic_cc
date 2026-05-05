@@ -78,7 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    enable_daily_energy_sensor = entry.options.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR)
+    enable_daily_energy_sensor = entry.options.get(
+        CONF_ENABLE_DAILY_ENERGY_SENSOR,
+        entry.data.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR),
+    )
     
     client = async_get_clientsession(hass)
     api = ApiClient(username, password, client)
