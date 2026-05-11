@@ -13,7 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from aio_panasonic_comfort_cloud import ApiClient
 from . import DOMAIN as PANASONIC_DOMAIN
 from .const import (
-    KEY_DOMAIN,
     CONF_FORCE_OUTSIDE_SENSOR,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
@@ -44,10 +43,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=PANASONIC_DOMAIN):
 
     async def _create_entry(self, username, password):
         """Register new entry."""
-        # Check if ip already is registered
-        for entry in self._async_current_entries():
-            if entry.data[KEY_DOMAIN] == PANASONIC_DOMAIN:
-                return self.async_abort(reason="already_configured")
+        # _async_current_entries() already filters to this integration's domain.
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(title="", data={
             CONF_USERNAME: username,
