@@ -17,8 +17,8 @@ from .const import (
     DOMAIN,
     DATA_COORDINATORS,
     ENERGY_COORDINATORS,
-    AQUAREA_COORDINATORS
-    )
+    AQUAREA_COORDINATORS,
+)
 from .base import PanasonicDataEntity, PanasonicEnergyEntity, AquareaDataEntity
 from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator, AquareaDeviceCoordinator
 
@@ -223,11 +223,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class PanasonicSensorEntityBase(SensorEntity):
     """Base class for all sensor entities."""
-    entity_description: PanasonicSensorEntityDescription # type: ignore[override]
+
+    entity_description: PanasonicSensorEntityDescription  # type: ignore[reportIncompatibleVariableOverride]
 
 class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
-    
-    def __init__(self, coordinator: PanasonicDeviceCoordinator, description: PanasonicSensorEntityDescription):
+    """Representation of a Panasonic sensor."""
+
+    def __init__(
+        self,
+        coordinator: PanasonicDeviceCoordinator,
+        description: PanasonicSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator, description.key)
 
@@ -235,7 +242,7 @@ class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.is_available is None:
-            return False        
+            return True
         return self.entity_description.is_available(self.coordinator.device)
 
     def _async_update_attrs(self) -> None:
@@ -243,11 +250,14 @@ class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
         if self.entity_description.is_available:
             self._attr_available = self.entity_description.is_available(self.coordinator.device)
         if self.entity_description.get_state:
-            self._attr_native_value = self.entity_description.get_state(self.coordinator.device)
+            state = self.entity_description.get_state(self.coordinator.device)
+            self._attr_native_value = state
+
 
 class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
-    
-    entity_description: PanasonicEnergySensorEntityDescription # type: ignore[override]
+    """Representation of a Panasonic energy sensor."""
+
+    entity_description: PanasonicEnergySensorEntityDescription  # type: ignore[reportIncompatibleVariableOverride]
 
     def __init__(self, coordinator: PanasonicDeviceEnergyCoordinator, description: PanasonicEnergySensorEntityDescription):
         self.entity_description = description
@@ -262,11 +272,11 @@ class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
         """Update the attributes of the sensor."""
         value = self.entity_description.get_state(self.coordinator.energy)
         self._attr_available = value is not None
-        self._attr_native_value = value
+        self._attr_native_value = value  # type: ignore[assignment]
 
 class AquareaSensorEntity(AquareaDataEntity, SensorEntity):
     
-    entity_description: AquareaSensorEntityDescription
+    entity_description: AquareaSensorEntityDescription  # type: ignore[reportIncompatibleVariableOverride]
 
     def __init__(self, coordinator: AquareaDeviceCoordinator, description: AquareaSensorEntityDescription):
         self.entity_description = description
