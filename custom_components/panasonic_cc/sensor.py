@@ -235,10 +235,10 @@ class PanasonicSensorEntity(PanasonicDataEntity, PanasonicSensorEntityBase):
         description: PanasonicSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self.entity_description = description
+        self.entity_description = description  # type: ignore[reportIncompatibleVariableOverride]
         super().__init__(coordinator, description.key)
 
-    @property
+    @property  # type: ignore[reportIncompatibleOverride]
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.is_available is None:
@@ -260,17 +260,22 @@ class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
     entity_description: PanasonicEnergySensorEntityDescription  # type: ignore[reportIncompatibleVariableOverride]
 
     def __init__(self, coordinator: PanasonicDeviceEnergyCoordinator, description: PanasonicEnergySensorEntityDescription):
-        self.entity_description = description
+        self.entity_description = description  # type: ignore[reportIncompatibleVariableOverride]
         super().__init__(coordinator, description.key)
 
-    @property
+    @property  # type: ignore[reportIncompatibleOverride]
     def available(self) -> bool:
         """Return if entity is available."""
         return self._attr_available
     
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        value = self.entity_description.get_state(self.coordinator.energy)
+        energy = self.coordinator.energy
+        if energy is None:
+            return
+        if self.entity_description.get_state is None:
+            return
+        value = self.entity_description.get_state(energy)
         self._attr_available = value is not None
         self._attr_native_value = value  # type: ignore[assignment]
 
@@ -279,14 +284,15 @@ class AquareaSensorEntity(AquareaDataEntity, SensorEntity):
     entity_description: AquareaSensorEntityDescription  # type: ignore[reportIncompatibleVariableOverride]
 
     def __init__(self, coordinator: AquareaDeviceCoordinator, description: AquareaSensorEntityDescription):
-        self.entity_description = description
+        self.entity_description = description  # type: ignore[reportIncompatibleVariableOverride]
         super().__init__(coordinator, description.key)
 
-    @property
+    @property  # type: ignore[reportIncompatibleOverride]
     def available(self) -> bool:
         """Return if entity is available."""
-        value = self.entity_description.is_available(self.coordinator.device) if self.entity_description.is_available else None 
-        return value if value is not None else False
+        if self.entity_description.is_available:
+            return self.entity_description.is_available(self.coordinator.device)
+        return True
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""

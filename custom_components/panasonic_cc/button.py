@@ -99,7 +99,6 @@ class CoordinatorUpdateButtonEntity(PanasonicDataEntity, ButtonEntity):
         """Initialize the button entity."""
         self.entity_description = description
         super().__init__(coordinator, description.key)
-        super().__init__(coordinator, description.key)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""

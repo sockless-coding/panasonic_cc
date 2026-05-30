@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
 from homeassistant.components.climate.const import ClimateEntityFeature
@@ -202,14 +203,13 @@ async def async_setup_entry(
                     ),
                 )
             )
-    async_add_entities(entities)
-
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
         SERVICE_SET_SWING_LR_MODE,
         {vol.Required("swing_mode"): cv.string},
         "async_set_horizontal_swing_mode",
     )
+    async_add_entities(entities)
 
 
 class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):

@@ -7,6 +7,9 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
+    STATE_HEAT_PUMP,
+    STATE_OFF,
+    STATE_IDLE,
 )
 from homeassistant.const import UnitOfTemperature, PRECISION_WHOLE, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
@@ -74,15 +77,15 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
         self._attr_target_temperature = device.tank.target_temperature
         self._attr_current_temperature = device.tank.temperature
 
-        if device.tank.operation_status == OperationStatus.OFF:
-            self._attr_state = None
-            self._attr_current_operation = WaterHeaterEntityFeature.OPERATION_MODE_OFF
+                if device.tank.operation_status == OperationStatus.OFF:
+            self._attr_state = STATE_OFF
+            self._attr_current_operation = STATE_OFF
         else:
-            self._attr_state = WaterHeaterEntityFeature.OPERATION_MODE_HEAT_PUMP
+            self._attr_state = STATE_HEAT_PUMP
             self._attr_current_operation = (
-                "heating"
+                STATE_HEAT_PUMP
                 if device.current_action == DeviceAction.HEATING_WATER
-                else "idle"
+                else STATE_IDLE
             )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -94,7 +97,7 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set operation mode."""
-        if operation_mode == "heating":
+        if operation_mode == STATE_HEAT_PUMP:
             await self.coordinator.device.tank.turn_on()
-        elif operation_mode == "off":
+        elif operation_mode == STATE_OFF:
             await self.coordinator.device.tank.turn_off()
