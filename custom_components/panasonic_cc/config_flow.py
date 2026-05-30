@@ -1,18 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Any, Mapping
+from typing import Any
 
 import voluptuous as vol
-from aiohttp import ClientError
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import ActionResponse
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from aio_panasonic_comfort_cloud import ApiClient
 
 from .const import (
     CONF_DEVICE_FETCH_INTERVAL,
@@ -48,7 +42,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a user initiated config flow."""
         if user_input is None:
             return self.async_show_form(
@@ -81,7 +75,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_create_entry(user_input)
 
-    async def _async_create_entry(self, user_input: dict[str, Any]) -> config_entries.FlowResult:
+    async def _async_create_entry(self, user_input: dict[str, Any]) -> config_entries.ConfigFlowResult:
         """Create a config entry."""
         # Validate no duplicate entries
         self._async_abort_entries_match({
@@ -102,39 +96,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _async_validate_user_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
-        """Validate the user input."""
-        errors: dict[str, str] = {}
-
-        client = async_get_clientsession(self.hass)
-        username = user_input[CONF_USERNAME]
-        password = user_input[CONF_PASSWORD]
-        api = ApiClient(username, password, client)
-
-        try:
-            await api.reauthenticate()
-            devices = api.get_devices()
-
-            if not devices and not api.has_unknown_devices:
-                errors["base"] = "no_devices"
-        except asyncio.TimeoutError:
-            _LOGGER.exception("TimeoutError")
-            errors["base"] = "device_timeout"
-        except ClientError:
-            _LOGGER.exception("ClientError")
-            errors["base"] = "device_fail"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error")
-            errors["base"] = "device_fail"
-
-        if errors:
-            raise ActionResponse("show_form", errors=errors)
-
-        return {}
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a reconfiguration flow."""
         if user_input is None:
             return self.async_show_form(
@@ -157,7 +121,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(
