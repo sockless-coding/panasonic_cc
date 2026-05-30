@@ -24,6 +24,16 @@ class PanasonicDataEntity(CoordinatorEntity[PanasonicDeviceCoordinator]):
         self._attr_unique_id = f"{coordinator.device_id}-{key}"
         self._attr_device_info = self.coordinator.device_info
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._async_update_attrs()
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        self.async_write_ha_state()
+
     @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
@@ -41,6 +51,16 @@ class PanasonicEnergyEntity(CoordinatorEntity[PanasonicDeviceEnergyCoordinator])
         self._attr_unique_id = f"{coordinator.device_id}-{key}"
         self._attr_device_info = self.coordinator.device_info
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._async_update_attrs()
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        self.async_write_ha_state()
+
     @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
@@ -57,6 +77,16 @@ class AquareaDataEntity(CoordinatorEntity[AquareaDeviceCoordinator]):
         self._attr_translation_key = key
         self._attr_unique_id = f"{coordinator.device_id}-{key}"
         self._attr_device_info = self.coordinator.device_info
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._async_update_attrs()
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        self.async_write_ha_state()
 
     @abstractmethod
     def _async_update_attrs(self) -> None:

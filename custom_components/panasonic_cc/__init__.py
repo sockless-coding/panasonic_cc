@@ -8,6 +8,7 @@ from typing import Any
 from aio_panasonic_comfort_cloud import ApiClient
 from aioaquarea import Client as AquareaApiClient, AquareaEnvironment
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -32,6 +33,7 @@ from .const import (
     DOMAIN,
     ENERGY_COORDINATORS,
     MANUFACTURER,
+    NOTIFICATION_AUTH_EXPIRED,
     STARTUP,
 )
 from .coordinator import (
@@ -112,7 +114,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.start_session()
     except Exception as err:
+        error_msg = str(err).lower()
+        if any(kw in error_msg for kw in ["401", "unauthorized", "authentication", "token", "expired"]):
+            _LOGGER.error(
+                "Authentication has expired or is invalid. Please re-authenticate by removing and re-adding the integration with valid credentials."
+            )
+        else:
+            _LOGGER.error("Authentication failed: %s", err)
         raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+
+    # Dismiss any stale auth expired notification on successful setup
+    async_dismiss(hass, NOTIFICATION_AUTH_EXPIRED)
 
     devices = api.get_devices()
 

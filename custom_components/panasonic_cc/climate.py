@@ -219,6 +219,8 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
+    _attr_min_temp = 16
+    _attr_max_temp = 30
     _attr_supported_features = SUPPORT_FLAGS
     _attr_fan_modes = [f.name for f in constants.FanSpeed]
     _attr_translation_key = "climate"
@@ -315,17 +317,13 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             self._attr_hvac_action = convert_state_to_hvac_action(state)
 
     def _set_temp_range(self) -> None:
-        """Set temperature range based on current mode."""
-        state = self.coordinator.device.parameters
-        if state.mode == constants.OperationMode.Cool:
-            self._attr_min_temp = state.min_cool_temp
-            self._attr_max_temp = state.max_cool_temp
-        elif state.mode == constants.OperationMode.Heat:
-            self._attr_min_temp = state.min_heat_temp
-            self._attr_max_temp = state.max_heat_temp
+        """Set new target temperature range."""
+        device = self.coordinator.device
+        self._attr_min_temp = 8 if device.in_summer_house_mode else 16
+        if device.in_summer_house_mode:
+            self._attr_max_temp = 15 if device.features.summer_house == 2 else 10
         else:
-            self._attr_min_temp = state.min_auto_temp
-            self._attr_max_temp = state.max_auto_temp
+            self._attr_max_temp = 30
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""

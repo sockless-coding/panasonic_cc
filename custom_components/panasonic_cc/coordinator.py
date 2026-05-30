@@ -1,6 +1,8 @@
 import logging
 from datetime import timedelta
 
+from aiohttp import ClientResponseError
+from homeassistant.components.persistent_notification import async_create, async_dismiss
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.entity import DeviceInfo
@@ -28,9 +30,28 @@ from .const import (
     MANUFACTURER,
     CONF_DEVICE_FETCH_INTERVAL,
     CONF_ENERGY_FETCH_INTERVAL,
+    NOTIFICATION_AUTH_EXPIRED,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_auth_error(err: Exception) -> bool:
+    """Check if an exception is caused by authentication failure."""
+    if isinstance(err, ClientResponseError) and err.status == 401:
+        return True
+    error_str = str(err).lower()
+    return any(kw in error_str for kw in ["401", "unauthorized", "authentication", "token", "expired", "invalid session"])
+
+
+def _create_auth_expired_notification(hass: HomeAssistant) -> None:
+    """Create a persistent notification for expired authentication."""
+    async_create(
+        hass,
+        message="Panasonic Comfort Cloud authentication has expired. Please re-authenticate by removing and re-adding the integration.",
+        title="Panasonic Comfort Cloud - Authentication Expired",
+        notification_id=NOTIFICATION_AUTH_EXPIRED,
+    )
 
 
 class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
@@ -121,6 +142,13 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                 self._update_id += 1
                 return self._update_id
         except Exception as err:
+            if _is_auth_error(err):
+                _LOGGER.error(
+                    "%s Authentication has expired or is invalid. Please re-authenticate by removing and re-adding the integration.",
+                    self._device_info.name,
+                    exc_info=True,
+                )
+                _create_auth_expired_notification(self.hass)
             raise UpdateFailed(f"Invalid response from API: {err}") from err
         return self._update_id
 
@@ -186,6 +214,13 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
                 self._update_id += 1
                 return self._update_id
         except Exception as err:
+            if _is_auth_error(err):
+                _LOGGER.error(
+                    "%s Authentication has expired or is invalid. Please re-authenticate by removing and re-adding the integration.",
+                    self._device_info.name,
+                    exc_info=True,
+                )
+                _create_auth_expired_notification(self.hass)
             raise UpdateFailed(f"Invalid response from API: {err}") from err
         return self._update_id
 
@@ -259,5 +294,13 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator[int]):
             self._update_id += 1
             return self._update_id
         except Exception as err:
+            if _is_auth_error(err):
+                device_name = self.device.device_name if self._device else self._device_info.name
+                _LOGGER.error(
+                    "%s Authentication has expired or is invalid. Please re-authenticate by removing and re-adding the integration.",
+                    device_name,
+                    exc_info=True,
+                )
+                _create_auth_expired_notification(self.hass)
             raise UpdateFailed(f"Invalid response from API: {err}") from err
         return self._update_id
