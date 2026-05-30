@@ -2,6 +2,7 @@
   "domain": "panasonic_cc",
   "name": "Panasonic Comfort Cloud",
   "after_dependencies": ["http"],
+  "codeowners": ["@sockless-coding"],
   "code_coverage": [
     "coordinator",
     "config_flow"
