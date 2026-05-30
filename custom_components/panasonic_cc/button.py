@@ -10,7 +10,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, DATA_COORDINATORS, ENERGY_COORDINATORS
 from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator
-from .base import PanasonicDataEntity
+from .base import PanasonicDataEntity, PanasonicEnergyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ async def async_setup_entry(
         entities.append(PanasonicButtonEntity(coordinator, APP_VERSION_DESCRIPTION))
         entities.append(CoordinatorUpdateButtonEntity(coordinator, UPDATE_DATA_DESCRIPTION))
     for coordinator in energy_coordinators:
-        entities.append(CoordinatorUpdateButtonEntity(coordinator, UPDATE_ENERGY_DESCRIPTION))
+        entities.append(CoordinatorUpdateEnergyButtonEntity(coordinator, UPDATE_ENERGY_DESCRIPTION))
 
     async_add_entities(entities)
 
@@ -93,7 +93,27 @@ class CoordinatorUpdateButtonEntity(PanasonicDataEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: PanasonicDeviceCoordinator | PanasonicDeviceEnergyCoordinator,
+        coordinator: PanasonicDeviceCoordinator,
+        description: ButtonEntityDescription,
+    ) -> None:
+        """Initialize the button entity."""
+        self.entity_description = description
+        super().__init__(coordinator, description.key)
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the entity."""
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self.coordinator.async_request_refresh()
+
+
+class CoordinatorUpdateEnergyButtonEntity(PanasonicEnergyEntity, ButtonEntity):
+    """Representation of a Coordinator Update Button for energy entities."""
+
+    def __init__(
+        self,
+        coordinator: PanasonicDeviceEnergyCoordinator,
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the button entity."""
