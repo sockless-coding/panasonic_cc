@@ -9,9 +9,8 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
     STATE_HEAT_PUMP,
     STATE_OFF,
-    STATE_IDLE,
 )
-from homeassistant.const import UnitOfTemperature, PRECISION_WHOLE, ATTR_TEMPERATURE
+from homeassistant.const import UnitOfTemperature, PRECISION_WHOLE, ATTR_TEMPERATURE, STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
@@ -77,7 +76,7 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
         self._attr_target_temperature = device.tank.target_temperature
         self._attr_current_temperature = device.tank.temperature
 
-                if device.tank.operation_status == OperationStatus.OFF:
+        if device.tank.operation_status == OperationStatus.OFF:
             self._attr_state = STATE_OFF
             self._attr_current_operation = STATE_OFF
         else:

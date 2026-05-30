@@ -222,6 +222,12 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_fan_modes = [f.name for f in constants.FanSpeed]
     _attr_translation_key = "climate"
+    _attr_hvac_mode = HVACMode.OFF
+    _attr_hvac_action = None
+    _attr_preset_mode = PRESET_NONE
+    _attr_fan_mode = None
+    _attr_swing_mode = None
+    _attr_swing_horizontal_mode = None
 
     def __init__(
         self,
@@ -385,6 +391,7 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
+    _attr_hvac_mode = HVACMode.OFF
 
     def __init__(
         self,
