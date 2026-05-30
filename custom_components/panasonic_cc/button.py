@@ -4,13 +4,12 @@ import logging
 from typing import Any, Awaitable, Callable
 from dataclasses import dataclass
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, cached_property
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity import DeviceInfo
 from .const import DOMAIN, DATA_COORDINATORS, ENERGY_COORDINATORS
 from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator
-from .base import PanasonicDataEntity, PanasonicEnergyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,10 +64,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PanasonicButtonEntity(PanasonicDataEntity, ButtonEntity):
+class PanasonicButtonEntity(ButtonEntity):
     """Representation of a Panasonic Button."""
 
-    entity_description: PanasonicButtonEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -76,20 +75,29 @@ class PanasonicButtonEntity(PanasonicDataEntity, ButtonEntity):
         description: PanasonicButtonEntityDescription,
     ) -> None:
         """Initialize the button entity."""
-        self.entity_description = description
-        super().__init__(coordinator, description.key)
+        super().__init__()
+        self.entity_description = description # type: ignore[assignment]
+        self._coordinator = coordinator
+        self._attr_unique_id = f"{coordinator.device_id}-{description.key}"
+        self._attr_device_info = coordinator.device_info
+        self._attr_translation_key = description.key
 
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
+    @cached_property
+    def available(self) -> bool:
+        """Return if the button is available."""
+        return self._coordinator.last_update_success
 
     async def async_press(self) -> None:
         """Press the button."""
-        if self.entity_description.func:
-            await self.entity_description.func(self.coordinator)
+        desc = self.entity_description # type: ignore[union-attr]
+        if isinstance(desc, PanasonicButtonEntityDescription) and desc.func:
+            await desc.func(self._coordinator)
 
 
-class CoordinatorUpdateButtonEntity(PanasonicDataEntity, ButtonEntity):
+class CoordinatorUpdateButtonEntity(ButtonEntity):
     """Representation of a Coordinator Update Button."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -97,19 +105,27 @@ class CoordinatorUpdateButtonEntity(PanasonicDataEntity, ButtonEntity):
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the button entity."""
+        super().__init__()
         self.entity_description = description
-        super().__init__(coordinator, description.key)
+        self._coordinator = coordinator
+        self._attr_unique_id = f"{coordinator.device_id}-{description.key}"
+        self._attr_device_info = coordinator.device_info
+        self._attr_translation_key = description.key
 
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
+    @cached_property
+    def available(self) -> bool:
+        """Return if the button is available."""
+        return self._coordinator.last_update_success
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.coordinator.async_request_refresh()
+        await self._coordinator.async_request_refresh()
 
 
-class CoordinatorUpdateEnergyButtonEntity(PanasonicEnergyEntity, ButtonEntity):
+class CoordinatorUpdateEnergyButtonEntity(ButtonEntity):
     """Representation of a Coordinator Update Button for energy entities."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -117,12 +133,18 @@ class CoordinatorUpdateEnergyButtonEntity(PanasonicEnergyEntity, ButtonEntity):
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the button entity."""
+        super().__init__()
         self.entity_description = description
-        super().__init__(coordinator, description.key)
+        self._coordinator = coordinator
+        self._attr_unique_id = f"{coordinator.device_id}-{description.key}"
+        self._attr_device_info = coordinator.device_info
+        self._attr_translation_key = description.key
 
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
+    @cached_property
+    def available(self) -> bool:
+        """Return if the button is available."""
+        return self._coordinator.last_update_success
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.coordinator.async_request_refresh()
+        await self._coordinator.async_request_refresh()
