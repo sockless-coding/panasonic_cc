@@ -21,11 +21,14 @@ from .const import (
     CONF_DEVICE_FETCH_INTERVAL,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_ENERGY_FETCH_INTERVAL,
+    CONF_FORCE_ENABLE_NANOE,
+    CONF_FORCE_OUTSIDE_SENSOR,
     CONF_UPDATE_INTERVAL_VERSION,
     DATA_COORDINATORS,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENERGY_FETCH_INTERVAL,
+    DEFAULT_FORCE_ENABLE_NANOE,
     DOMAIN,
     ENERGY_COORDINATORS,
     MANUFACTURER,
@@ -38,6 +41,42 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate a config entry from VERSION 1 to VERSION 2."""
+    _LOGGER.debug("Migrating config entry from version %s.%s", entry.version, entry.minor_version)
+
+    if entry.version == 1:
+        # VERSION 1 → 2: Data structure is compatible, no changes needed.
+        # Both versions store the same keys in entry.data:
+        # CONF_USERNAME, CONF_PASSWORD, CONF_FORCE_OUTSIDE_SENSOR,
+        # CONF_FORCE_ENABLE_NANOE, CONF_ENABLE_DAILY_ENERGY_SENSOR,
+        # CONF_USE_PANASONIC_PRESET_NAMES, CONF_DEVICE_FETCH_INTERVAL,
+        # CONF_ENERGY_FETCH_INTERVAL.
+        # Ensure all expected keys have defaults for safety.
+        new_data = {**entry.data}
+        new_data.setdefault(CONF_FORCE_OUTSIDE_SENSOR, False)
+        new_data.setdefault(CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE)
+        new_data.setdefault(
+            CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+        )
+        new_data.setdefault(
+            CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL
+        )
+        new_data.setdefault(
+            CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL
+        )
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            version=2,
+            minor_version=1,
+        )
+
+    _LOGGER.debug("Successfully migrated config entry to version 2.1")
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
