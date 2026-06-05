@@ -510,6 +510,11 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_hvac_mode = HVACMode.OFF
 
     def __init__(
@@ -529,30 +534,70 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
         if zone is None or zone.operation_status == AquareaZoneOperationStatus.OFF:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
+            self._attr_target_temperature = None
+            self._attr_min_temp = 5
+            self._attr_max_temp = 65
             return
 
+        # Mode is at device level, not zone level
         self._attr_hvac_mode = convert_mode_and_status_to_hvac_mode(
-            zone.extended_operation_mode, zone.operation_status
+            device.mode, zone.operation_status
         )
         self._attr_hvac_action = convert_aquarea_action_to_hvac_action(
             device.current_action
         )
         self._attr_current_temperature = zone.temperature
-        self._attr_target_temperature = zone.target_temperature
+
+        # Target temperature depends on the current mode (heat or cool)
+        if device.mode in (
+            AquareaExtendedOperationMode.HEAT,
+            AquareaExtendedOperationMode.AUTO_HEAT,
+        ):
+            self._attr_target_temperature = zone.heat_target_temperature
+            self._attr_min_temp = zone.heat_min if zone.heat_min is not None else 5
+            self._attr_max_temp = zone.heat_max if zone.heat_max is not None else 65
+        else:
+            self._attr_target_temperature = zone.cool_target_temperature
+            self._attr_min_temp = zone.cool_min if zone.cool_min is not None else 5
+            self._attr_max_temp = zone.cool_max if zone.cool_max is not None else 65
+
+        # Build HVAC modes list based on zone capabilities
+        hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        if zone.cool_mode:
+            hvac_modes.append(HVACMode.COOL)
+            hvac_modes.append(HVACMode.HEAT_COOL)
+        self._attr_hvac_modes = hvac_modes
+
+    async def async_turn_on(self) -> None:
+        """Turn the climate entity on."""
+        await self.coordinator.device.turn_on()
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self) -> None:
+        """Turn the climate entity off."""
+        await self.coordinator.device.turn_off()
+        self._attr_hvac_mode = HVACMode.OFF
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
+        if hvac_mode == HVACMode.OFF:
+            await self.async_turn_off()
+            return
         operation_mode = convert_hvac_mode_to_aquarea_operation_mode(hvac_mode)
-        await self.coordinator.device.set_operation_mode(
+        await self.coordinator.device.set_mode(
+            mode=operation_mode,
             zone_id=self.entity_description.zone_id,
-            update_operation_mode=operation_mode,
         )
+        await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             target_temp = kwargs[ATTR_TEMPERATURE]
-            await self.coordinator.device.set_target_temperature(
+            await self.coordinator.device.set_temperature(
+                temperature=target_temp,
                 zone_id=self.entity_description.zone_id,
-                target_temperature=target_temp,
             )
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(mode)
