@@ -103,9 +103,15 @@ def convert_state_to_hvac_action(state: PanasonicDeviceParameters) -> HVACAction
     if state.power == constants.Power.Off:
         return HVACAction.OFF
 
+    target_temp = state.target_temperature
+    inside_temp = state.inside_temperature
+
+    if target_temp is None or inside_temp is None:
+        return None
+
     match state.mode:
         case constants.OperationMode.Auto:
-            auto_diff = state.target_temperature - state.inside_temperature
+            auto_diff = target_temp - inside_temp
             if auto_diff >= 1:
                 return HVACAction.HEATING
             if auto_diff <= -1:
@@ -114,7 +120,7 @@ def convert_state_to_hvac_action(state: PanasonicDeviceParameters) -> HVACAction
         case constants.OperationMode.Cool:
             return (
                 HVACAction.COOLING
-                if state.target_temperature < state.inside_temperature
+                if target_temp < inside_temp
                 else HVACAction.IDLE
             )
         case constants.OperationMode.Dry:
@@ -124,7 +130,7 @@ def convert_state_to_hvac_action(state: PanasonicDeviceParameters) -> HVACAction
         case constants.OperationMode.Heat:
             return (
                 HVACAction.HEATING
-                if state.target_temperature > state.inside_temperature
+                if target_temp > inside_temp
                 else HVACAction.IDLE
             )
 
@@ -192,23 +198,27 @@ async def async_setup_entry(
         )
     for aquarea_coordinator in aquarea_coordinators:
         for zone_id in aquarea_coordinator.device.zones:
+            zone = aquarea_coordinator.device.zones.get(zone_id)
+            if zone is None:
+                continue
             entities.append(
                 AquareaClimateEntity(
                     aquarea_coordinator,
                     AquareaClimateEntityDescription(
                         zone_id=zone_id,
-                        name=aquarea_coordinator.device.zones.get(zone_id).name,
+                        name=zone.name,
                         key=f"zone-{zone_id}-climate",
                         translation_key=f"zone-{zone_id}-climate",
                     ),
                 )
             )
     platform = entity_platform.current_platform.get()
-    platform.async_register_entity_service(
-        SERVICE_SET_SWING_LR_MODE,
-        {vol.Required("swing_mode"): cv.string},
-        "async_set_horizontal_swing_mode",
-    )
+    if platform is not None:
+        platform.async_register_entity_service(
+            SERVICE_SET_SWING_LR_MODE,
+            {vol.Required("swing_mode"): cv.string},
+            "async_set_horizontal_swing_mode",
+        )
     async_add_entities(entities)
 
 
@@ -400,7 +410,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
-        if fan_mode not in self.fan_modes:
+        if self.fan_modes is None or fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
 
         builder = self.coordinator.get_change_request_builder()
@@ -457,7 +467,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         """Set new preset mode."""
         if preset_mode is None:
             return
-        if preset_mode not in self.preset_modes:
+        if self.preset_modes is None or preset_mode not in self.preset_modes:
             raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
 
         builder = self.coordinator.get_change_request_builder()
@@ -474,7 +484,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
-        if swing_mode not in self.swing_modes:
+        if self.swing_modes is None or swing_mode not in self.swing_modes:
             raise ValueError(f"Unsupported swing mode '{swing_mode}'")
 
         builder = self.coordinator.get_change_request_builder()
@@ -484,7 +494,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new horizontal swing mode."""
-        if swing_horizontal_mode not in self.swing_horizontal_modes:
+        if self.swing_horizontal_modes is None or swing_horizontal_mode not in self.swing_horizontal_modes:
             raise ValueError(f"Unsupported swing mode '{swing_horizontal_mode}'")
 
         builder = self.coordinator.get_change_request_builder()
