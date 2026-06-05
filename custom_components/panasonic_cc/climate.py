@@ -325,61 +325,172 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         else:
             self._attr_max_temp = 30
 
+    def _update_attributes(self, builder: ChangeRequestBuilder) -> None:
+        """Update attributes."""
+        if builder.power_mode == constants.Power.Off:
+            self._attr_hvac_mode = HVACMode.OFF
+        default_preset = PRESET_NONE
+        if builder.target_temperature:
+            self._attr_target_temperature = builder.target_temperature
+            if builder.target_temperature > 15 and self._attr_preset_mode == PRESET_8_15:
+                self._attr_preset_mode = default_preset
+            elif builder.target_temperature < 15 and self._attr_preset_mode != PRESET_8_15:
+                self._attr_preset_mode = default_preset = PRESET_8_15
+
+        if builder.eco_mode:
+            if builder.eco_mode.name in (PRESET_QUIET, PRESET_ECO):
+                self._attr_preset_mode = self._quiet_preset
+            elif builder.eco_mode.name in (PRESET_POWERFUL, PRESET_BOOST):
+                self._attr_preset_mode = self._powerful_preset
+            else:
+                self._attr_preset_mode = default_preset
+
+        if builder.fan_speed:
+            self._attr_fan_mode = builder.fan_speed.name
+        if builder.vertical_swing:
+            self._attr_swing_mode = builder.vertical_swing.name
+        if builder.horizontal_swing:
+            self._attr_swing_horizontal_mode = builder.horizontal_swing.name
+        if builder.hvac_mode:
+            self._attr_hvac_mode = convert_operation_mode_to_hvac_mode(builder.hvac_mode, False)
+        self.async_write_ha_state()
+
+    async def async_turn_on(self) -> None:
+        """Set the climate state to on."""
+        builder = self.coordinator.get_change_request_builder()
+        builder.set_power_mode(constants.Power.On)
+        await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()
+
+    async def async_turn_off(self) -> None:
+        """Set the climate state to off."""
+        builder = self.coordinator.get_change_request_builder()
+        builder.set_power_mode(constants.Power.Off)
+        await self.coordinator.async_apply_changes(builder)
+        self._attr_hvac_mode = HVACMode.OFF
+        self.async_write_ha_state()
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
-        builder = self.coordinator.get_change_request_builder()
         if hvac_mode == HVACMode.OFF:
-            builder.set_power(constants.Power.Off)
-        else:
-            builder.set_power(constants.Power.On)
-            operation_mode = convert_hvac_mode_to_operation_mode(hvac_mode)
-            if operation_mode:
-                builder.set_mode(operation_mode)
+            await self.async_turn_off()
+            return
+        if not (op_mode := convert_hvac_mode_to_operation_mode(hvac_mode)):
+            raise ValueError(f"Invalid hvac mode {hvac_mode}")
+
+        builder = self.coordinator.get_change_request_builder()
+        await self._async_exit_summer_house_mode(builder)
+        builder.set_hvac_mode(op_mode)
         await self.coordinator.async_apply_changes(builder)
+        self._update_attributes(builder)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        if ATTR_HVAC_MODE in kwargs:
-            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
-        if ATTR_TEMPERATURE in kwargs:
-            builder = self.coordinator.get_change_request_builder()
-            builder.set_target_temperature(kwargs[ATTR_TEMPERATURE])
-            await self.coordinator.async_apply_changes(builder)
+        """Set the climate temperature."""
+        builder = self.coordinator.get_change_request_builder()
+        if temp := kwargs.get(ATTR_TEMPERATURE):
+            builder.set_target_temperature(temp)
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            if op_mode := convert_hvac_mode_to_operation_mode(mode):
+                builder.set_hvac_mode(op_mode)
+            else:
+                mode = None
+        await self.coordinator.async_apply_changes(builder)
+        self._update_attributes(builder)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
+        if fan_mode not in self.fan_modes:
+            raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
+
         builder = self.coordinator.get_change_request_builder()
         builder.set_fan_speed(fan_mode)
         await self.coordinator.async_apply_changes(builder)
+        self._update_attributes(builder)
+
+    async def _async_enter_summer_house_mode(self, builder: ChangeRequestBuilder):
+        """Enter summer house mode."""
+        device = self.coordinator.device
+        stored_data = await self.coordinator.async_get_stored_data()
+
+        stored_data["mode"] = device.parameters.mode.value
+        stored_data["ecoMode"] = device.parameters.eco_mode.value
+        stored_data["targetTemperature"] = device.parameters.target_temperature
+        stored_data["fanSpeed"] = device.parameters.fan_speed.value
+        await self.coordinator.async_store_data(stored_data)
+
+        builder.set_hvac_mode(constants.OperationMode.Heat)
+        builder.set_eco_mode(constants.EcoMode.Powerful)
+        builder.set_target_temperature(8)
+        builder.set_fan_speed(constants.FanSpeed.High)
+
+        self._attr_min_temp = 8
+        self._attr_max_temp = 15 if device.features.summer_house == 2 else 10
+
+    async def _async_exit_summer_house_mode(self, builder: ChangeRequestBuilder):
+        """Exit summer house mode."""
+        self._attr_min_temp = 16
+        self._attr_max_temp = 30
+        if not self.coordinator.device.in_summer_house_mode:
+            return
+        stored_data = await self.coordinator.async_get_stored_data()
+        try:
+            hvac_mode = constants.OperationMode(stored_data["mode"]) if "mode" in stored_data else constants.OperationMode.Heat
+        except Exception:
+            hvac_mode = constants.OperationMode.Heat
+        try:
+            eco_mode = constants.EcoMode(stored_data["ecoMode"]) if "ecoMode" in stored_data else constants.EcoMode.Auto
+        except Exception:
+            eco_mode = constants.EcoMode.Auto
+        target_temperature = stored_data["targetTemperature"] if "targetTemperature" in stored_data else 20
+        try:
+            fan_speed = constants.FanSpeed(stored_data["fanSpeed"]) if "fanSpeed" in stored_data else constants.FanSpeed.Auto
+        except Exception:
+            fan_speed = constants.FanSpeed.Auto
+
+        builder.set_hvac_mode(hvac_mode)
+        builder.set_eco_mode(eco_mode)
+        builder.set_target_temperature(target_temperature)
+        builder.set_fan_speed(fan_speed)
 
     async def async_set_preset_mode(self, preset_mode: str | None) -> None:
         """Set new preset mode."""
         if preset_mode is None:
             return
+        if preset_mode not in self.preset_modes:
+            raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
+
         builder = self.coordinator.get_change_request_builder()
-        if preset_mode == PRESET_8_15:
-            builder.set_summer_house_mode(True)
-        elif preset_mode == self._quiet_preset:
+        await self._async_exit_summer_house_mode(builder)
+        builder.set_eco_mode(constants.EcoMode.Auto)
+        if preset_mode in (PRESET_QUIET, PRESET_ECO):
             builder.set_eco_mode(constants.EcoMode.Quiet)
-        elif preset_mode == self._powerful_preset:
+        elif preset_mode in (PRESET_POWERFUL, PRESET_BOOST):
             builder.set_eco_mode(constants.EcoMode.Powerful)
-        else:
-            builder.set_eco_mode(constants.EcoMode.Off)
-            if preset_mode == PRESET_8_15:
-                builder.set_summer_house_mode(False)
+        elif preset_mode == PRESET_8_15:
+            await self._async_enter_summer_house_mode(builder)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_request_refresh()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
+        if swing_mode not in self.swing_modes:
+            raise ValueError(f"Unsupported swing mode '{swing_mode}'")
+
         builder = self.coordinator.get_change_request_builder()
         builder.set_vertical_swing(swing_mode)
         await self.coordinator.async_apply_changes(builder)
+        self._update_attributes(builder)
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new horizontal swing mode."""
+        if swing_horizontal_mode not in self.swing_horizontal_modes:
+            raise ValueError(f"Unsupported swing mode '{swing_horizontal_mode}'")
+
         builder = self.coordinator.get_change_request_builder()
         builder.set_horizontal_swing(swing_horizontal_mode)
         await self.coordinator.async_apply_changes(builder)
+        self._update_attributes(builder)
 
 
 class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
