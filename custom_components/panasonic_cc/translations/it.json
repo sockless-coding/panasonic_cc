@@ -8,7 +8,7 @@
           "username": "ID Panasonic",
           "password": "Password",
           "enable_daily_energy_sensor": "Abilita tutti i sensori di energia giornalieri.",
-          "force_enable_nanoe": "Ablita Nanoe per tutti i dispositivi.",
+          "force_enable_nanoe": "Abilita Nanoe per tutti i dispositivi.",
           "use_panasonic_preset_names": "Usa i profili 'Quiet' e 'Powerful' invece di 'Eco' e 'Boost'",
           "device_fetch_interval": "Intervallo interrogazione dispositivo (secondi)",
           "energy_fetch_interval": "Intervallo interrogazione energia (secondi)"
@@ -42,7 +42,7 @@
         "data": {
           "force_outside_sensor": "Forza sensore esterno",
           "enable_daily_energy_sensor": "Abilita i sensori energia giornalieri (riavvio necessario)",
-          "force_enable_nanoe": "Abilita Nonoe per tutti i dispositivi (riavvio necessario)",
+          "force_enable_nanoe": "Abilita Nanoe per tutti i dispositivi (riavvio necessario)",
           "use_panasonic_preset_names": "Usa i profili 'Quiet' e 'Powerful' invece di 'Eco' e 'Boost' (riavvio necessario)",
           "device_fetch_interval": "Intervallo interrogazione dispositivo (secondi)",
           "energy_fetch_interval": "Intervallo interrogazione energia (secondi)"
@@ -114,7 +114,24 @@
           "UpMid": "Medio-alto",
           "Mid": "Medio",
           "DownMid": "Medio-basso",
-          "Down": "Basso"
+          "Down": "Basso",
+          "Swing": "Oscilla"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+      "name": "Imposta la modalità oscillazione orizzontale",
+      "description": "Imposta la modalità oscillazione orizzontale per il dispositivo climatico.",
+      "fields": {
+        "entity_id": {
+          "name": "ID entità",
+          "description": "Nome/i dell'entità da modificare."
+        },
+        "swing_mode": {
+          "name": "Modalità oscillazione",
+          "description": "Nuova modalità oscillazione orizzontale."
         }
       }
     }

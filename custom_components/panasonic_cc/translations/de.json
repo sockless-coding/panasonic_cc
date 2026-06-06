@@ -7,18 +7,33 @@
           "data": {
             "username": "Panasonic ID",
             "password": "Passwort",
-            "enable_daily_energy_sensor": "Tägliche Energiesensoren freischalten",
-            "force_enable_nanoe": "Einschalte Nanoe für alle Geräte",
+            "enable_daily_energy_sensor": "Tägliche Energiesensoren aktivieren",
+            "force_enable_nanoe": "Nanoe-Schalter für alle Geräte aktivieren",
             "use_panasonic_preset_names": "'Leise' und 'Stark' anstelle von 'Eco' und 'Boost' verwenden",
-            "device_fetch_interval": "Abrufintervall für Gerät (Sekunden)",
-            "energy_fetch_interval": "Abrufintervall für Energie (Sekunden)"
+            "device_fetch_interval": "Geräteabrufintervall (Sekunden)",
+            "energy_fetch_interval": "Energieabrufintervall (Sekunden)"
+          }
+        },
+        "reconfigure_confirm": {
+          "title": "Panasonic Comfort Cloud neu konfigurieren",
+          "description": "Geben Sie Ihre Panasonic-ID und Ihr Passwort ein, um sich neu zu authentifizieren",
+          "data": {
+            "username": "Panasonic ID",
+            "password": "Passwort"
           }
         }
+      },
+      "error": {
+        "no_devices": "Keine Geräte gefunden. Bitte überprüfen Sie Ihr Konto und die CFC-App und versuchen Sie es erneut.",
+        "device_timeout": "Zeitüberschreitung bei der Verbindung mit der API.",
+        "device_fail": "Unerwarteter Fehler bei der Verbindung mit der API.",
+        "invalid_user_password": "Ungültige Panasonic-ID oder Passwort."
       },
       "abort": {
         "device_timeout": "Zeitüberschreitung beim Verbinden mit dem Gerät.",
         "device_fail": "Unerwarteter Fehler beim Erstellen des Geräts.",
-        "already_configured": "Gerät ist bereits konfiguriert"
+        "already_configured": "Gerät ist bereits konfiguriert",
+        "reauth_successful": "Neuauthentifizierung erfolgreich."
       }
     },
     "options": {
@@ -27,10 +42,10 @@
           "data": {
             "force_outside_sensor": "Force outside sensor",
             "enable_daily_energy_sensor": "Tägliche Energiesensoren freischalten (Neustart erforderlich)",
-            "force_enable_nanoe": "Einschalte Nanoe für alle GeräteEinschalte Nanoe für alle Geräte (Neustart erforderlich)",
-            "use_panasonic_preset_names": "'Leise' und 'Stark' anstelle von 'Eco' und 'Boost' verwenden",
-            "device_fetch_interval": "Abrufintervall für Gerät (Sekunden)",
-            "energy_fetch_interval": "Abrufintervall für Energie (Sekunden)"
+            "force_enable_nanoe": "Nanoe-Schalter für alle Geräte aktivieren (Neustart erforderlich)",
+            "use_panasonic_preset_names": "'Leise' und 'Stark' anstelle von 'Eco' und 'Boost' verwenden (Neustart erforderlich)",
+            "device_fetch_interval": "Geräteabrufintervall (Sekunden)",
+            "energy_fetch_interval": "Energieabrufintervall (Sekunden)"
           }
         }
       }
@@ -70,6 +85,7 @@
             },
             "fan_mode":{
               "state": {
+                "Auto": "Auto",
                 "Low": "Niedrig",
                 "LowMid": "Niedrig-Mittel",
                 "Mid": "Mittel",
@@ -98,7 +114,24 @@
             "UpMid": "Oben-Mitte",
             "Mid": "Mitte",
             "DownMid": "Unten-Mitte",
-            "Down": "Unten"
+            "Down": "Unten",
+            "Swing": "Schwingen"
+          }
+        }
+      }
+    },
+    "services": {
+      "set_horizontal_swing_mode": {
+        "name": "Horizontale Schwenkrichtung einstellen",
+        "description": "Die horizontale Schwenkrichtung für das Klimagerät einstellen.",
+        "fields": {
+          "entity_id": {
+            "name": "Entitäts-ID",
+            "description": "Name(n) der zu ändernden Entitäten."
+          },
+          "swing_mode": {
+            "name": "Schwenkmodus",
+            "description": "Neue horizontale Schwenkrichtung."
           }
         }
       }

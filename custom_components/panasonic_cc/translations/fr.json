@@ -1,0 +1,139 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Entrez votre identifiant Panasonic et votre mot de passe",
+        "data": {
+          "username": "Identifiant Panasonic",
+          "password": "Mot de passe",
+          "enable_daily_energy_sensor": "Activer les capteurs d'énergie quotidiens",
+          "force_enable_nanoe": "Activer l'interrupteur Nanoe pour tous les appareils",
+          "use_panasonic_preset_names": "Utiliser 'Silencieux' et 'Puissant' au lieu de 'Eco' et 'Boost'",
+          "device_fetch_interval": "Intervalle de récupération des appareils (secondes)",
+          "energy_fetch_interval": "Intervalle de récupération de l'énergie (secondes)"
+        }
+      },
+      "reconfigure_confirm": {
+        "title": "Reconfigurer Panasonic Comfort Cloud",
+        "description": "Entrez votre identifiant Panasonic et votre mot de passe pour vous réauthentifier",
+        "data": {
+          "username": "Identifiant Panasonic",
+          "password": "Mot de passe"
+        }
+      }
+    },
+    "error": {
+      "no_devices": "Aucun appareil trouvé. Veuillez vérifier votre compte et l'application CFC, puis réessayer.",
+      "device_timeout": "Délai d'attente dépassé lors de la connexion à l'API.",
+      "device_fail": "Erreur inattendue lors de la connexion à l'API.",
+      "invalid_user_password": "Identifiant Panasonic ou mot de passe invalide."
+    },
+    "abort": {
+      "device_timeout": "Délai d'attente dépassé lors de la connexion à l'appareil.",
+      "device_fail": "Erreur inattendue lors de la création de l'appareil.",
+      "already_configured": "L'appareil est déjà configuré",
+      "reauth_successful": "Réauthentification réussie."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "force_outside_sensor": "Forcer le capteur extérieur",
+          "enable_daily_energy_sensor": "Activer les capteurs d'énergie quotidiens (redémarrage requis)",
+          "force_enable_nanoe": "Activer l'interrupteur Nanoe pour tous les appareils (redémarrage requis)",
+          "use_panasonic_preset_names": "Utiliser 'Silencieux' et 'Puissant' au lieu de 'Eco' et 'Boost' (redémarrage requis)",
+          "device_fetch_interval": "Intervalle de récupération des appareils (secondes)",
+          "energy_fetch_interval": "Intervalle de récupération de l'énergie (secondes)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat_8_15": "+8/15°C",
+              "none": "Aucun",
+              "quiet": "Silencieux",
+              "powerful": "Puissant"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Up": "Haut",
+              "UpMid": "Milieu-haut",
+              "Mid": "Milieu",
+              "DownMid": "Milieu-bas",
+              "Down": "Bas",
+              "Swing": "Balancement"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Left": "Gauche",
+              "LeftMid": "Centre gauche",
+              "Mid": "Centre",
+              "RightMid": "Centre droit",
+              "Right": "Droite"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Low": "Faible",
+              "LowMid": "Moyen-faible",
+              "Mid": "Moyen",
+              "HighMid": "Moyen-élevé",
+              "High": "Élevé"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Left": "Gauche",
+          "LeftMid": "Centre gauche",
+          "Mid": "Centre",
+          "RightMid": "Centre droit",
+          "Right": "Droite"
+        }
+      },
+      "vertical_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Up": "Haut",
+          "UpMid": "Milieu-haut",
+          "Mid": "Milieu",
+          "DownMid": "Milieu-bas",
+          "Down": "Bas",
+          "Swing": "Balancement"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+      "name": "Définir le mode de balancement horizontal",
+      "description": "Définir le mode de balancement horizontal pour l'appareil climatique.",
+      "fields": {
+        "entity_id": {
+          "name": "ID d'entité",
+          "description": "Nom(s) de l'entité à modifier."
+        },
+        "swing_mode": {
+          "name": "Mode de balancement",
+          "description": "Nouveau mode de balancement horizontal."
+        }
+      }
+    }
+  }
+}

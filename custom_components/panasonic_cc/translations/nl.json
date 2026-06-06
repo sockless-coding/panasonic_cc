@@ -1,0 +1,139 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Voer uw Panasonic ID en wachtwoord in",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Wachtwoord",
+          "enable_daily_energy_sensor": "Dagelijkse energiesensoren inschakelen",
+          "force_enable_nanoe": "Nanoe-schakelaar voor alle apparaten inschakelen",
+          "use_panasonic_preset_names": "'Stil' en 'Krachtig' gebruiken in plaats van 'Eco' en 'Boost'",
+          "device_fetch_interval": "Apparaalophalinginterval (seconden)",
+          "energy_fetch_interval": "Energieophalinginterval (seconden)"
+        }
+      },
+      "reconfigure_confirm": {
+        "title": "Panasonic Comfort Cloud opnieuw configureren",
+        "description": "Voer uw Panasonic ID en wachtwoord in om opnieuw te authenticeren",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Wachtwoord"
+        }
+      }
+    },
+    "error": {
+      "no_devices": "Geen apparaten gevonden. Controleer uw account en de CFC-app en probeer het opnieuw.",
+      "device_timeout": "Time-out bij het verbinden met de API.",
+      "device_fail": "Onverwachte fout bij het verbinden met de API.",
+      "invalid_user_password": "Ongeldig Panasonic ID of wachtwoord."
+    },
+    "abort": {
+      "device_timeout": "Time-out bij het verbinden met het apparaat.",
+      "device_fail": "Onverwachte fout bij het maken van het apparaat.",
+      "already_configured": "Apparaat is al geconfigureerd",
+      "reauth_successful": "Opnieuw authenticeren gelukt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "force_outside_sensor": "Buitensensor forceren",
+          "enable_daily_energy_sensor": "Dagelijkse energiesensoren inschakelen (herstart vereist)",
+          "force_enable_nanoe": "Nanoe-schakelaar voor alle apparaten inschakelen (herstart vereist)",
+          "use_panasonic_preset_names": "'Stil' en 'Krachtig' gebruiken in plaats van 'Eco' en 'Boost' (herstart vereist)",
+          "device_fetch_interval": "Apparaalophalinginterval (seconden)",
+          "energy_fetch_interval": "Energieophalinginterval (seconden)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat_8_15": "+8/15°C",
+              "none": "Geen",
+              "quiet": "Stil",
+              "powerful": "Krachtig"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Up": "Boven",
+              "UpMid": "Midden-boven",
+              "Mid": "Midden",
+              "DownMid": "Midden-onder",
+              "Down": "Onder",
+              "Swing": "Zwaaien"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Left": "Links",
+              "LeftMid": "Midden links",
+              "Mid": "Midden",
+              "RightMid": "Midden rechts",
+              "Right": "Rechts"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Low": "Laag",
+              "LowMid": "Midden-laag",
+              "Mid": "Midden",
+              "HighMid": "Midden-hoog",
+              "High": "Hoog"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Left": "Links",
+          "LeftMid": "Midden links",
+          "Mid": "Midden",
+          "RightMid": "Midden rechts",
+          "Right": "Rechts"
+        }
+      },
+      "vertical_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Up": "Boven",
+          "UpMid": "Midden-boven",
+          "Mid": "Midden",
+          "DownMid": "Midden-onder",
+          "Down": "Onder",
+          "Swing": "Zwaaien"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+      "name": "Horizontale zwaaimodus instellen",
+      "description": "De horizontale zwaaimodus voor het klimaatapparaat instellen.",
+      "fields": {
+        "entity_id": {
+          "name": "Entiteit-ID",
+          "description": "Naam(s) van de entiteit(en) om te wijzigen."
+        },
+        "swing_mode": {
+          "name": "Zwaaimodus",
+          "description": "Nieuwe horizontale zwaaimodus."
+        }
+      }
+    }
+  }
+}
