@@ -10,13 +10,13 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_OFF,
 )
-from homeassistant.const import UnitOfTemperature, PRECISION_WHOLE, ATTR_TEMPERATURE, STATE_IDLE
+from homeassistant.const import UnitOfTemperature, PRECISION_WHOLE, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 from .base import AquareaDataEntity
 from .coordinator import AquareaDeviceCoordinator
-from .const import DOMAIN, AQUAREA_COORDINATORS, STATE_HEATING
+from .const import DOMAIN, AQUAREA_COORDINATORS
 from aioaquarea.data import DeviceAction, OperationStatus
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE | WaterHeaterEntityFeature.OPERATION_MODE
-    _attr_operation_list = [STATE_HEATING, STATE_OFF]
+    _attr_operation_list = [STATE_HEAT_PUMP, STATE_OFF]
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 1
     _attr_min_temp = 40
@@ -80,14 +80,8 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
 
         if device.tank.operation_status == OperationStatus.OFF:
             self._attr_current_operation = STATE_OFF
-            self._attr_current_operation = STATE_OFF
         else:
             self._attr_current_operation = STATE_HEAT_PUMP
-            self._attr_current_operation = (
-                STATE_HEATING
-                if device.current_action == DeviceAction.HEATING_WATER
-                else STATE_IDLE
-            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -102,7 +96,7 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
         """Set operation mode."""
         if self.coordinator.device.tank is None:
             return
-        if operation_mode == STATE_HEATING:
+        if operation_mode == STATE_HEAT_PUMP:
             await self.coordinator.device.tank.turn_on()
         elif operation_mode == STATE_OFF:
             await self.coordinator.device.tank.turn_off()

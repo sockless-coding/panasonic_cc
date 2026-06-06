@@ -117,6 +117,95 @@
           "Down": "Bottom",
           "Swing": "Swing"
         }
+      },
+      "quiet_mode": {
+        "name": "Quiet Mode",
+        "state": {
+          "level1": "Level 1",
+          "level2": "Level 2",
+          "level3": "Level 3",
+          "off": "Off"
+        }
+      },
+      "powerful_time": {
+        "name": "Powerful Mode",
+        "state": {
+          "on-30m": "30 minutes",
+          "on-60m": "60 minutes",
+          "on-90m": "90 minutes",
+          "off": "Off"
+        }
+      }
+    },
+    "binary_sensor": {
+      "status": {
+        "name": "Error Status"
+      },
+      "defrost": {
+        "name": "Defrost"
+      }
+    },
+    "sensor": {
+      "outside_temperature": {
+        "name": "Outside Temperature"
+      },
+      "tank_temperature": {
+        "name": "Tank Temperature"
+      },
+      "direction": {
+        "name": "Direction"
+      },
+      "pump_status": {
+        "name": "Pump Status"
+      },
+      "dhw_cycles_today": {
+        "name": "DHW Cycles Today"
+      },
+      "zone_cycles_today": {
+        "name": "Zone Cycles Today"
+      },
+      "defrost_cycles_today": {
+        "name": "Defrost Cycles Today"
+      },
+      "heating_accumulated_energy_consumption": {
+        "name": "Heating Accumulated Consumption"
+      },
+      "cooling_accumulated_energy_consumption": {
+        "name": "Cooling Accumulated Consumption"
+      },
+      "tank_accumulated_energy_consumption": {
+        "name": "Tank Accumulated Consumption"
+      },
+      "accumulated_energy_consumption": {
+        "name": "Accumulated Consumption"
+      },
+      "heating_energy_consumption": {
+        "name": "Heating Consumption"
+      },
+      "cooling_energy_consumption": {
+        "name": "Cooling Consumption"
+      },
+      "tank_energy_consumption": {
+        "name": "Tank Consumption"
+      },
+      "energy_consumption": {
+        "name": "Consumption"
+      }
+    },
+    "switch": {
+      "force_dhw": {
+        "name": "Force DHW"
+      },
+      "force_heater": {
+        "name": "Force Heater"
+      },
+      "holiday_timer": {
+        "name": "Holiday Timer"
+      }
+    },
+    "button": {
+      "request_defrost": {
+        "name": "Request Defrost"
       }
     }
   },
