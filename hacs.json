@@ -1,4 +1,5 @@
 {
     "name": "Panasonic Comfort Cloud",
-    "homeassistant": "2024.12.1"
+    "homeassistant": "2024.12.1",
+    "render_readme": true
 }

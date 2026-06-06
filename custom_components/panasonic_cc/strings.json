@@ -24,7 +24,7 @@
       }
     },
     "error":{
-      "no_devices": "No devices found. Please check your the account and CFC app and try again.",
+      "no_devices": "No devices found. Please check your account and CFC app and try again.",
       "device_timeout": "Timeout connecting to the API.",
       "device_fail": "Unexpected error connecting to the API.",
       "invalid_user_password": "Invalid Panasonic ID or password."

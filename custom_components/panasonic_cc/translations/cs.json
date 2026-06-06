@@ -114,7 +114,24 @@
           "UpMid": "Středně nahoru",
           "Mid": "Střed",
           "DownMid": "Středně dolů",
-          "Down": "Dolů"
+          "Down": "Dolů",
+          "Swing": "Kmitání"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+      "name": "Nastavit vodorovný režim kyvání",
+      "description": "Nastavit vodorovný režim kyvání pro klimatizační zařízení.",
+      "fields": {
+        "entity_id": {
+          "name": "ID entity",
+          "description": "Název entit, které mají být změněny."
+        },
+        "swing_mode": {
+          "name": "Režim kyvání",
+          "description": "Nový vodorovný režim kyvání."
         }
       }
     }

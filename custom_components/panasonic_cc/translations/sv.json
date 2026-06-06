@@ -13,6 +13,14 @@
           "device_fetch_interval": "Enhetshämtningsintervall (sekunder)",
           "energy_fetch_interval": "Energihämtningsintervall (sekunder)"
         }
+      },
+      "reconfigure_confirm": {
+        "title": "Konfigurera Panasonic Comfort Cloud på nytt",
+        "description": "Fyll i ditt Panasonic ID och lösenord för att autentisera på nytt",
+        "data": {
+          "username": "Panasonic ID",
+          "password": "Lösenord"
+        }
       }
     },
     "error":{
@@ -106,7 +114,24 @@
           "UpMid": "Mitt-upp",
           "Mid": "Mitten",
           "DownMid": "Mitt-Neråt",
-          "Down": "Neråt"
+          "Down": "Neråt",
+          "Swing": "Svängande"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+      "name": "Ställ in horisontell svängläge",
+      "description": "Ställ in horisontell svängläge för klimatanläggning.",
+      "fields": {
+        "entity_id": {
+          "name": "Entitets-ID",
+          "description": "Namn på enhet(er) som ska ändras."
+        },
+        "swing_mode": {
+          "name": "Svängläge",
+          "description": "Nytt horisontellt svängläge."
         }
       }
     }

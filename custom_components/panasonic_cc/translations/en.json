@@ -114,7 +114,8 @@
           "UpMid": "Mid-top",
           "Mid": "Middle",
           "DownMid": "Mid-bottom",
-          "Down": "Bottom"
+          "Down": "Bottom",
+          "Swing": "Swing"
         }
       }
     }

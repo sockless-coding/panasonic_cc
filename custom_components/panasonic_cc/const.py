@@ -88,7 +88,9 @@ MANUFACTURER = "Panasonic"
 PANASONIC_DEVICES = "panasonic_devices"
 DATA_COORDINATORS = "data_coordinators"
 ENERGY_COORDINATORS = "energy_coordinators"
-AQUAREA_COORDINATORS = "aquarea_coorinators"
+AQUAREA_COORDINATORS = "aquarea_coordinators"
+
+NOTIFICATION_AUTH_EXPIRED = f"{DOMAIN}_auth_expired"
 
 COMPONENT_TYPES = [
     Platform.CLIMATE,

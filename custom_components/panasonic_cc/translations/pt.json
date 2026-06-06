@@ -1,0 +1,139 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Panasonic Comfort Cloud",
+        "description": "Introduza o seu ID da Panasonic e a sua palavra-passe",
+        "data": {
+          "username": "ID da Panasonic",
+          "password": "Palavra-passe",
+          "enable_daily_energy_sensor": "Ativar sensores de energia diários",
+          "force_enable_nanoe": "Ativar interruptor Nanoe para todos os dispositivos",
+          "use_panasonic_preset_names": "Usar 'Silencioso' e 'Potente' em vez de 'Eco' e 'Boost'",
+          "device_fetch_interval": "Intervalo de obtenção de dispositivos (segundos)",
+          "energy_fetch_interval": "Intervalo de obtenção de energia (segundos)"
+        }
+      },
+      "reconfigure_confirm": {
+        "title": "Reconfigurar Panasonic Comfort Cloud",
+        "description": "Introduza o seu ID da Panasonic e a sua palavra-passe para reautenticar",
+        "data": {
+          "username": "ID da Panasonic",
+          "password": "Palavra-passe"
+        }
+      }
+    },
+    "error": {
+      "no_devices": "Nenhum dispositivo encontrado. Verifique a sua conta e a aplicação CFC e tente novamente.",
+      "device_timeout": "Tempo esgotado ao ligar à API.",
+      "device_fail": "Erro inesperado ao ligar à API.",
+      "invalid_user_password": "ID da Panasonic ou palavra-passe inválidos."
+    },
+    "abort": {
+      "device_timeout": "Tempo esgotado ao ligar ao dispositivo.",
+      "device_fail": "Erro inesperado ao criar o dispositivo.",
+      "already_configured": "O dispositivo já está configurado",
+      "reauth_successful": "Reautenticação bem-sucedida."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "force_outside_sensor": "Forçar sensor exterior",
+          "enable_daily_energy_sensor": "Ativar sensores de energia diários (requer reinício)",
+          "force_enable_nanoe": "Ativar interruptor Nanoe para todos os dispositivos (requer reinício)",
+          "use_panasonic_preset_names": "Usar 'Silencioso' e 'Potente' em vez de 'Eco' e 'Boost' (requer reinício)",
+          "device_fetch_interval": "Intervalo de obtenção de dispositivos (segundos)",
+          "energy_fetch_interval": "Intervalo de obtenção de energia (segundos)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat_8_15": "+8/15°C",
+              "none": "Nenhum",
+              "quiet": "Silencioso",
+              "powerful": "Potente"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Up": "Cima",
+              "UpMid": "Meio-cima",
+              "Mid": "Meio",
+              "DownMid": "Meio-baixo",
+              "Down": "Baixo",
+              "Swing": "Oscilação"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Left": "Esquerda",
+              "LeftMid": "Centro esquerda",
+              "Mid": "Centro",
+              "RightMid": "Centro direita",
+              "Right": "Direita"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "Auto": "Auto",
+              "Low": "Baixo",
+              "LowMid": "Médio-baixo",
+              "Mid": "Médio",
+              "HighMid": "Médio-alto",
+              "High": "Alto"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "horizontal_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Left": "Esquerda",
+          "LeftMid": "Centro esquerda",
+          "Mid": "Centro",
+          "RightMid": "Centro direita",
+          "Right": "Direita"
+        }
+      },
+      "vertical_swing": {
+        "state": {
+          "Auto": "Auto",
+          "Up": "Cima",
+          "UpMid": "Meio-cima",
+          "Mid": "Meio",
+          "DownMid": "Meio-baixo",
+          "Down": "Baixo",
+          "Swing": "Oscilação"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_horizontal_swing_mode": {
+      "name": "Definir modo de oscilação horizontal",
+      "description": "Definir o modo de oscilação horizontal para o dispositivo climático.",
+      "fields": {
+        "entity_id": {
+          "name": "ID da entidade",
+          "description": "Nome(s) da entidade a alterar."
+        },
+        "swing_mode": {
+          "name": "Modo de oscilação",
+          "description": "Novo modo de oscilação horizontal."
+        }
+      }
+    }
+  }
+}

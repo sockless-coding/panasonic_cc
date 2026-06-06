@@ -1,2 +1,6 @@
 .vscode/
 .idea/
+.memories/
+.venv/
+__pycache__/
+*.pyc
