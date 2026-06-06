@@ -25,7 +25,6 @@ from .const import (
     CONF_FORCE_ENABLE_NANOE,
     CONF_FORCE_OUTSIDE_SENSOR,
     CONF_USE_PANASONIC_PRESET_NAMES,
-    CONF_UPDATE_INTERVAL_VERSION,
     DATA_COORDINATORS,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
@@ -112,23 +111,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Panasonic Comfort Cloud from a config entry."""
-    # Register entry version migration
-    if entry.version < 2:
-        hass.config_entries.async_update_entry(
-            entry,
-            version=2,
-            data={
-                **entry.data,
-                CONF_UPDATE_INTERVAL_VERSION: 2,
-                CONF_DEVICE_FETCH_INTERVAL: entry.data.get(
-                    CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL
-                ),
-                CONF_ENERGY_FETCH_INTERVAL: entry.data.get(
-                    CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL
-                ),
-            },
-        )
-
     hass.data.setdefault(DOMAIN, {})
 
     username = entry.data[CONF_USERNAME]
