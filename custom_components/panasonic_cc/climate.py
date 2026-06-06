@@ -41,6 +41,7 @@ from .const import (
     DATA_COORDINATORS,
     AQUAREA_COORDINATORS,
     CONF_USE_PANASONIC_PRESET_NAMES,
+    DEFAULT_USE_PANASONIC_PRESET_NAMES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -188,7 +189,7 @@ async def async_setup_entry(
     data_coordinators: list[PanasonicDeviceCoordinator] = hass.data[DOMAIN][DATA_COORDINATORS]
     aquarea_coordinators: list[AquareaDeviceCoordinator] = hass.data[DOMAIN][AQUAREA_COORDINATORS]
     use_panasonic_preset_names = entry.options.get(
-        CONF_USE_PANASONIC_PRESET_NAMES, True
+        CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES
     )
     for coordinator in data_coordinators:
         entities.append(

@@ -24,12 +24,15 @@ from .const import (
     CONF_ENERGY_FETCH_INTERVAL,
     CONF_FORCE_ENABLE_NANOE,
     CONF_FORCE_OUTSIDE_SENSOR,
+    CONF_USE_PANASONIC_PRESET_NAMES,
     CONF_UPDATE_INTERVAL_VERSION,
     DATA_COORDINATORS,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENERGY_FETCH_INTERVAL,
     DEFAULT_FORCE_ENABLE_NANOE,
+    DEFAULT_FORCE_OUTSIDE_SENSOR,
+    DEFAULT_USE_PANASONIC_PRESET_NAMES,
     DOMAIN,
     ENERGY_COORDINATORS,
     MANUFACTURER,
@@ -46,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate a config entry from VERSION 1 to VERSION 2."""
+    """Migrate a config entry."""
     _LOGGER.debug("Migrating config entry from version %s.%s", entry.version, entry.minor_version)
 
     if entry.version == 1:
@@ -77,7 +80,33 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             minor_version=1,
         )
 
-    _LOGGER.debug("Successfully migrated config entry to version 2.1")
+    if entry.version <= 2:
+        # VERSION 2 → 3: Move configurable settings from entry.data to entry.options.
+        # Only credentials (username/password) stay in entry.data.
+        # This fixes a bug where settings were stored in data but read from options.
+        new_data = {
+            CONF_USERNAME: entry.data[CONF_USERNAME],
+            CONF_PASSWORD: entry.data[CONF_PASSWORD],
+        }
+
+        new_options = {
+            CONF_FORCE_OUTSIDE_SENSOR: entry.data.get(CONF_FORCE_OUTSIDE_SENSOR, DEFAULT_FORCE_OUTSIDE_SENSOR),
+            CONF_FORCE_ENABLE_NANOE: entry.data.get(CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE),
+            CONF_ENABLE_DAILY_ENERGY_SENSOR: entry.data.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR),
+            CONF_USE_PANASONIC_PRESET_NAMES: entry.data.get(CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES),
+            CONF_DEVICE_FETCH_INTERVAL: entry.data.get(CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL),
+            CONF_ENERGY_FETCH_INTERVAL: entry.data.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL),
+        }
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            options=new_options,
+            version=3,
+            minor_version=1,
+        )
+
+    _LOGGER.debug("Successfully migrated config entry to version 3.1")
     return True
 
 
@@ -107,6 +136,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     enable_daily_energy_sensor = entry.options.get(
         CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
     )
+
+    # Merge data and options so coordinators can read fetch intervals from options
+    config = {**entry.data, **entry.options}
 
     client = async_get_clientsession(hass)
     api = ApiClient(username, password, client)
@@ -140,12 +172,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     for device in devices:
         try:
-            device_coordinator = PanasonicDeviceCoordinator(hass, dict(entry.data), api, device)
+            device_coordinator = PanasonicDeviceCoordinator(hass, config, api, device)
             await device_coordinator.async_config_entry_first_refresh()
             data_coordinators.append(device_coordinator)
             if enable_daily_energy_sensor:
                 energy_coordinators.append(
-                    PanasonicDeviceEnergyCoordinator(hass, dict(entry.data), api, device)
+                    PanasonicDeviceEnergyCoordinator(hass, config, api, device)
                 )
         except Exception as exc:
             _LOGGER.warning("Failed to setup device %s: %s", device.name, exc, exc_info=True)
@@ -159,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for aquarea_device in aquarea_devices:
                 try:
                     aquarea_coordinator = AquareaDeviceCoordinator(
-                        hass, dict(entry.data), aquarea_api, aquarea_device
+                        hass, config, aquarea_api, aquarea_device
                     )
                     await aquarea_coordinator.async_config_entry_first_refresh()
                     aquarea_coordinators.append(aquarea_coordinator)
