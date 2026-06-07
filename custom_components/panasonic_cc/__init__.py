@@ -89,12 +89,30 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
 
         new_options = {
-            CONF_FORCE_OUTSIDE_SENSOR: entry.data.get(CONF_FORCE_OUTSIDE_SENSOR, DEFAULT_FORCE_OUTSIDE_SENSOR),
-            CONF_FORCE_ENABLE_NANOE: entry.data.get(CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE),
-            CONF_ENABLE_DAILY_ENERGY_SENSOR: entry.data.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR),
-            CONF_USE_PANASONIC_PRESET_NAMES: entry.data.get(CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES),
-            CONF_DEVICE_FETCH_INTERVAL: entry.data.get(CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL),
-            CONF_ENERGY_FETCH_INTERVAL: entry.data.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL),
+            CONF_FORCE_OUTSIDE_SENSOR: entry.options.get(
+                CONF_FORCE_OUTSIDE_SENSOR,
+                entry.data.get(CONF_FORCE_OUTSIDE_SENSOR, DEFAULT_FORCE_OUTSIDE_SENSOR),
+            ),
+            CONF_FORCE_ENABLE_NANOE: entry.options.get(
+                CONF_FORCE_ENABLE_NANOE,
+                entry.data.get(CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE),
+            ),
+            CONF_ENABLE_DAILY_ENERGY_SENSOR: entry.options.get(
+                CONF_ENABLE_DAILY_ENERGY_SENSOR,
+                entry.data.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR),
+            ),
+            CONF_USE_PANASONIC_PRESET_NAMES: entry.options.get(
+                CONF_USE_PANASONIC_PRESET_NAMES,
+                entry.data.get(CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES),
+            ),
+            CONF_DEVICE_FETCH_INTERVAL: entry.options.get(
+                CONF_DEVICE_FETCH_INTERVAL,
+                entry.data.get(CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL),
+            ),
+            CONF_ENERGY_FETCH_INTERVAL: entry.options.get(
+                CONF_ENERGY_FETCH_INTERVAL,
+                entry.data.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL),
+            ),
         }
 
         hass.config_entries.async_update_entry(
