@@ -16,8 +16,6 @@ ATTR_SWING_LR_MODES = "horizontal_swing_modes"
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
 
-STATE_HEATING = "heating"
-
 SERVICE_SET_SWING_LR_MODE = "set_horizontal_swing_mode"
 
 KEY_DOMAIN = "domain"
@@ -99,7 +97,8 @@ COMPONENT_TYPES = [
     Platform.BUTTON,
     Platform.SELECT,
     Platform.NUMBER,
-    Platform.WATER_HEATER
+    Platform.WATER_HEATER,
+    Platform.BINARY_SENSOR,
     ]
 
 STARTUP = """
