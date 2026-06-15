@@ -142,10 +142,6 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
         if zone and zone.cool_mode:
             self._attr_hvac_modes.extend([HVACMode.COOL, HVACMode.HEAT_COOL])
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-        if zone and zone.cool_mode:
-            self._attr_hvac_modes.extend([HVACMode.COOL, HVACMode.HEAT_COOL])
-        self._attr_hvac_mode = HVACMode.OFF
 
     @callback
     def _handle_coordinator_update(self) -> None:

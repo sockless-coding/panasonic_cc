@@ -5,8 +5,9 @@ import asyncio
 import logging
 from typing import Any
 
-from aio_panasonic_comfort_cloud import ApiClient
+from aio_panasonic_comfort_cloud import ApiClient, PanasonicDeviceInfo
 from aioaquarea import Client as AquareaApiClient, AquareaEnvironment
+from aioaquarea.data import DeviceInfo as AquareaDeviceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -170,17 +171,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     energy_coordinators: list[PanasonicDeviceEnergyCoordinator] = []
     aquarea_coordinators: list[AquareaDeviceCoordinator] = []
 
+    # Create all device coordinators first
+    device_coordinators_uninitialized: list[tuple[PanasonicDeviceCoordinator, PanasonicDeviceInfo]] = []
     for device in devices:
         try:
             device_coordinator = PanasonicDeviceCoordinator(hass, config, api, device)
-            await device_coordinator.async_config_entry_first_refresh()
-            data_coordinators.append(device_coordinator)
+            device_coordinators_uninitialized.append((device_coordinator, device))
             if enable_daily_energy_sensor:
                 energy_coordinators.append(
                     PanasonicDeviceEnergyCoordinator(hass, config, api, device)
                 )
         except Exception as exc:
-            _LOGGER.warning("Failed to setup device %s: %s", device.name, exc, exc_info=True)
+            _LOGGER.warning("Failed to create coordinator for device %s: %s", device.name, exc, exc_info=True)
+
+    # Refresh all device coordinators in parallel
+    async def _init_device(coordinator: PanasonicDeviceCoordinator, device_info: PanasonicDeviceInfo) -> None:
+        try:
+            await coordinator.async_config_entry_first_refresh()
+            data_coordinators.append(coordinator)
+        except Exception as exc:
+            _LOGGER.warning("Failed to setup device %s: %s", device_info.name, exc, exc_info=True)
+
+    await asyncio.gather(
+        *(_init_device(coordinator, device_info) for coordinator, device_info in device_coordinators_uninitialized),
+        return_exceptions=True,
+    )
 
     # Handle Aquarea (Panasonic heat pump) devices
     if api.has_unknown_devices:
@@ -188,20 +203,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             aquarea_api = AquareaApiClient(client, username, password)
             await aquarea_api.login()
             aquarea_devices = await aquarea_api.get_devices()
+
+            aquarea_coordinators_uninitialized: list[tuple[AquareaDeviceCoordinator, AquareaDeviceInfo]] = []
             for aquarea_device in aquarea_devices:
                 try:
                     aquarea_coordinator = AquareaDeviceCoordinator(
                         hass, config, aquarea_api, aquarea_device
                     )
-                    await aquarea_coordinator.async_config_entry_first_refresh()
-                    aquarea_coordinators.append(aquarea_coordinator)
+                    aquarea_coordinators_uninitialized.append((aquarea_coordinator, aquarea_device))
                 except Exception as exc:
                     _LOGGER.warning(
-                        "Failed to setup Aquarea device %s: %s",
+                        "Failed to create coordinator for Aquarea device %s: %s",
                         aquarea_device.name,
                         exc,
                         exc_info=True,
                     )
+
+            # Refresh all Aquarea coordinators in parallel
+            async def _init_aquarea(coordinator: AquareaDeviceCoordinator, device_info: AquareaDeviceInfo) -> None:
+                try:
+                    await coordinator.async_config_entry_first_refresh()
+                    aquarea_coordinators.append(coordinator)
+                except Exception as exc:
+                    _LOGGER.warning(
+                        "Failed to setup Aquarea device %s: %s",
+                        device_info.name,
+                        exc,
+                        exc_info=True,
+                    )
+
+            await asyncio.gather(
+                *(_init_aquarea(coordinator, device_info) for coordinator, device_info in aquarea_coordinators_uninitialized),
+                return_exceptions=True,
+            )
         except Exception as exc:
             _LOGGER.warning("Failed to setup Aquarea devices: %s", exc, exc_info=True)
 
