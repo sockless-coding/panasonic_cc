@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -78,6 +79,7 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         self._device: PanasonicDevice | None = None
         self._update_id = 0
         self._store = Store(hass, version=1, key=f"panasonic_cc_{device_info.id}")
+        self._refresh_task: asyncio.Task | None = None
 
     @property
     def device(self) -> PanasonicDevice:
@@ -114,6 +116,27 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
     async def async_apply_changes(self, request_builder: ChangeRequestBuilder) -> None:
         """Apply changes to the device."""
         await self._api_client.set_device_raw(self.device, request_builder.build())
+
+    async def async_schedule_refresh(self) -> None:
+        """Schedule a debounced refresh of device data.
+
+        If a refresh is already pending, it will be cancelled and rescheduled.
+        This ensures that multiple rapid changes only result in a single refresh.
+        """
+        if self._refresh_task is not None:
+            self._refresh_task.cancel()
+            self._refresh_task = None
+
+        async def _delayed_refresh() -> None:
+            try:
+                await asyncio.sleep(2)
+                await self.async_request_refresh()
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self._refresh_task = None
+
+        self._refresh_task = self.hass.async_create_task(_delayed_refresh())
 
     async def async_get_stored_data(self) -> dict:
         """Get stored data."""

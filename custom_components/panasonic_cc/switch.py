@@ -203,6 +203,7 @@ class PanasonicSwitchEntity(PanasonicDataEntity, SwitchEntity):
         builder = self.coordinator.get_change_request_builder()
         self.entity_description.on_func(builder)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -210,6 +211,7 @@ class PanasonicSwitchEntity(PanasonicDataEntity, SwitchEntity):
         builder = self.coordinator.get_change_request_builder()
         self.entity_description.off_func(builder)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._attr_is_on = False
 
 

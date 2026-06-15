@@ -257,7 +257,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         builder = self.coordinator.get_change_request_builder()
         builder.set_power_mode(constants.Power.On)
         await self.coordinator.async_apply_changes(builder)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_schedule_refresh()
         self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:
@@ -265,6 +265,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         builder = self.coordinator.get_change_request_builder()
         builder.set_power_mode(constants.Power.Off)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._attr_hvac_mode = HVACMode.OFF
         self.async_write_ha_state()
 
@@ -280,6 +281,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         await self._async_exit_summer_house_mode(builder)
         builder.set_hvac_mode(op_mode)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._update_attributes(builder)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -293,6 +295,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             else:
                 mode = None
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._update_attributes(builder)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -303,6 +306,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         builder = self.coordinator.get_change_request_builder()
         builder.set_fan_speed(fan_mode)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._update_attributes(builder)
 
     async def _async_enter_summer_house_mode(self, builder: ChangeRequestBuilder):
@@ -367,7 +371,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         elif preset_mode == PRESET_8_15:
             await self._async_enter_summer_house_mode(builder)
         await self.coordinator.async_apply_changes(builder)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_schedule_refresh()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
@@ -377,6 +381,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         builder = self.coordinator.get_change_request_builder()
         builder.set_vertical_swing(swing_mode)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._update_attributes(builder)
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
@@ -387,6 +392,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         builder = self.coordinator.get_change_request_builder()
         builder.set_horizontal_swing(swing_horizontal_mode)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._update_attributes(builder)
 
     async def async_set_horizontal_swing_mode(self, swing_mode: str) -> None:
