@@ -222,6 +222,16 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn the climate entity on."""
         await self.coordinator.device.turn_on()
+        # Optimistically update HVAC mode based on current device mode
+        device = self.coordinator.device
+        zone = device.zones.get(self.entity_description.zone_id)
+        if zone and zone.operation_status != AquareaZoneOperationStatus.OFF:
+            self._attr_hvac_mode = convert_mode_and_status_to_hvac_mode(
+                device.mode, zone.operation_status
+            )
+        else:
+            self._attr_hvac_mode = HVACMode.HEAT
+        self.async_write_ha_state()
         self.hass.async_create_task(self._schedule_refresh(AQUAREA_CLIMATE_DELAY_LONG))
 
     async def async_turn_off(self) -> None:
@@ -241,18 +251,27 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
             mode=operation_mode,
             zone_id=self.entity_description.zone_id,
         )
+        # Optimistically update HVAC mode
+        self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
         self.hass.async_create_task(self._schedule_refresh(AQUAREA_CLIMATE_DELAY_LONG))
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        state_changed = False
         if ATTR_TEMPERATURE in kwargs:
             target_temp = kwargs[ATTR_TEMPERATURE]
             await self.coordinator.device.set_temperature(
                 temperature=target_temp,
                 zone_id=self.entity_description.zone_id,
             )
+            # Optimistically update target temperature
+            self._attr_target_temperature = target_temp
+            state_changed = True
         if mode := kwargs.get("hvac_mode"):
             await self.async_set_hvac_mode(mode)
+        if state_changed:
+            self.async_write_ha_state()
         self.hass.async_create_task(self._schedule_refresh(AQUAREA_CLIMATE_DELAY_LONG))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
