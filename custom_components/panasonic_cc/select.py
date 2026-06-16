@@ -127,6 +127,7 @@ class PanasonicSelectEntity(PanasonicDataEntity, SelectEntity):
         builder = self.coordinator.get_change_request_builder()
         self.entity_description.set_option(builder, option)
         await self.coordinator.async_apply_changes(builder)
+        await self.coordinator.async_schedule_refresh()
         self._attr_current_option = option
 
     def _async_update_attrs(self) -> None:
