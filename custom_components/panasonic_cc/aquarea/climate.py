@@ -1,4 +1,4 @@
-"""Aquarea climate entity."""
+"""Aquarea climate entities."""
 from __future__ import annotations
 
 import asyncio
@@ -14,10 +14,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE, PRECISION_WHOLE
 from homeassistant.components.climate.const import ClimateEntityFeature
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 
-from ..base import AquareaDataEntity
-from ..coordinator import AquareaDeviceCoordinator
 from aioaquarea import (
     ExtendedOperationMode as AquareaExtendedOperationMode,
     OperationStatus as AquareaZoneOperationStatus,
@@ -27,15 +26,12 @@ from aioaquarea import (
     DeviceDirection as AquareaDeviceDirection,
 )
 
-from ..const import (
-    PRESET_ECO,
-    PRESET_NONE,
-)
+from ..const import DOMAIN, PRESET_ECO, PRESET_NONE
+from .base import AquareaDataEntity
+from .coordinator import AquareaDeviceCoordinator
+from .const import AQUAREA_COORDINATORS, AQUAREA_CLIMATE_DELAY_SHORT, AQUAREA_CLIMATE_DELAY_LONG
 
 _LOGGER = logging.getLogger(__name__)
-
-AQUAREA_CLIMATE_DELAY_SHORT = 5.0
-AQUAREA_CLIMATE_DELAY_LONG = 10.0
 
 AQUAREA_SPECIAL_STATUS_LOOKUP: dict[str, AquareaSpecialStatus | None] = {
     PRESET_ECO: AquareaSpecialStatus.ECO,
@@ -166,19 +162,16 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
                 )
             return
 
-        # Mode is at device level, not zone level
         self._attr_hvac_mode = convert_mode_and_status_to_hvac_mode(
             device.mode, zone.operation_status
         )
 
-        # Use device direction for more accurate HVAC action
         self._attr_hvac_action = _get_hvac_action_from_device_direction(
             device.current_direction, self._attr_hvac_mode
         )
 
         self._attr_current_temperature = zone.temperature
 
-        # Target temperature depends on the current mode (heat or cool)
         if device.mode in (
             AquareaExtendedOperationMode.HEAT,
             AquareaExtendedOperationMode.AUTO_HEAT,
@@ -191,14 +184,12 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
             self._attr_min_temp = zone.cool_min if zone.cool_min is not None else 5
             self._attr_max_temp = zone.cool_max if zone.cool_max is not None else 65
 
-        # Build HVAC modes list based on zone capabilities
         hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         if zone.cool_mode:
             hvac_modes.append(HVACMode.COOL)
             hvac_modes.append(HVACMode.HEAT_COOL)
         self._attr_hvac_modes = hvac_modes
 
-        # Update preset mode if supported
         if device.support_special_status:
             self._attr_preset_mode = AQUAREA_SPECIAL_STATUS_REVERSE_LOOKUP.get(
                 device.special_status, PRESET_NONE
@@ -218,7 +209,6 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn the climate entity on."""
         await self.coordinator.device.turn_on()
-        # Optimistically update HVAC mode based on current device mode
         device = self.coordinator.device
         zone = device.zones.get(self.entity_description.zone_id)
         if zone and zone.operation_status != AquareaZoneOperationStatus.OFF:
@@ -247,7 +237,6 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
             mode=operation_mode,
             zone_id=self.entity_description.zone_id,
         )
-        # Optimistically update HVAC mode
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
         self.hass.async_create_task(self._schedule_refresh(AQUAREA_CLIMATE_DELAY_LONG))
@@ -261,7 +250,6 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
                 temperature=target_temp,
                 zone_id=self.entity_description.zone_id,
             )
-            # Optimistically update target temperature
             self._attr_target_temperature = target_temp
             state_changed = True
         if mode := kwargs.get("hvac_mode"):
@@ -287,3 +275,30 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
         self.hass.async_create_task(self._schedule_refresh(AQUAREA_CLIMATE_DELAY_LONG))
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Any,
+) -> None:
+    """Set up the Aquarea climate entities."""
+    entities = []
+    aquarea_coordinators = hass.data[DOMAIN][AQUAREA_COORDINATORS]
+    for aquarea_coordinator in aquarea_coordinators:
+        for zone_id in aquarea_coordinator.device.zones:
+            zone = aquarea_coordinator.device.zones.get(zone_id)
+            if zone is None:
+                continue
+            entities.append(
+                AquareaClimateEntity(
+                    aquarea_coordinator,
+                    AquareaClimateEntityDescription(
+                        zone_id=zone_id,
+                        name=zone.name,
+                        key=f"zone-{zone_id}-climate",
+                        translation_key=f"zone-{zone_id}-climate",
+                    ),
+                )
+            )
+    async_add_entities(entities)
