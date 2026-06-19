@@ -32,7 +32,9 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - Target temperature control
 - Fan mode selection
 - Preset modes (Quiet, Powerful, +8/15°C heat)
-- Water heater entity for Aquarea hot water tanks
+
+### Water Heater
+- **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off)
 
 ### Swing Control
 - Horizontal swing mode via Select entity
@@ -45,24 +47,47 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **AI ECO** — Toggle AI ECO mode (where available)
 - **iAUTO-X** — Toggle iAUTO-X intelligent auto mode (where available)
 - **Zone controls** — Toggle individual zone on/off (where available)
+- **Force DHW** — Force domestic hot water mode (Aquarea, where available)
+- **Force Heater** — Force heater mode (Aquarea)
+- **Holiday Timer** — Enable/disable holiday timer (Aquarea)
 
 ### Sensors
 - **Inside Temperature** — Indoor temperature reading
 - **Outside Temperature** — Outdoor temperature reading (where available)
 - **Daily Energy** — Daily energy consumption in kWh (optional)
-- **Current Power** — Current power consumption in W (calculated from energy readings)
+- **Daily Heating Energy** — Daily heating energy consumption in kWh (optional)
+- **Daily Cooling Energy** — Daily cooling energy consumption in kWh (optional)
+- **Current Extrapolated Power** — Current power consumption in W (calculated from energy readings)
+- **Cooling Extrapolated Power** — Cooling power consumption in W (calculated from energy readings)
+- **Heating Extrapolated Power** — Heating power consumption in W (calculated from energy readings)
+- **Zone Temperature** — Per-zone temperature reading (where zones are available)
+- **Connection Status** — Current connection status: connected, degraded, disconnected, or authentication_error (diagnostic)
 - **Last Updated** — Timestamp of last device data update (diagnostic)
 - **Cached Data Age** — Timestamp of cached data when device is offline (diagnostic)
 - **Data Mode** — Current data mode: LIVE, CACHED, or OFFLINE (diagnostic)
+- **Outside Temperature** — Outdoor temperature reading (Aquarea)
+- **Tank Temperature** — Hot water tank temperature (Aquarea, where available)
+- **Direction** — Current operating direction (Aquarea)
+- **Pump Status** — On/Off pump status (Aquarea)
+- **Accumulated Energy** — Heating, cooling, tank, and total accumulated energy consumption in kWh (Aquarea)
 
 ### Zone Controls
 - **Zone Damper Position** — Slider control for zone damper (0–100%, in steps of 10)
 - **Zone Mode** — Switch to enable/disable individual zones
 
+### Select
+- **Quiet Mode** — Select quiet mode level: level1, level2, level3, or off (Aquarea)
+- **Powerful Time** — Select powerful mode duration: on-30m, on-60m, on-90m, or off (Aquarea)
+
+### Binary Sensors
+- **Error Status** — Indicates if the Aquarea device is in an error state, with error code and message attributes (Aquarea)
+- **Defrost** — Indicates if the Aquarea device is in defrost mode (Aquarea)
+
 ### Buttons
 - **Fetch latest data** — Manually refresh device data from the cloud
 - **Fetch latest energy data** — Manually refresh energy data from the cloud
 - **Fetch latest app version** — Refresh the app version information
+- **Request Defrost** — Request the Aquarea device to start the defrost process (Aquarea)
 
 ## Installation
 
@@ -156,7 +181,7 @@ data:
 
 ### Energy Sensors
 - **Energy data not updating** — Ensure "Enable daily energy sensors" is checked in the integration options. Note that energy data resets daily.
-- **Current power seems inaccurate** — Current power is calculated from the daily energy reading and may not reflect instantaneous power accurately.
+- **Current power seems inaccurate** — Current power is extrapolated from the daily energy reading and may not reflect instantaneous power accurately.
 
 ---
 
