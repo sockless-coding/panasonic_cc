@@ -18,13 +18,15 @@ from aio_panasonic_comfort_cloud import (
     ChangeRequestBuilder,
 )
 
-from .const import (
+from ..const import (
+    DOMAIN,
+    MANUFACTURER,
+    NOTIFICATION_AUTH_EXPIRED,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     DEFAULT_ENERGY_FETCH_INTERVAL,
     CONF_DEVICE_FETCH_INTERVAL,
     CONF_ENERGY_FETCH_INTERVAL,
 )
-from ..const import DOMAIN, MANUFACTURER, NOTIFICATION_AUTH_EXPIRED
 
 MAX_CONSECUTIVE_FAILURES = 5
 BACKOFF_MULTIPLIER = 2
