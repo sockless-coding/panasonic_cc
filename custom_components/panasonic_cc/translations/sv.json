@@ -118,6 +118,17 @@
           "Swing": "Svängande"
         }
       }
+    },
+    "sensor": {
+      "connection_status": {
+        "name": "Anslutningsstatus",
+        "state": {
+          "connected": "Ansluten",
+          "degraded": "Försämrad",
+          "disconnected": "Frånkopplad",
+          "authentication_error": "Autentiseringsfel"
+        }
+      }
     }
   },
   "services": {

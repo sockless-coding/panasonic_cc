@@ -21,6 +21,7 @@ from ..const import DOMAIN
 from .base import PanasonicDataEntity, PanasonicEnergyEntity
 from .coordinator import PanasonicDeviceCoordinator, PanasonicDeviceEnergyCoordinator
 from .const import DATA_COORDINATORS, ENERGY_COORDINATORS
+from ..error_handler import ErrorCategory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,6 +94,24 @@ DATA_MODE_DESCRIPTION = PanasonicSensorEntityDescription(
     state_class=None,
     native_unit_of_measurement=None,
     get_state=lambda device: device.info.status_data_mode.name,
+    is_available=lambda device: True,
+    entity_registry_enabled_default=True,
+)
+
+# Connection status sensor options
+CONNECTION_STATUS_OPTIONS = ["connected", "degraded", "disconnected", "authentication_error"]
+
+CONNECTION_STATUS_DESCRIPTION = PanasonicSensorEntityDescription(
+    key="connection_status",
+    translation_key="connection_status",
+    name="Connection Status",
+    icon="mdi:network",
+    options=CONNECTION_STATUS_OPTIONS,
+    device_class=SensorDeviceClass.ENUM,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=None,
+    native_unit_of_measurement=None,
+    get_state=lambda device: None,  # Handled by the entity itself
     is_available=lambda device: True,
     entity_registry_enabled_default=True,
 )
@@ -183,6 +202,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(PanasonicSensorEntity(coordinator, LAST_UPDATE_TIME_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, DATA_AGE_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, DATA_MODE_DESCRIPTION))
+        entities.append(PanasonicConnectionStatusSensor(coordinator))
         if coordinator.device.has_zones:
             for zone in coordinator.device.parameters.zones:
                 entities.append(PanasonicSensorEntity(
@@ -257,3 +277,46 @@ class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
         value = self.entity_description.get_state(energy)
         self._attr_available = value is not None
         self._attr_native_value = value  # type: ignore[assignment]
+
+
+class PanasonicConnectionStatusSensor(PanasonicDataEntity, SensorEntity):
+    """Sensor that reports the connection status and error information for a Panasonic device."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "connection_status"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = CONNECTION_STATUS_OPTIONS
+    _attr_icon = "mdi:network"
+
+    def __init__(self, coordinator: PanasonicDeviceCoordinator) -> None:
+        """Initialize the connection status sensor."""
+        super().__init__(coordinator, "connection_status")
+        self._attr_unique_id = f"{coordinator.device_id}-connection_status"
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_native_value = self.coordinator.connection_status
+
+        # Build extra attributes with error details
+        attrs = {}
+        attrs["consecutive_failures"] = self.coordinator._consecutive_failures
+
+        if self.coordinator.last_error is not None:
+            err = self.coordinator.last_error
+            attrs["last_error_title"] = err.title
+            attrs["last_error_message"] = err.message
+            attrs["last_error_category"] = err.category.name.lower()
+            attrs["last_error_recoverable"] = err.is_recoverable
+            if err.suggestion:
+                attrs["last_error_suggestion"] = err.suggestion
+
+        if self.coordinator.last_command_error is not None:
+            err = self.coordinator.last_command_error
+            attrs["last_command_error_title"] = err.title
+            attrs["last_command_error_message"] = err.message
+            attrs["last_command_error_category"] = err.category.name.lower()
+            if err.suggestion:
+                attrs["last_command_error_suggestion"] = err.suggestion
+
+        self._attr_extra_state_attributes = attrs

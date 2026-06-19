@@ -84,12 +84,20 @@ class PanasonicNumberEntity(PanasonicDataEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        int_value = int(value)
-        builder = self.coordinator.get_change_request_builder()
-        self.entity_description.set_value(builder, int_value)
-        await self.coordinator.async_apply_changes(builder)
-        await self.coordinator.async_schedule_refresh()
-        self._attr_native_value = int_value
+        try:
+            int_value = int(value)
+            builder = self.coordinator.get_change_request_builder()
+            self.entity_description.set_value(builder, int_value)
+            await self.coordinator.async_apply_changes(builder)
+            await self.coordinator.async_schedule_refresh()
+            self._attr_native_value = int_value
+        except Exception:
+            _LOGGER.exception(
+                "Failed to set value %s for number %s on device %s",
+                value,
+                self.entity_description.key,
+                self.coordinator.device_id,
+            )
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the number entity."""

@@ -184,16 +184,30 @@ class PanasonicSwitchEntity(PanasonicDataEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        builder = self.coordinator.get_change_request_builder()
-        self.entity_description.on_func(builder)
-        await self.coordinator.async_apply_changes(builder)
-        await self.coordinator.async_schedule_refresh()
-        self._attr_is_on = True
+        try:
+            builder = self.coordinator.get_change_request_builder()
+            self.entity_description.on_func(builder)
+            await self.coordinator.async_apply_changes(builder)
+            await self.coordinator.async_schedule_refresh()
+            self._attr_is_on = True
+        except Exception:
+            _LOGGER.exception(
+                "Failed to turn on switch %s for device %s",
+                self.entity_description.key,
+                self.coordinator.device_id,
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        builder = self.coordinator.get_change_request_builder()
-        self.entity_description.off_func(builder)
-        await self.coordinator.async_apply_changes(builder)
-        await self.coordinator.async_schedule_refresh()
-        self._attr_is_on = False
+        try:
+            builder = self.coordinator.get_change_request_builder()
+            self.entity_description.off_func(builder)
+            await self.coordinator.async_apply_changes(builder)
+            await self.coordinator.async_schedule_refresh()
+            self._attr_is_on = False
+        except Exception:
+            _LOGGER.exception(
+                "Failed to turn off switch %s for device %s",
+                self.entity_description.key,
+                self.coordinator.device_id,
+            )

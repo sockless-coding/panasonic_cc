@@ -25,6 +25,7 @@ from ..const import DOMAIN
 from .base import AquareaDataEntity
 from .coordinator import AquareaDeviceCoordinator
 from .const import AQUAREA_COORDINATORS
+from ..error_handler import ErrorCategory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +76,9 @@ AQUAREA_PUMP_STATUS_DESCRIPTION = AquareaSensorEntityDescription(
     get_state=lambda device: "On" if device.pump_duty == 1 else "Off",
     is_available=lambda device: True,
 )
+
+# Connection status sensor options
+AQUAREA_CONNECTION_STATUS_OPTIONS = ["connected", "degraded", "disconnected", "authentication_error"]
 
 # Energy consumption sensor descriptions for Aquarea
 @dataclass(frozen=True, kw_only=True)
@@ -243,6 +247,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for desc in AQUAREA_ENERGY_SENSORS:
             if desc.exists_fn(coordinator):
                 entities.append(AquareaEnergyConsumptionSensor(coordinator, desc))
+        # Connection status sensor
+        entities.append(AquareaConnectionStatusSensor(coordinator))
 
     async_add_entities(entities)
 
@@ -456,3 +462,38 @@ class AquareaEnergyConsumptionSensor(AquareaDataEntity, SensorEntity, RestoreEnt
             pass  # Keep last known value
         except Exception:
             pass  # Keep last known value
+
+
+class AquareaConnectionStatusSensor(AquareaDataEntity, SensorEntity):
+    """Sensor that reports the connection status and error information for an Aquarea device."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "connection_status"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = AQUAREA_CONNECTION_STATUS_OPTIONS
+    _attr_icon = "mdi:network"
+
+    def __init__(self, coordinator: AquareaDeviceCoordinator) -> None:
+        """Initialize the connection status sensor."""
+        super().__init__(coordinator, "connection_status")
+        self._attr_unique_id = f"{coordinator.device_id}-connection_status"
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_native_value = self.coordinator.connection_status
+
+        # Build extra attributes with error details
+        attrs = {}
+        attrs["consecutive_failures"] = self.coordinator._consecutive_failures
+
+        if self.coordinator.last_error is not None:
+            err = self.coordinator.last_error
+            attrs["last_error_title"] = err.title
+            attrs["last_error_message"] = err.message
+            attrs["last_error_category"] = err.category.name.lower()
+            attrs["last_error_recoverable"] = err.is_recoverable
+            if err.suggestion:
+                attrs["last_error_suggestion"] = err.suggestion
+
+        self._attr_extra_state_attributes = attrs
