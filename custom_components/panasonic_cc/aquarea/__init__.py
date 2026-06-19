@@ -1,6 +1,7 @@
 """Aquarea device setup and coordination."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from aio_panasonic_comfort_cloud import ApiClient
