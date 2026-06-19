@@ -97,11 +97,19 @@ class PanasonicSelectEntity(PanasonicDataEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select a new option."""
-        builder = self.coordinator.get_change_request_builder()
-        self.entity_description.set_option(builder, option)
-        await self.coordinator.async_apply_changes(builder)
-        await self.coordinator.async_schedule_refresh()
-        self._attr_current_option = option
+        try:
+            builder = self.coordinator.get_change_request_builder()
+            self.entity_description.set_option(builder, option)
+            await self.coordinator.async_apply_changes(builder)
+            await self.coordinator.async_schedule_refresh()
+            self._attr_current_option = option
+        except Exception:
+            _LOGGER.exception(
+                "Failed to select option '%s' for select %s on device %s",
+                option,
+                self.entity_description.key,
+                self.coordinator.device_id,
+            )
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the select entity."""

@@ -23,6 +23,7 @@ from ..const import (
     DOMAIN,
     NOTIFICATION_AUTH_EXPIRED,
 )
+from ..error_handler import classify_error, FriendlyError, ErrorCategory
 
 MAX_CONSECUTIVE_FAILURES = 5
 BACKOFF_MULTIPLIER = 2
@@ -78,6 +79,23 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator[int]):
         self._consecutive_failures = 0
         self._auth_failed = False
         self._last_device_state_hash: int | None = None
+        self._last_error: FriendlyError | None = None
+
+    @property
+    def last_error(self) -> FriendlyError | None:
+        """Return the last error that occurred."""
+        return self._last_error
+
+    @property
+    def connection_status(self) -> str:
+        """Return the current connection status."""
+        if self._auth_failed:
+            return "authentication_error"
+        if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+            return "disconnected"
+        if self._consecutive_failures > 0:
+            return "degraded"
+        return "connected"
 
     @property
     def device(self) -> AquareaDevice:
@@ -170,8 +188,9 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator[int]):
                 )
                 _create_auth_expired_notification(self.hass)
                 raise UpdateFailed("Authentication failed — coordinator disabled") from err
-            self._handle_failure()
-            raise UpdateFailed(f"Invalid response from API: {err}") from err
+            self._handle_failure(err)
+            friendly = classify_error(err)
+            raise UpdateFailed(f"{friendly.title}: {friendly.message}") from err
         return self._update_id
 
     def _reset_backoff(self) -> None:
@@ -183,9 +202,10 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator[int]):
                 self._consecutive_failures,
             )
         self._consecutive_failures = 0
+        self._last_error = None
         self.update_interval = timedelta(seconds=self._base_interval)
 
-    def _handle_failure(self) -> None:
+    def _handle_failure(self, err: Exception | None = None) -> None:
         """Handle API failure with exponential backoff."""
         self._consecutive_failures += 1
         new_interval = min(
@@ -193,13 +213,25 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator[int]):
             MAX_UPDATE_INTERVAL,
         )
         self.update_interval = timedelta(seconds=new_interval)
-        _LOGGER.warning(
-            "%s API failure %d/%d — polling interval increased to %ds",
-            self._device_info.name,
-            self._consecutive_failures,
-            MAX_CONSECUTIVE_FAILURES,
-            new_interval,
-        )
+        if err is not None:
+            self._last_error = classify_error(err)
+            _LOGGER.warning(
+                "%s API failure %d/%d — %s: %s — polling interval increased to %ds",
+                self._device_info.name,
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+                self._last_error.title,
+                self._last_error.message,
+                new_interval,
+            )
+        else:
+            _LOGGER.warning(
+                "%s API failure %d/%d — polling interval increased to %ds",
+                self._device_info.name,
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+                new_interval,
+            )
 
     async def async_schedule_refresh(self) -> None:
         """Schedule a debounced refresh of device data."""

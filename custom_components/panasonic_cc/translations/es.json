@@ -118,6 +118,17 @@
           "Swing": "Oscilación"
         }
       }
+    },
+    "sensor": {
+      "connection_status": {
+        "name": "Estado de conexión",
+        "state": {
+          "connected": "Conectado",
+          "degraded": "Degradado",
+          "disconnected": "Desconectado",
+          "authentication_error": "Error de autenticación"
+        }
+      }
     }
   },
   "services": {

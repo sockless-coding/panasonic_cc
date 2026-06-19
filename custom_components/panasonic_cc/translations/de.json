@@ -118,6 +118,17 @@
             "Swing": "Schwingen"
           }
         }
+      },
+      "sensor": {
+        "connection_status": {
+          "name": "Verbindungsstatus",
+          "state": {
+            "connected": "Verbunden",
+            "degraded": "Eingeschränkt",
+            "disconnected": "Getrennt",
+            "authentication_error": "Authentifizierungsfehler"
+          }
+        }
       }
     },
     "services": {

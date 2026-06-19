@@ -190,6 +190,15 @@
       },
       "energy_consumption": {
         "name": "Consumption"
+      },
+      "connection_status": {
+        "name": "Connection Status",
+        "state": {
+          "connected": "Connected",
+          "degraded": "Degraded",
+          "disconnected": "Disconnected",
+          "authentication_error": "Authentication Error"
+        }
       }
     },
     "switch": {

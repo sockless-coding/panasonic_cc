@@ -27,6 +27,7 @@ from ..const import (
     CONF_DEVICE_FETCH_INTERVAL,
     CONF_ENERGY_FETCH_INTERVAL,
 )
+from ..error_handler import classify_error, FriendlyError, ErrorCategory
 
 MAX_CONSECUTIVE_FAILURES = 5
 BACKOFF_MULTIPLIER = 2
@@ -81,6 +82,29 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         self._refresh_task: asyncio.Task | None = None
         self._consecutive_failures = 0
         self._auth_failed = False
+        self._last_error: FriendlyError | None = None
+        self._last_command_error: FriendlyError | None = None
+
+    @property
+    def last_error(self) -> FriendlyError | None:
+        """Return the last error that occurred."""
+        return self._last_error
+
+    @property
+    def last_command_error(self) -> FriendlyError | None:
+        """Return the last command error that occurred."""
+        return self._last_command_error
+
+    @property
+    def connection_status(self) -> str:
+        """Return the current connection status."""
+        if self._auth_failed:
+            return "authentication_error"
+        if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+            return "disconnected"
+        if self._consecutive_failures > 0:
+            return "degraded"
+        return "connected"
 
     @property
     def device(self) -> PanasonicDevice:
@@ -116,7 +140,25 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
 
     async def async_apply_changes(self, request_builder: ChangeRequestBuilder) -> None:
         """Apply changes to the device."""
-        await self._api_client.set_device_raw(self.device, request_builder.build())
+        try:
+            await self._api_client.set_device_raw(self.device, request_builder.build())
+            # Clear command error on success
+            self._last_command_error = None
+        except Exception as err:
+            friendly = classify_error(err)
+            self._last_command_error = friendly
+            # Also track the failure in the consecutive failures counter
+            # so the connection status sensor reflects the device state
+            self._handle_failure(err)
+            _LOGGER.warning(
+                "%s Command failed: %s — %s",
+                self._device_info.name,
+                friendly.title,
+                friendly.message,
+            )
+            # Notify listeners so the connection status sensor updates immediately
+            self.async_update_listeners()
+            raise
 
     async def async_schedule_refresh(self) -> None:
         """Schedule a debounced refresh of device data."""
@@ -176,8 +218,9 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                 )
                 _create_auth_expired_notification(self.hass)
                 raise UpdateFailed("Authentication failed — coordinator disabled") from err
-            self._handle_failure()
-            raise UpdateFailed(f"Invalid response from API: {err}") from err
+            self._handle_failure(err)
+            friendly = classify_error(err)
+            raise UpdateFailed(f"{friendly.title}: {friendly.message}") from err
         return self._update_id
 
     def _reset_backoff(self) -> None:
@@ -189,9 +232,10 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                 self._consecutive_failures,
             )
         self._consecutive_failures = 0
+        self._last_error = None
         self.update_interval = timedelta(seconds=self._base_interval)
 
-    def _handle_failure(self) -> None:
+    def _handle_failure(self, err: Exception | None = None) -> None:
         """Handle API failure with exponential backoff."""
         self._consecutive_failures += 1
         new_interval = min(
@@ -199,13 +243,25 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
             MAX_UPDATE_INTERVAL,
         )
         self.update_interval = timedelta(seconds=new_interval)
-        _LOGGER.warning(
-            "%s API failure %d/%d — polling interval increased to %ds",
-            self._device_info.name,
-            self._consecutive_failures,
-            MAX_CONSECUTIVE_FAILURES,
-            new_interval,
-        )
+        if err is not None:
+            self._last_error = classify_error(err)
+            _LOGGER.warning(
+                "%s API failure %d/%d — %s: %s — polling interval increased to %ds",
+                self._device_info.name,
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+                self._last_error.title,
+                self._last_error.message,
+                new_interval,
+            )
+        else:
+            _LOGGER.warning(
+                "%s API failure %d/%d — polling interval increased to %ds",
+                self._device_info.name,
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+                new_interval,
+            )
 
 
 class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
@@ -234,6 +290,23 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
         self._update_id = 0
         self._consecutive_failures = 0
         self._auth_failed = False
+        self._last_error: FriendlyError | None = None
+
+    @property
+    def last_error(self) -> FriendlyError | None:
+        """Return the last error that occurred."""
+        return self._last_error
+
+    @property
+    def connection_status(self) -> str:
+        """Return the current connection status."""
+        if self._auth_failed:
+            return "authentication_error"
+        if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+            return "disconnected"
+        if self._consecutive_failures > 0:
+            return "degraded"
+        return "connected"
 
     @property
     def api_client(self) -> ApiClient:
@@ -286,8 +359,9 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
                 )
                 _create_auth_expired_notification(self.hass)
                 raise UpdateFailed("Authentication failed — coordinator disabled") from err
-            self._handle_failure()
-            raise UpdateFailed(f"Invalid response from API: {err}") from err
+            self._handle_failure(err)
+            friendly = classify_error(err)
+            raise UpdateFailed(f"{friendly.title}: {friendly.message}") from err
         return self._update_id
 
     def _reset_backoff(self) -> None:
@@ -299,9 +373,10 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
                 self._consecutive_failures,
             )
         self._consecutive_failures = 0
+        self._last_error = None
         self.update_interval = timedelta(seconds=self._base_interval)
 
-    def _handle_failure(self) -> None:
+    def _handle_failure(self, err: Exception | None = None) -> None:
         """Handle API failure with exponential backoff."""
         self._consecutive_failures += 1
         new_interval = min(
@@ -309,10 +384,22 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
             MAX_UPDATE_INTERVAL,
         )
         self.update_interval = timedelta(seconds=new_interval)
-        _LOGGER.warning(
-            "%s Energy API failure %d/%d — polling interval increased to %ds",
-            self._device_info.name,
-            self._consecutive_failures,
-            MAX_CONSECUTIVE_FAILURES,
-            new_interval,
-        )
+        if err is not None:
+            self._last_error = classify_error(err)
+            _LOGGER.warning(
+                "%s Energy API failure %d/%d — %s: %s — polling interval increased to %ds",
+                self._device_info.name,
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+                self._last_error.title,
+                self._last_error.message,
+                new_interval,
+            )
+        else:
+            _LOGGER.warning(
+                "%s Energy API failure %d/%d — polling interval increased to %ds",
+                self._device_info.name,
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+                new_interval,
+            )

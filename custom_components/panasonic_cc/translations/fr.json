@@ -118,6 +118,17 @@
           "Swing": "Balancement"
         }
       }
+    },
+    "sensor": {
+      "connection_status": {
+        "name": "État de connexion",
+        "state": {
+          "connected": "Connecté",
+          "degraded": "Dégradé",
+          "disconnected": "Déconnecté",
+          "authentication_error": "Erreur d'authentification"
+        }
+      }
     }
   },
   "services": {

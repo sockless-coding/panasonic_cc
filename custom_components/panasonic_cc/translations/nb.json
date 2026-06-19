@@ -118,6 +118,17 @@
           "Swing": "Sving"
         }
       }
+    },
+    "sensor": {
+      "connection_status": {
+        "name": "Tilkoblingsstatus",
+        "state": {
+          "connected": "Tilkoblet",
+          "degraded": "Forverret",
+          "disconnected": "Frakoblet",
+          "authentication_error": "Autentiseringsfeil"
+        }
+      }
     }
   },
   "services": {

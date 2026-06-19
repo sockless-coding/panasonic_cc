@@ -117,6 +117,17 @@
           "Down": "Niski"
         }
       }
+    },
+    "sensor": {
+      "connection_status": {
+        "name": "Status połączenia",
+        "state": {
+          "connected": "Połączono",
+          "degraded": "Degradowany",
+          "disconnected": "Rozłączono",
+          "authentication_error": "Błąd uwierzytelniania"
+        }
+      }
     }
   },
   "services": {

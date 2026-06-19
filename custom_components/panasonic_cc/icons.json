@@ -44,6 +44,16 @@
                 }
             }
         }
+      },
+      "sensor": {
+        "connection_status": {
+          "state": {
+            "connected": "mdi:network",
+            "degraded": "mdi:network-strength-2-alert",
+            "disconnected": "mdi:network-off",
+            "authentication_error": "mdi:account-alert"
+          }
+        }
       }
     }
   }

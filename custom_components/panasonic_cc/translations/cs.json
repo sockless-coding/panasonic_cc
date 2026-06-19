@@ -118,6 +118,17 @@
           "Swing": "Kmitání"
         }
       }
+    },
+    "sensor": {
+      "connection_status": {
+        "name": "Status připojení",
+        "state": {
+          "connected": "Připojeno",
+          "degraded": "Zhoršeno",
+          "disconnected": "Odpojeno",
+          "authentication_error": "Chyba ověření"
+        }
+      }
     }
   },
   "services": {

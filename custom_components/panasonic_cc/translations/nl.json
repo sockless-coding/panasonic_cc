@@ -118,6 +118,17 @@
           "Swing": "Zwaaien"
         }
       }
+    },
+    "sensor": {
+      "connection_status": {
+        "name": "Verbindingsstatus",
+        "state": {
+          "connected": "Verbonden",
+          "degraded": "Verslechterd",
+          "disconnected": "Verbroken",
+          "authentication_error": "Authenticatiefout"
+        }
+      }
     }
   },
   "services": {
