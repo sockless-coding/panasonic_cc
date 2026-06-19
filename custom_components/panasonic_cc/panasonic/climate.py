@@ -1,4 +1,4 @@
-"""Panasonic climate entity."""
+"""Panasonic climate entities."""
 from __future__ import annotations
 
 import logging
@@ -13,12 +13,20 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
 from homeassistant.components.climate.const import ClimateEntityFeature
+from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 
-from ..base import PanasonicDataEntity
-from ..coordinator import PanasonicDeviceCoordinator
 from aio_panasonic_comfort_cloud import PanasonicDeviceParameters, ChangeRequestBuilder, constants
 
 from ..const import (
+    CONF_USE_PANASONIC_PRESET_NAMES,
+    DEFAULT_USE_PANASONIC_PRESET_NAMES,
+    DOMAIN,
+)
+from .base import PanasonicDataEntity
+from .coordinator import PanasonicDeviceCoordinator
+from .const import (
+    DATA_COORDINATORS,
     SUPPORT_FLAGS,
     PRESET_8_15,
     PRESET_NONE,
@@ -452,3 +460,23 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     async def async_set_horizontal_swing_mode(self, swing_mode: str) -> None:
         """Set horizontal swing mode via service call."""
         await self.async_set_swing_horizontal_mode(swing_mode)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Any,
+) -> None:
+    """Set up the Panasonic climate entities."""
+    entities = []
+    data_coordinators = hass.data[DOMAIN][DATA_COORDINATORS]
+    use_panasonic_preset_names = entry.options.get(
+        CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES
+    )
+    for coordinator in data_coordinators:
+        entities.append(
+            PanasonicClimateEntity(
+                coordinator, PANASONIC_CLIMATE_DESCRIPTION, use_panasonic_preset_names
+            )
+        )
+    async_add_entities(entities)
