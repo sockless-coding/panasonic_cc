@@ -21,6 +21,7 @@ from aio_panasonic_comfort_cloud import PanasonicDeviceParameters, ChangeRequest
 from ..const import (
     CONF_USE_PANASONIC_PRESET_NAMES,
     DEFAULT_USE_PANASONIC_PRESET_NAMES,
+    DOMAIN,
 )
 from .base import PanasonicDataEntity
 from .coordinator import PanasonicDeviceCoordinator

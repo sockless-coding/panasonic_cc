@@ -22,6 +22,7 @@ from aio_panasonic_comfort_cloud import (
 from ..const import (
     CONF_FORCE_ENABLE_NANOE,
     DEFAULT_FORCE_ENABLE_NANOE,
+    DOMAIN,
 )
 from .base import PanasonicDataEntity
 from .coordinator import PanasonicDeviceCoordinator

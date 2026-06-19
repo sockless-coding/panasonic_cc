@@ -42,6 +42,7 @@ async def async_setup_aquarea(
 ) -> list[AquareaDeviceCoordinator]:
     """Set up Aquarea devices: create API client, coordinators, and register devices."""
     if not panasonic_api.has_unknown_devices:
+        hass.data[DOMAIN][AQUAREA_COORDINATORS] = []
         return []
 
     username = entry.data[CONF_USERNAME]
@@ -56,6 +57,7 @@ async def async_setup_aquarea(
         aquarea_devices = await aquarea_api.get_devices()
     except Exception as exc:
         _LOGGER.warning("Failed to setup Aquarea devices: %s", exc, exc_info=True)
+        hass.data[DOMAIN][AQUAREA_COORDINATORS] = []
         return []
 
     aquarea_coordinators: list[AquareaDeviceCoordinator] = []
