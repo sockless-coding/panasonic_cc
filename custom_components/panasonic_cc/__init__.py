@@ -142,10 +142,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .panasonic import async_setup_panasonic
     data_coordinators, energy_coordinators = await async_setup_panasonic(hass, entry)
 
-    if not data_coordinators:
-        _LOGGER.error("Could not find any Panasonic Comfort Cloud Heat Pumps")
-        return False
-
     # Set up Aquarea slice (if there are unknown devices)
     from .aquarea import async_setup_aquarea
     aquarea_coordinators = await async_setup_aquarea(hass, entry, api)
