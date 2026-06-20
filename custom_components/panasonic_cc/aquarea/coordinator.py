@@ -158,17 +158,12 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator[int]):
             raise UpdateFailed("Authentication failed — coordinator disabled")
 
         try:
-            if self._device is None:
-                self._device = await self._api_client.get_device(
-                    device_info=self._device_info,
-                    consumption_refresh_interval=timedelta(
-                        seconds=self._config.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL)
-                    ),
-                )
-                self._update_id = 1
-                self._last_device_state_hash = self._device_state_hash()
-                self._reset_backoff()
-                return self._update_id
+            self._device = await self._api_client.get_device(
+                device_info=self._device_info,
+                consumption_refresh_interval=timedelta(
+                    seconds=self._config.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL)
+                ),
+            )
             await self._device.refresh_data()
             current_hash = self._device_state_hash()
             if current_hash != self._last_device_state_hash:
