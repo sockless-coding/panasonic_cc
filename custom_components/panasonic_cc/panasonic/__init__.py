@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import Any
 
-from aio_panasonic_comfort_cloud import ApiClient, PanasonicDeviceInfo
+from aio_panasonic_comfort_cloud import ApiClient, PanasonicDevice, PanasonicDeviceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -29,6 +29,27 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _patch_missing_timestamp() -> None:
+    """Patch aio-panasonic-comfort-cloud to handle missing timestamp payloads."""
+    if getattr(PanasonicDevice.load, "_panasonic_cc_patched", False):
+        return
+
+    original_load = PanasonicDevice.load
+
+    def _panasonic_cc_safe_load(self: PanasonicDevice, json_data: Any) -> bool:
+        if isinstance(json_data, dict) and "timestamp" not in json_data:
+            import time
+
+            json_data = {**json_data, "timestamp": int(time.time())}
+        return original_load(self, json_data)
+
+    setattr(_panasonic_cc_safe_load, "_panasonic_cc_patched", True)
+    PanasonicDevice.load = _panasonic_cc_safe_load
+
+
+_patch_missing_timestamp()
 
 # Platforms that the Panasonic slice provides
 PLATFORMS = [
