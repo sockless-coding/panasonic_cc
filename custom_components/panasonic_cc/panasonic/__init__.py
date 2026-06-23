@@ -33,16 +33,19 @@ _LOGGER = logging.getLogger(__name__)
 
 def _patch_missing_timestamp() -> None:
     """Patch aio-panasonic-comfort-cloud to handle missing timestamp payloads."""
-    if getattr(PanasonicDevice.load, "__name__", "") == "_panasonic_cc_safe_load":
+    if getattr(PanasonicDevice.load, "_panasonic_cc_patched", False):
         return
 
     original_load = PanasonicDevice.load
 
     def _panasonic_cc_safe_load(self: PanasonicDevice, json_data: Any) -> bool:
         if isinstance(json_data, dict) and "timestamp" not in json_data:
-            json_data = {**json_data, "timestamp": 0}
+            import time
+
+            json_data = {**json_data, "timestamp": int(time.time())}
         return original_load(self, json_data)
 
+    setattr(_panasonic_cc_safe_load, "_panasonic_cc_patched", True)
     PanasonicDevice.load = _panasonic_cc_safe_load
 
 
