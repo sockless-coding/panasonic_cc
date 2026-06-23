@@ -13,9 +13,9 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/sockless-coding/panasonic_cc/issues",
   "requirements": [
-    "aio-panasonic-comfort-cloud==2026.6.1",
+    "aio-panasonic-comfort-cloud==2026.6.2",
     "aioaquarea==1.0.7"
   ],
   "quality_scale": "silver",
-  "version": "2026.6.6"
+  "version": "2026.6.7"
 }
