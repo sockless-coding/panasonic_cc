@@ -117,7 +117,7 @@ The initial setup form includes the following options:
 |--------|-------------|---------|
 | **Panasonic ID** | Your Panasonic Comfort Cloud account ID | — |
 | **Password** | Your Panasonic Comfort Cloud password | — |
-| **Enable daily energy sensors** | Create daily energy and current power sensors | Disabled |
+| **Enable daily energy sensors** | Create daily energy and current power sensors | Enabled |
 | **Enable Nanoe switch for all devices** | Force the Nanoe switch to appear even if the device doesn't report Nanoe support | Disabled |
 | **Use Panasonic preset names** | Use "Quiet" and "Powerful" instead of "Eco" and "Boost" preset names | Enabled |
 | **Device fetch interval** | How often to poll device data (5–300 seconds) | 120s |
@@ -131,7 +131,7 @@ After initial setup, you can modify the following options from the integration's
 | Option | Description | Default |
 |--------|-------------|---------|
 | **Force outside sensor** | Force the outside temperature sensor to appear even if no reading is available | Disabled |
-| **Enable daily energy sensors** | Create daily energy and current power sensors | Disabled |
+| **Enable daily energy sensors** | Create daily energy and current power sensors | Enabled |
 | **Enable Nanoe switch for all devices** | Force the Nanoe switch to appear on all devices | Disabled |
 | **Use Panasonic preset names** | Use "Quiet" and "Powerful" instead of "Eco" and "Boost" | Enabled |
 | **Device fetch interval** | How often to poll device data (5–300 seconds) | 120s |
@@ -180,7 +180,7 @@ data:
 - **No outside temperature** — Not all devices report outside temperature. Use the "Force outside sensor" option if you want the sensor entity to always appear.
 
 ### Energy Sensors
-- **Energy data not updating** — Ensure "Enable daily energy sensors" is checked in the integration options. Note that energy data resets daily.
+- **Energy data not updating** — Ensure "Enable daily energy sensors" is checked in the integration options. Energy sensors are on by default but can be disabled; disabling them helps accounts with many devices avoid Panasonic 429 rate limiting. Note that energy data resets daily.
 - **Current power seems inaccurate** — Current power is extrapolated from the daily energy reading and may not reflect instantaneous power accurately.
 
 ---
