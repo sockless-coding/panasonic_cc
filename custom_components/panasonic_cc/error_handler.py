@@ -121,6 +121,12 @@ KNOWN_ERROR_CODES = {
         message="The Panasonic server timed out waiting for a response from an upstream service.",
         suggestion="This is a temporary issue. It should resolve automatically.",
     ),
+    5300: FriendlyError(
+        category=ErrorCategory.SERVER_ERROR,
+        title="Service Under Maintenance",
+        message="The Panasonic service is temporarily unavailable due to scheduled maintenance.",
+        suggestion="This should resolve automatically once maintenance is complete.",
+    ),
 }
 
 # Regex patterns for error message matching (fallback when no code is found)
