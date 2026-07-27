@@ -33,6 +33,9 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - Fan mode selection
 - Preset modes (Quiet, Powerful, +8/15°C heat)
 
+> [!NOTE]
+> Quiet/Powerful presets and supported fan speeds (e.g. Auto on some models) depend on capability flags reported by the Comfort Cloud service. If a preset or fan mode is unavailable or rejected by the unit, enable debug logging for the integration — the offered modes and detected features are logged at setup. Full per-model fan-speed support is tracked upstream in aio-panasonic-comfort-cloud.
+
 ### Water Heater
 - **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off)
 
