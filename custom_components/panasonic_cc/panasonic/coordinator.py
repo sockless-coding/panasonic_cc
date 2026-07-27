@@ -1,6 +1,7 @@
 """Coordinators for Panasonic Comfort Cloud devices."""
 import asyncio
 import logging
+import random
 from datetime import timedelta
 
 from aiohttp import ClientResponseError
@@ -32,6 +33,9 @@ from ..error_handler import classify_error, FriendlyError, ErrorCategory
 MAX_CONSECUTIVE_FAILURES = 5
 BACKOFF_MULTIPLIER = 2
 MAX_UPDATE_INTERVAL = 600  # seconds
+MAX_CONCURRENT_API_CALLS = 3
+MIN_RATE_LIMIT_INTERVAL = 30
+BACKOFF_MULTIPLIER_RATE_LIMIT = 4
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +67,7 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         config: dict,
         api_client: ApiClient,
         device_info: PanasonicDeviceInfo,
+        api_semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         self._base_interval = config.get(
@@ -84,6 +89,7 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
         self._auth_failed = False
         self._last_error: FriendlyError | None = None
         self._last_command_error: FriendlyError | None = None
+        self._api_semaphore = api_semaphore
 
     @property
     def last_error(self) -> FriendlyError | None:
@@ -141,7 +147,8 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
     async def async_apply_changes(self, request_builder: ChangeRequestBuilder) -> None:
         """Apply changes to the device."""
         try:
-            await self._api_client.set_device_raw(self.device, request_builder.build())
+            async with self._api_semaphore:
+                await self._api_client.set_device_raw(self.device, request_builder.build())
             # Clear command error on success
             self._last_command_error = None
         except Exception as err:
@@ -193,7 +200,9 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
 
         try:
             if self._device is None:
-                self._device = await self._api_client.get_device(self._device_info)
+                async with self._api_semaphore:
+                    await asyncio.sleep(random.uniform(0.0, 0.5))
+                    self._device = await self._api_client.get_device(self._device_info)
                 _LOGGER.debug(
                     "%s Device features - Nanoe: %s, Eco Navi: %s, AI Eco: %s",
                     self._device_info.name,
@@ -204,7 +213,10 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                 self._update_id = 1
                 self._reset_backoff()
                 return self._update_id
-            if await self._api_client.try_update_device(self._device):
+            async with self._api_semaphore:
+                await asyncio.sleep(random.uniform(0.0, 0.5))
+                updated = await self._api_client.try_update_device(self._device)
+            if updated:
                 self._update_id += 1
                 self._reset_backoff()
                 return self._update_id
@@ -238,10 +250,15 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
     def _handle_failure(self, err: Exception | None = None) -> None:
         """Handle API failure with exponential backoff."""
         self._consecutive_failures += 1
+        multiplier = BACKOFF_MULTIPLIER
+        if err is not None and classify_error(err).category == ErrorCategory.RATE_LIMIT:
+            multiplier = BACKOFF_MULTIPLIER_RATE_LIMIT
         new_interval = min(
-            self._base_interval * (BACKOFF_MULTIPLIER ** self._consecutive_failures),
+            self._base_interval * (multiplier ** self._consecutive_failures),
             MAX_UPDATE_INTERVAL,
         )
+        if err is not None and classify_error(err).category == ErrorCategory.RATE_LIMIT:
+            new_interval = max(new_interval, MIN_RATE_LIMIT_INTERVAL)
         self.update_interval = timedelta(seconds=new_interval)
         if err is not None:
             self._last_error = classify_error(err)
@@ -273,6 +290,7 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
         config: dict,
         api_client: ApiClient,
         device_info: PanasonicDeviceInfo,
+        api_semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         self._base_interval = config.get(
@@ -291,6 +309,7 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
         self._consecutive_failures = 0
         self._auth_failed = False
         self._last_error: FriendlyError | None = None
+        self._api_semaphore = api_semaphore
 
     @property
     def last_error(self) -> FriendlyError | None:
@@ -341,11 +360,16 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
 
         try:
             if self._energy is None:
-                self._energy = await self._api_client.async_get_energy(self._device_info)
+                async with self._api_semaphore:
+                    await asyncio.sleep(random.uniform(0.0, 0.5))
+                    self._energy = await self._api_client.async_get_energy(self._device_info)
                 self._update_id = 1
                 self._reset_backoff()
                 return self._update_id
-            if await self._api_client.async_try_update_energy(self._energy):
+            async with self._api_semaphore:
+                await asyncio.sleep(random.uniform(0.0, 0.5))
+                updated = await self._api_client.async_try_update_energy(self._energy)
+            if updated:
                 self._update_id += 1
                 self._reset_backoff()
                 return self._update_id
@@ -379,10 +403,15 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
     def _handle_failure(self, err: Exception | None = None) -> None:
         """Handle API failure with exponential backoff."""
         self._consecutive_failures += 1
+        multiplier = BACKOFF_MULTIPLIER
+        if err is not None and classify_error(err).category == ErrorCategory.RATE_LIMIT:
+            multiplier = BACKOFF_MULTIPLIER_RATE_LIMIT
         new_interval = min(
-            self._base_interval * (BACKOFF_MULTIPLIER ** self._consecutive_failures),
+            self._base_interval * (multiplier ** self._consecutive_failures),
             MAX_UPDATE_INTERVAL,
         )
+        if err is not None and classify_error(err).category == ErrorCategory.RATE_LIMIT:
+            new_interval = max(new_interval, MIN_RATE_LIMIT_INTERVAL)
         self.update_interval = timedelta(seconds=new_interval)
         if err is not None:
             self._last_error = classify_error(err)

@@ -24,6 +24,7 @@ from ..const import (
 )
 from .const import DATA_COORDINATORS, ENERGY_COORDINATORS
 from .coordinator import (
+    MAX_CONCURRENT_API_CALLS,
     PanasonicDeviceCoordinator,
     PanasonicDeviceEnergyCoordinator,
 )
@@ -63,6 +64,9 @@ async def async_setup_panasonic(
     devices = api.get_devices()
     _LOGGER.info("Got %s Panasonic devices", len(devices))
 
+    api_semaphore = asyncio.Semaphore(MAX_CONCURRENT_API_CALLS)
+    hass.data[DOMAIN]["_api_semaphore"] = api_semaphore
+
     data_coordinators: list[PanasonicDeviceCoordinator] = []
     energy_coordinators: list[PanasonicDeviceEnergyCoordinator] = []
 
@@ -70,11 +74,11 @@ async def async_setup_panasonic(
     device_coordinators_uninitialized: list[tuple[PanasonicDeviceCoordinator, PanasonicDeviceInfo]] = []
     for device in devices:
         try:
-            device_coordinator = PanasonicDeviceCoordinator(hass, config, api, device)
+            device_coordinator = PanasonicDeviceCoordinator(hass, config, api, device, api_semaphore)
             device_coordinators_uninitialized.append((device_coordinator, device))
             if enable_daily_energy_sensor:
                 energy_coordinators.append(
-                    PanasonicDeviceEnergyCoordinator(hass, config, api, device)
+                    PanasonicDeviceEnergyCoordinator(hass, config, api, device, api_semaphore)
                 )
         except Exception as exc:
             _LOGGER.warning("Failed to create coordinator for device %s: %s", device.name, exc, exc_info=True)
