@@ -96,6 +96,11 @@
         }
       }
     },
+    "fan": {
+      "fan": {
+        "name": "Fan"
+      }
+    },
     "select": {
       "horizontal_swing":{
         "state": {

@@ -36,6 +36,9 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 ### Water Heater
 - **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off)
 
+### Fan
+- **Fan** — A dedicated fan entity for Panasonic indoor units, exposing fan speed as a percentage and as preset modes (mirroring the climate entity's fan_mode). Use it in dashboards or automations that cannot reach the climate entity's fan mode.
+
 ### Swing Control
 - Horizontal swing mode via Select entity
 - Vertical swing mode via Select entity
