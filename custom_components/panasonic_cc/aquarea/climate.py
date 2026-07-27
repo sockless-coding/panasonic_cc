@@ -301,4 +301,9 @@ async def async_setup_entry(
                     ),
                 )
             )
+    _LOGGER.debug(
+        "Aquarea climate: created %d climate entity(ies) across %d coordinator(s)",
+        len(entities),
+        len(aquarea_coordinators),
+    )
     async_add_entities(entities)

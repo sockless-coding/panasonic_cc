@@ -183,6 +183,9 @@ data:
 - **Energy data not updating** — Ensure "Enable daily energy sensors" is checked in the integration options. Note that energy data resets daily.
 - **Current power seems inaccurate** — Current power is extrapolated from the daily energy reading and may not reflect instantaneous power accurately.
 
+### Aquarea
+If no thermostat/climate entity appears for your Aquarea monoblock (e.g. WH-SDC0509 + WH-WDG), the device may report no zones to the integration. Enable debug logging — the number of detected zones is logged at startup. Zone availability depends on the upstream aioaquarea library.
+
 ---
 
 ## Dependencies
