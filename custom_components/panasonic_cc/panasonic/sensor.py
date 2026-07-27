@@ -44,6 +44,7 @@ INSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    suggested_unit_of_measurement=UnitOfTemperature.CELSIUS,
     get_state=lambda device: device.parameters.inside_temperature,
     is_available=lambda device: device.parameters.inside_temperature is not None,
 )
@@ -55,6 +56,7 @@ OUTSIDE_TEMPERATURE_DESCRIPTION = PanasonicSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    suggested_unit_of_measurement=UnitOfTemperature.CELSIUS,
     get_state=lambda device: device.parameters.outside_temperature,
     is_available=lambda device: device.parameters.outside_temperature is not None,
 )
@@ -186,6 +188,7 @@ def create_zone_temperature_description(zone: PanasonicDeviceZone):
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_unit_of_measurement=UnitOfTemperature.CELSIUS,
         get_state=lambda device: zone.temperature,
         is_available=lambda device: zone.has_temperature
     )

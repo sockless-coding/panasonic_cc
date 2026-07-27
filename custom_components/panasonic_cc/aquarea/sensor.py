@@ -43,6 +43,7 @@ AQUAREA_OUTSIDE_TEMPERATURE_DESCRIPTION = AquareaSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    suggested_unit_of_measurement=UnitOfTemperature.CELSIUS,
     get_state=lambda device: device.temperature_outdoor,
     is_available=lambda device: device.temperature_outdoor is not None,
 )
@@ -55,6 +56,7 @@ AQUAREA_TANK_TEMPERATURE_DESCRIPTION = AquareaSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    suggested_unit_of_measurement=UnitOfTemperature.CELSIUS,
     get_state=lambda device: device.tank.temperature if device.tank is not None else None,
     is_available=lambda device: device.tank is not None,
 )
