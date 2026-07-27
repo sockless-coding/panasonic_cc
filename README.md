@@ -178,6 +178,7 @@ data:
 - **Cached data** — If your device is offline, the integration will show cached data. Check the "Data Mode" diagnostic sensor to see if data is LIVE, CACHED, or OFFLINE.
 - **Stale readings** — Use the "Fetch latest data" button to manually refresh device data.
 - **No outside temperature** — Not all devices report outside temperature. Use the "Force outside sensor" option if you want the sensor entity to always appear.
+- **Temperature display unit** — Temperature entities report in Celsius natively and follow HA's unit system for display. To show a specific unit, set the entity's display unit in HA or change the HA unit system.
 
 ### Energy Sensors
 - **Energy data not updating** — Ensure "Enable daily energy sensors" is checked in the integration options. Note that energy data resets daily.
