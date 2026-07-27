@@ -65,6 +65,11 @@ async def async_setup_aquarea(
     aquarea_coordinators_uninitialized: list[tuple[AquareaDeviceCoordinator, AquareaDeviceInfo]] = []
 
     for aquarea_device in aquarea_devices:
+        _LOGGER.debug(
+            "Aquarea device discovered: id=%s name=%s",
+            getattr(aquarea_device, "id", None),
+            aquarea_device.name,
+        )
         try:
             aquarea_coordinator = AquareaDeviceCoordinator(
                 hass, config, aquarea_api, aquarea_device
@@ -89,6 +94,26 @@ async def async_setup_aquarea(
                 device_info.name,
                 exc,
                 exc_info=True,
+            )
+            return
+
+        device = coordinator.device
+        zones = device.zones
+        zone_summary = [
+            {"zone_id": zone_id, "name": zone.name} for zone_id, zone in zones.items()
+        ]
+        _LOGGER.debug(
+            "Aquarea device %s (model=%s, id=%s) reported %d zone(s): %s",
+            device.device_name,
+            device.model,
+            device.device_id,
+            len(zones),
+            zone_summary,
+        )
+        if not zones:
+            _LOGGER.info(
+                "Aquarea device %s reported no zones; no climate/thmostat entity will be created. Zone exposure may depend on the aioaquarea library.",
+                device.device_name,
             )
 
     await asyncio.gather(
