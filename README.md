@@ -182,6 +182,7 @@ data:
 ### Energy Sensors
 - **Energy data not updating** — Ensure "Enable daily energy sensors" is checked in the integration options. Note that energy data resets daily.
 - **Current power seems inaccurate** — Current power is extrapolated from the daily energy reading and may not reflect instantaneous power accurately.
+- **Random power spikes** — Current/cooling/heating extrapolated power are derived from daily energy readings and may spike on rare boundary cases; implausible readings are filtered in the integration, but a definitive fix for the calculation upstream is tracked in aio-panasonic-comfort-cloud.
 
 ---
 
