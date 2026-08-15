@@ -176,7 +176,7 @@ data:
 ## Troubleshooting
 
 ### Authentication Issues
-- **"Missing required parameter: code"** — You must use SMS-based 2FA. Other 2FA methods are not supported.
+- **Account has 2FA enabled** — The setup/reconfigure flow shows an extra "Verification code" step after your Panasonic ID and password. Enter the current one-time code from your authenticator app to continue.
 - **Authentication fails repeatedly** — Try resetting your MFA by logging in and out of the Panasonic Comfort Cloud app, then try again.
 - **Session expired** — The integration will notify you when authentication expires. Use the reconfigure option from the integration settings to re-authenticate.
 

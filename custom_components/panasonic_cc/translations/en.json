@@ -21,13 +21,21 @@
           "username": "Panasonic ID",
           "password": "Password"
         }
+      },
+      "otp": {
+        "title": "Two-factor authentication",
+        "description": "Your account requires a verification code. Enter the one-time code from your authenticator app.",
+        "data": {
+          "otp_code": "Verification code"
+        }
       }
     },
     "error":{
       "no_devices": "No devices found. Please check your the account and CFC app and try again.",
       "device_timeout": "Timeout connecting to the API.",
       "device_fail": "Unexpected error connecting to the API.",
-      "invalid_user_password": "Invalid Panasonic ID or password."
+      "invalid_user_password": "Invalid Panasonic ID or password.",
+      "invalid_otp": "Invalid verification code. Please try again."
     },
     "abort": {
       "device_timeout": "Timeout connecting to the device.",
