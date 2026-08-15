@@ -14,7 +14,7 @@
           "energy_fetch_interval": "Energy fetch interval (seconds)"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure Panasonic Comfort Cloud",
         "description": "Enter your Panasonic ID and password to re-authenticate",
         "data": {

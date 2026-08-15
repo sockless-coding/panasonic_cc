@@ -14,7 +14,7 @@
           "energy_fetch_interval": "Intervalo de obtenção de energia (segundos)"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigurar Panasonic Comfort Cloud",
         "description": "Introduza o seu ID da Panasonic e a sua palavra-passe para reautenticar",
         "data": {
