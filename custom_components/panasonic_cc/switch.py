@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .panasonic.switch import async_setup_entry as panasonic_setup
 from .aquarea.switch import async_setup_entry as aquarea_setup
+from .hws.switch import async_setup_entry as hws_setup
 
 
 async def async_setup_entry(
@@ -15,6 +16,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: Any,
 ) -> None:
-    """Set up the switch entities for both Panasonic and Aquarea."""
+    """Set up the switch entities for Panasonic, Aquarea and HWS."""
     await panasonic_setup(hass, entry, async_add_entities)
     await aquarea_setup(hass, entry, async_add_entities)
+    await hws_setup(hass, entry, async_add_entities)

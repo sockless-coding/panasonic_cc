@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import aioaquarea
+from aio_panasonic_comfort_cloud.constants import AquareaDeviceModeStatus
 
 from homeassistant.core import HomeAssistant, cached_property
 from homeassistant.components.button import ButtonEntity
@@ -39,10 +39,10 @@ class AquareaDefrostButton(ButtonEntity):
         """Request to start the defrost process."""
         _LOGGER.debug(
             "Requesting defrost for device %s",
-            self._coordinator.device.device_id,
+            self._coordinator.device_id,
         )
-        if self._coordinator.device.device_mode_status is not aioaquarea.DeviceModeStatus.DEFROST:
-            await self._coordinator.device.request_defrost()
+        if self._coordinator.device.parameters.device_mode_status is not AquareaDeviceModeStatus.Defrost:
+            await self._coordinator.api_client.request_aquarea_defrost(self._coordinator.info)
 
 
 async def async_setup_entry(

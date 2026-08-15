@@ -13,6 +13,7 @@ from .const import (
     DATA_COORDINATORS,
     DOMAIN,
     ENERGY_COORDINATORS,
+    HWS_COORDINATORS,
 )
 
 TO_REDACT = {
@@ -74,14 +75,30 @@ async def async_get_config_entry_diagnostics(
     aquarea_devices = []
     for coordinator in aquarea_coordinators:
         if coordinator._device is not None:
-            aquarea_device = coordinator._device
+            aquarea_params = coordinator._device.parameters
             aquarea_devices.append(
                 {
                     "id": coordinator.device_id,
-                    "name": aquarea_device.device_name,
-                    "model": aquarea_device.model or "",
-                    "firmware_version": aquarea_device.firmware_version,
-                    "manufacturer": aquarea_device.manufacturer,
+                    "name": coordinator._device_info.name,
+                    "model": coordinator._device_info.model,
+                    "operation_mode": aquarea_params.operation_mode.name if aquarea_params.operation_mode else None,
+                    "has_tank": aquarea_params.has_tank,
+                    "zone_count": len(aquarea_params.zones),
+                }
+            )
+
+    hws_coordinators = hass.data[DOMAIN].get(HWS_COORDINATORS, [])
+    hws_devices = []
+    for coordinator in hws_coordinators:
+        if coordinator._device is not None:
+            hws_params = coordinator._device.parameters
+            hws_devices.append(
+                {
+                    "id": coordinator.device_id,
+                    "name": coordinator._device_info.name,
+                    "model": coordinator._device_info.model,
+                    "hpu_operation_status": hws_params.hpu_operation_status.name,
+                    "tank_temperature": hws_params.tank_temperature,
                 }
             )
 
@@ -91,6 +108,7 @@ async def async_get_config_entry_diagnostics(
             "devices": devices,
             "energy_data": energy_data,
             "aquarea_devices": aquarea_devices,
+            "hws_devices": hws_devices,
         },
         TO_REDACT,
     )

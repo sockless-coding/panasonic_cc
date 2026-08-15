@@ -14,7 +14,7 @@ from homeassistant.const import UnitOfTemperature, PRECISION_WHOLE, ATTR_TEMPERA
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
-from aioaquarea.data import DeviceAction, OperationStatus
+from aio_panasonic_comfort_cloud.constants import AquareaOperationStatus
 
 from ..const import DOMAIN
 from .base import AquareaDataEntity
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     entities = []
     aquarea_coordinators: list[AquareaDeviceCoordinator] = hass.data[DOMAIN][AQUAREA_COORDINATORS]
     for aquarea_coordinator in aquarea_coordinators:
-        if aquarea_coordinator.device.tank is None:
+        if not aquarea_coordinator.device.parameters.has_tank:
             continue
         entities.append(AquareaWaterHeater(aquarea_coordinator, AQUAREA_WATER_TANK_DESCRIPTION))
     async_add_entities(entities)
@@ -69,18 +69,20 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
 
     def _async_update_attrs(self) -> None:
         """Update attributes."""
-        device = self.coordinator.device
+        tank = self.coordinator.device.parameters.tank
 
-        if device.tank is None:
+        if tank is None:
             self._attr_available = False
             return
 
-        self._attr_min_temp = device.tank.heat_min
-        self._attr_max_temp = device.tank.heat_max
-        self._attr_target_temperature = device.tank.target_temperature
-        self._attr_current_temperature = device.tank.temperature
+        if tank.heat_min is not None:
+            self._attr_min_temp = tank.heat_min
+        if tank.heat_max is not None:
+            self._attr_max_temp = tank.heat_max
+        self._attr_target_temperature = tank.heat_set
+        self._attr_current_temperature = tank.temperature
 
-        if device.tank.operation_status == OperationStatus.OFF:
+        if tank.operation_status == AquareaOperationStatus.Off:
             self._attr_current_operation = STATE_OFF
         else:
             self._attr_current_operation = STATE_HEAT_PUMP
@@ -90,15 +92,21 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
         temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        if self.coordinator.device.tank is None:
+        if self.coordinator.device.parameters.tank is None:
             return
-        await self.coordinator.device.tank.set_target_temperature(int(temperature))
+        await self.coordinator.api_client.set_aquarea_tank_temperature(
+            self.coordinator.info, int(temperature)
+        )
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set operation mode."""
-        if self.coordinator.device.tank is None:
+        if self.coordinator.device.parameters.tank is None:
             return
         if operation_mode == STATE_HEAT_PUMP:
-            await self.coordinator.device.tank.turn_on()
+            await self.coordinator.api_client.set_aquarea_tank_operation_status(
+                self.coordinator.info, AquareaOperationStatus.On
+            )
         elif operation_mode == STATE_OFF:
-            await self.coordinator.device.tank.turn_off()
+            await self.coordinator.api_client.set_aquarea_tank_operation_status(
+                self.coordinator.info, AquareaOperationStatus.Off
+            )

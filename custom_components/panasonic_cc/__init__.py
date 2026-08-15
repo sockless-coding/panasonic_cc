@@ -142,9 +142,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .panasonic import async_setup_panasonic
     data_coordinators, energy_coordinators = await async_setup_panasonic(hass, entry)
 
-    # Set up Aquarea slice (if there are unknown devices)
+    # Set up Aquarea slice
     from .aquarea import async_setup_aquarea
     aquarea_coordinators = await async_setup_aquarea(hass, entry, api)
+
+    # Set up HWS slice
+    from .hws import async_setup_hws
+    hws_coordinators = await async_setup_hws(hass, entry, api)
 
     integration = await async_get_integration(hass, DOMAIN)
     _LOGGER.info(STARTUP, integration.version)
