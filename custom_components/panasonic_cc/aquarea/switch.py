@@ -5,8 +5,6 @@ import asyncio
 import logging
 from typing import Any
 
-import aioaquarea
-
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.switch import (
@@ -14,6 +12,8 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+
+from aio_panasonic_comfort_cloud.constants import AquareaForceDHW, AquareaForceHeater, AquareaHolidayTimer
 
 from ..const import DOMAIN
 from .base import AquareaDataEntity
@@ -46,10 +46,10 @@ class AquareaBaseSwitch(AquareaDataEntity, SwitchEntity):
         self._optimistic_is_on = None
         try:
             await self.coordinator.async_request_refresh()
-        except aioaquarea.RequestFailedError:
+        except Exception:
             _LOGGER.exception(
                 "Delayed refresh failed for device %s",
-                self.coordinator.device.device_id,
+                self.coordinator.device_id,
             )
 
 
@@ -67,20 +67,20 @@ class AquareaForceDHWSwitch(AquareaBaseSwitch):
         return "mdi:water-boiler" if self.is_on else "mdi:water-boiler-off"
 
     def _get_is_on(self) -> bool:
-        return self.coordinator.device.force_dhw is aioaquarea.ForceDHW.ON
+        return self.coordinator.device.parameters.force_dhw is AquareaForceDHW.On
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Force DHW."""
         self._optimistic_is_on = True
         self.async_write_ha_state()
-        await self.coordinator.device.set_force_dhw(aioaquarea.ForceDHW.ON)
+        await self.coordinator.api_client.set_aquarea_force_dhw(self.coordinator.info, AquareaForceDHW.On)
         self.hass.async_create_task(self._schedule_refresh())
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off Force DHW."""
         self._optimistic_is_on = False
         self.async_write_ha_state()
-        await self.coordinator.device.set_force_dhw(aioaquarea.ForceDHW.OFF)
+        await self.coordinator.api_client.set_aquarea_force_dhw(self.coordinator.info, AquareaForceDHW.Off)
         self.hass.async_create_task(self._schedule_refresh())
 
     def _async_update_attrs(self) -> None:
@@ -101,20 +101,20 @@ class AquareaForceHeaterSwitch(AquareaBaseSwitch):
         return "mdi:hvac" if self.is_on else "mdi:hvac-off"
 
     def _get_is_on(self) -> bool:
-        return self.coordinator.device.force_heater is aioaquarea.ForceHeater.ON
+        return self.coordinator.device.parameters.force_heater is AquareaForceHeater.On
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Force Heater."""
         self._optimistic_is_on = True
         self.async_write_ha_state()
-        await self.coordinator.device.set_force_heater(aioaquarea.ForceHeater.ON)
+        await self.coordinator.api_client.set_aquarea_force_heater(self.coordinator.info, AquareaForceHeater.On)
         self.hass.async_create_task(self._schedule_refresh())
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off Force Heater."""
         self._optimistic_is_on = False
         self.async_write_ha_state()
-        await self.coordinator.device.set_force_heater(aioaquarea.ForceHeater.OFF)
+        await self.coordinator.api_client.set_aquarea_force_heater(self.coordinator.info, AquareaForceHeater.Off)
         self.hass.async_create_task(self._schedule_refresh())
 
     def _async_update_attrs(self) -> None:
@@ -135,20 +135,20 @@ class AquareaHolidayTimerSwitch(AquareaBaseSwitch):
         return "mdi:timer-check" if self.is_on else "mdi:timer-off"
 
     def _get_is_on(self) -> bool:
-        return self.coordinator.device.holiday_timer is aioaquarea.HolidayTimer.ON
+        return self.coordinator.device.parameters.holiday_timer is AquareaHolidayTimer.On
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Holiday Timer."""
         self._optimistic_is_on = True
         self.async_write_ha_state()
-        await self.coordinator.device.set_holiday_timer(aioaquarea.HolidayTimer.ON)
+        await self.coordinator.api_client.set_aquarea_holiday_timer(self.coordinator.info, AquareaHolidayTimer.On)
         self.hass.async_create_task(self._schedule_refresh())
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off Holiday Timer."""
         self._optimistic_is_on = False
         self.async_write_ha_state()
-        await self.coordinator.device.set_holiday_timer(aioaquarea.HolidayTimer.OFF)
+        await self.coordinator.api_client.set_aquarea_holiday_timer(self.coordinator.info, AquareaHolidayTimer.Off)
         self.hass.async_create_task(self._schedule_refresh())
 
     def _async_update_attrs(self) -> None:
@@ -167,7 +167,7 @@ async def async_setup_entry(
     ]
 
     for coordinator in aquarea_coordinators:
-        if coordinator.device.has_tank:
+        if coordinator.device.parameters.has_tank:
             devices.append(AquareaForceDHWSwitch(coordinator))
         devices.append(AquareaForceHeaterSwitch(coordinator))
         devices.append(AquareaHolidayTimerSwitch(coordinator))

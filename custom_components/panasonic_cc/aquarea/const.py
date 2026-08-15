@@ -1,6 +1,7 @@
 """Constants for Aquarea devices."""
 
 AQUAREA_COORDINATORS = "aquarea_coordinators"
+AQUAREA_ENERGY_COORDINATORS = "aquarea_energy_coordinators"
 
 AQUAREA_SWITCH_DELAY = 10.0
 AQUAREA_SELECT_DELAY = 10.0

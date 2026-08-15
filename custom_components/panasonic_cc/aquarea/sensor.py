@@ -5,7 +5,9 @@ from datetime import datetime
 import logging
 from typing import Any
 
-import aioaquarea
+from aio_panasonic_comfort_cloud import AquareaDevice
+from aio_panasonic_comfort_cloud.constants import AquareaDeviceDirection, AquareaDeviceModeStatus, AquareaOperationStatus, AquareaPumpDuty
+from aio_panasonic_comfort_cloud.models.aquarea import AquareaConsumption
 
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature, EntityCategory
 from homeassistant.components.sensor import (
@@ -19,12 +21,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from aioaquarea import Device as AquareaDevice
-
 from ..const import DOMAIN
-from .base import AquareaDataEntity
-from .coordinator import AquareaDeviceCoordinator
-from .const import AQUAREA_COORDINATORS
+from .base import AquareaDataEntity, AquareaEnergyEntity
+from .coordinator import AquareaConsumptionCoordinator, AquareaDeviceCoordinator
+from .const import AQUAREA_COORDINATORS, AQUAREA_ENERGY_COORDINATORS
 from ..error_handler import ErrorCategory
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +43,8 @@ AQUAREA_OUTSIDE_TEMPERATURE_DESCRIPTION = AquareaSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    get_state=lambda device: device.temperature_outdoor,
-    is_available=lambda device: device.temperature_outdoor is not None,
+    get_state=lambda device: device.parameters.temperature_outdoor,
+    is_available=lambda device: device.parameters.temperature_outdoor is not None,
 )
 
 AQUAREA_TANK_TEMPERATURE_DESCRIPTION = AquareaSensorEntityDescription(
@@ -55,8 +55,8 @@ AQUAREA_TANK_TEMPERATURE_DESCRIPTION = AquareaSensorEntityDescription(
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    get_state=lambda device: device.tank.temperature if device.tank is not None else None,
-    is_available=lambda device: device.tank is not None,
+    get_state=lambda device: device.parameters.tank.temperature if device.parameters.tank is not None else None,
+    is_available=lambda device: device.parameters.tank is not None,
 )
 
 AQUAREA_DIRECTION_DESCRIPTION = AquareaSensorEntityDescription(
@@ -64,7 +64,7 @@ AQUAREA_DIRECTION_DESCRIPTION = AquareaSensorEntityDescription(
     translation_key="direction",
     name="Direction",
     icon="mdi:compass",
-    get_state=lambda device: device.current_direction.name,
+    get_state=lambda device: device.parameters.direction.name,
     is_available=lambda device: True,
 )
 
@@ -73,112 +73,100 @@ AQUAREA_PUMP_STATUS_DESCRIPTION = AquareaSensorEntityDescription(
     translation_key="pump_status",
     name="Pump Status",
     icon="mdi:pump",
-    get_state=lambda device: "On" if device.pump_duty == 1 else "Off",
+    get_state=lambda device: "On" if device.parameters.pump_duty == AquareaPumpDuty.On else "Off",
     is_available=lambda device: True,
 )
 
 # Connection status sensor options
 AQUAREA_CONNECTION_STATUS_OPTIONS = ["connected", "degraded", "disconnected", "authentication_error"]
 
-# Energy consumption sensor descriptions for Aquarea
+# Energy consumption sensor descriptions for Aquarea, backed by AquareaConsumptionCoordinator
 @dataclass(frozen=True, kw_only=True)
 class AquareaEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Aquarea energy sensor entity."""
-    consumption_type: aioaquarea.ConsumptionType
+    get_state: Callable[[AquareaConsumption], Any]
     exists_fn: Callable[[AquareaDeviceCoordinator], bool] = lambda _: True
 
 
-AQUAREA_ACCUMULATED_ENERGY_SENSORS = [
+AQUAREA_ENERGY_SENSORS = [
     AquareaEnergySensorEntityDescription(
-        key="heating_accumulated_energy_consumption",
-        translation_key="heating_accumulated_energy_consumption",
-        name="Heating Accumulated Consumption",
+        key="heating_energy_consumption_today",
+        translation_key="heating_energy_consumption_today",
+        name="Heating Consumption Today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        consumption_type=aioaquarea.ConsumptionType.HEAT,
+        get_state=lambda entry: entry.heat_consumption,
     ),
     AquareaEnergySensorEntityDescription(
-        key="cooling_accumulated_energy_consumption",
-        translation_key="cooling_accumulated_energy_consumption",
-        name="Cooling Accumulated Consumption",
+        key="cooling_energy_consumption_today",
+        translation_key="cooling_energy_consumption_today",
+        name="Cooling Consumption Today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        consumption_type=aioaquarea.ConsumptionType.COOL,
-        exists_fn=lambda coordinator: any(zone.cool_mode for zone in coordinator.device.zones.values()),
+        get_state=lambda entry: entry.cool_consumption,
+        exists_fn=lambda coordinator: any(zone.supports_cooling for zone in coordinator.device.parameters.zones),
     ),
     AquareaEnergySensorEntityDescription(
-        key="tank_accumulated_energy_consumption",
-        translation_key="tank_accumulated_energy_consumption",
-        name="Tank Accumulated Consumption",
+        key="tank_energy_consumption_today",
+        translation_key="tank_energy_consumption_today",
+        name="Tank Consumption Today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        consumption_type=aioaquarea.ConsumptionType.WATER_TANK,
-        exists_fn=lambda coordinator: coordinator.device.has_tank,
+        get_state=lambda entry: entry.tank_consumption,
+        exists_fn=lambda coordinator: coordinator.device.parameters.has_tank,
     ),
     AquareaEnergySensorEntityDescription(
-        key="accumulated_energy_consumption",
-        translation_key="accumulated_energy_consumption",
-        name="Accumulated Consumption",
+        key="energy_consumption_today",
+        translation_key="energy_consumption_today",
+        name="Consumption Today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        consumption_type=aioaquarea.ConsumptionType.TOTAL,
+        get_state=lambda entry: entry.total_consumption,
     ),
 ]
 
-AQUAREA_ENERGY_SENSORS = [
+# Cost sensors — a bonus the old aioaquarea-based sensors never had. Kept
+# diagnostic/disabled by default so they don't clutter the default entity list.
+AQUAREA_COST_SENSORS = [
     AquareaEnergySensorEntityDescription(
-        key="heating_energy_consumption",
-        translation_key="heating_energy_consumption",
-        name="Heating Consumption",
-        device_class=SensorDeviceClass.ENERGY,
+        key="heating_cost_today",
+        translation_key="heating_cost_today",
+        name="Heating Cost Today",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        consumption_type=aioaquarea.ConsumptionType.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        get_state=lambda entry: entry.heat_cost,
     ),
     AquareaEnergySensorEntityDescription(
-        key="tank_energy_consumption",
-        translation_key="tank_energy_consumption",
-        name="Tank Consumption",
-        device_class=SensorDeviceClass.ENERGY,
+        key="cooling_cost_today",
+        translation_key="cooling_cost_today",
+        name="Cooling Cost Today",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        consumption_type=aioaquarea.ConsumptionType.WATER_TANK,
-        exists_fn=lambda coordinator: coordinator.device.has_tank,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        get_state=lambda entry: entry.cool_cost,
+        exists_fn=lambda coordinator: any(zone.supports_cooling for zone in coordinator.device.parameters.zones),
     ),
     AquareaEnergySensorEntityDescription(
-        key="cooling_energy_consumption",
-        translation_key="cooling_energy_consumption",
-        name="Cooling Consumption",
-        device_class=SensorDeviceClass.ENERGY,
+        key="tank_cost_today",
+        translation_key="tank_cost_today",
+        name="Tank Cost Today",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        consumption_type=aioaquarea.ConsumptionType.COOL,
-        exists_fn=lambda coordinator: any(zone.cool_mode for zone in coordinator.device.zones.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-    ),
-    AquareaEnergySensorEntityDescription(
-        key="energy_consumption",
-        translation_key="energy_consumption",
-        name="Consumption",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        consumption_type=aioaquarea.ConsumptionType.TOTAL,
-        entity_registry_enabled_default=False,
+        get_state=lambda entry: entry.tank_cost,
+        exists_fn=lambda coordinator: coordinator.device.parameters.has_tank,
     ),
 ]
 
@@ -198,7 +186,7 @@ AQUAREA_DAILY_COUNTERS = [
         device_class=SensorDeviceClass.ENUM,
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
-        detector=lambda device: device.current_direction == aioaquarea.DeviceDirection.WATER,
+        detector=lambda device: device.parameters.direction == AquareaDeviceDirection.Water,
     ),
     AquareaDailyCounterEntityDescription(
         key="zone_cycles_today",
@@ -209,8 +197,8 @@ AQUAREA_DAILY_COUNTERS = [
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
         detector=lambda device: (
-            device.current_direction == aioaquarea.DeviceDirection.PUMP
-            and any(zone.operation_status == aioaquarea.OperationStatus.ON for zone in device.zones.values())
+            device.parameters.direction == AquareaDeviceDirection.Pump
+            and any(zone.operation_status == AquareaOperationStatus.On for zone in device.parameters.zones)
         ),
     ),
     AquareaDailyCounterEntityDescription(
@@ -221,7 +209,7 @@ AQUAREA_DAILY_COUNTERS = [
         device_class=SensorDeviceClass.ENUM,
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
-        detector=lambda device: device.device_mode_status is aioaquarea.DeviceModeStatus.DEFROST,
+        detector=lambda device: device.parameters.device_mode_status is AquareaDeviceModeStatus.Defrost,
     ),
 ]
 
@@ -229,26 +217,31 @@ AQUAREA_DAILY_COUNTERS = [
 async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     aquarea_coordinators: list[AquareaDeviceCoordinator] = hass.data[DOMAIN][AQUAREA_COORDINATORS]
+    energy_coordinators: list[AquareaConsumptionCoordinator] = hass.data[DOMAIN].get(AQUAREA_ENERGY_COORDINATORS, [])
 
     for coordinator in aquarea_coordinators:
         entities.append(AquareaSensorEntity(coordinator, AQUAREA_OUTSIDE_TEMPERATURE_DESCRIPTION))
         entities.append(AquareaPumpDirectionSensor(coordinator))
         entities.append(AquareaPumpStatusSensor(coordinator))
-        if coordinator.device.has_tank:
+        if coordinator.device.parameters.has_tank:
             entities.append(AquareaSensorEntity(coordinator, AQUAREA_TANK_TEMPERATURE_DESCRIPTION))
         # Daily edge counters
         for desc in AQUAREA_DAILY_COUNTERS:
             entities.append(AquareaDailyCounterSensor(coordinator, desc))
-        # Accumulated energy sensors (month-to-date)
-        for desc in AQUAREA_ACCUMULATED_ENERGY_SENSORS:
-            if desc.exists_fn(coordinator):
-                entities.append(AquareaEnergyAccumulatedConsumptionSensor(coordinator, desc))
-        # Today's energy sensors (disabled by default)
-        for desc in AQUAREA_ENERGY_SENSORS:
-            if desc.exists_fn(coordinator):
-                entities.append(AquareaEnergyConsumptionSensor(coordinator, desc))
         # Connection status sensor
         entities.append(AquareaConnectionStatusSensor(coordinator))
+
+    aquarea_by_id = {coordinator.device_id: coordinator for coordinator in aquarea_coordinators}
+    for energy_coordinator in energy_coordinators:
+        device_coordinator = aquarea_by_id.get(energy_coordinator.device_id)
+        if device_coordinator is None:
+            continue
+        for desc in AQUAREA_ENERGY_SENSORS:
+            if desc.exists_fn(device_coordinator):
+                entities.append(AquareaEnergySensorEntity(energy_coordinator, desc))
+        for desc in AQUAREA_COST_SENSORS:
+            if desc.exists_fn(device_coordinator):
+                entities.append(AquareaEnergySensorEntity(energy_coordinator, desc))
 
     async_add_entities(entities)
 
@@ -288,12 +281,12 @@ class AquareaPumpDirectionSensor(AquareaDataEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.device.current_direction.name
+        self._attr_native_value = self.coordinator.device.parameters.direction.name
         super()._handle_coordinator_update()
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_native_value = self.coordinator.device.current_direction.name
+        self._attr_native_value = self.coordinator.device.parameters.direction.name
 
 
 class AquareaPumpStatusSensor(AquareaDataEntity, SensorEntity):
@@ -308,12 +301,12 @@ class AquareaPumpStatusSensor(AquareaDataEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = "On" if self.coordinator.device.pump_duty == 1 else "Off"
+        self._attr_native_value = "On" if self.coordinator.device.parameters.pump_duty == AquareaPumpDuty.On else "Off"
         super()._handle_coordinator_update()
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_native_value = "On" if self.coordinator.device.pump_duty == 1 else "Off"
+        self._attr_native_value = "On" if self.coordinator.device.parameters.pump_duty == AquareaPumpDuty.On else "Off"
 
 
 class AquareaDailyCounterSensor(AquareaDataEntity, SensorEntity, RestoreEntity):
@@ -369,24 +362,25 @@ class AquareaDailyCounterSensor(AquareaDataEntity, SensorEntity, RestoreEntity):
         self._attr_native_value = self._count
 
 
-class AquareaEnergyAccumulatedConsumptionSensor(AquareaDataEntity, SensorEntity, RestoreEntity):
-    """Sensor for accumulated (month-to-date) energy consumption from the Aquarea device."""
+class AquareaEnergySensorEntity(AquareaEnergyEntity, SensorEntity, RestoreEntity):
+    """Sensor for today's energy consumption/cost from the Aquarea consumption endpoint."""
 
-    entity_description: AquareaEnergySensorEntityDescription
+    entity_description: AquareaEnergySensorEntityDescription  # type: ignore[reportIncompatibleVariableOverride]
 
     def __init__(
         self,
-        coordinator: AquareaDeviceCoordinator,
+        coordinator: AquareaConsumptionCoordinator,
         description: AquareaEnergySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.key)
-        self.entity_description = description
-        self._attr_translation_key = description.key
+        self.entity_description = description  # type: ignore[reportIncompatibleVariableOverride]
         self._attr_device_class = description.device_class
         self._attr_state_class = description.state_class
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         self._attr_suggested_display_precision = description.suggested_display_precision
+        self._attr_entity_category = description.entity_category
+        self._attr_entity_registry_enabled_default = description.entity_registry_enabled_default
+        super().__init__(coordinator, description.key)
 
     async def async_added_to_hass(self) -> None:
         """Restore value from previous session."""
@@ -402,66 +396,12 @@ class AquareaEnergyAccumulatedConsumptionSensor(AquareaDataEntity, SensorEntity,
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        device = self.coordinator.device
-        now = dt_util.now()
-        try:
-            consumption = device.get_or_schedule_consumption(
-                now, self.entity_description.consumption_type
-            )
-            if consumption is not None:
-                self._attr_native_value = float(consumption)
-        except aioaquarea.DataNotAvailableError:
-            pass  # Keep last known value
-        except Exception:
-            pass  # Keep last known value
-
-
-class AquareaEnergyConsumptionSensor(AquareaDataEntity, SensorEntity, RestoreEntity):
-    """Sensor for today's energy consumption from the Aquarea device."""
-
-    entity_description: AquareaEnergySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: AquareaDeviceCoordinator,
-        description: AquareaEnergySensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, description.key)
-        self.entity_description = description
-        self._attr_translation_key = description.key
-        self._attr_device_class = description.device_class
-        self._attr_state_class = description.state_class
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._attr_suggested_display_precision = description.suggested_display_precision
-        self._attr_entity_registry_enabled_default = False
-
-    async def async_added_to_hass(self) -> None:
-        """Restore value from previous session."""
-        restored = await self.async_get_last_state()
-        if restored is not None and restored.state not in (None, "unknown", "unavailable"):
-            try:
-                self._attr_native_value = float(restored.state)
-            except ValueError:
-                self._attr_native_value = 0
-        else:
-            self._attr_native_value = 0
-        await super().async_added_to_hass()
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the sensor."""
-        device = self.coordinator.device
-        now = dt_util.now()
-        try:
-            consumption = device.get_or_schedule_consumption(
-                now, self.entity_description.consumption_type
-            )
-            if consumption is not None:
-                self._attr_native_value = float(consumption)
-        except aioaquarea.DataNotAvailableError:
-            pass  # Keep last known value
-        except Exception:
-            pass  # Keep last known value
+        consumption = self.coordinator.consumption
+        if consumption is None:
+            return
+        value = self.entity_description.get_state(consumption)
+        if value is not None:
+            self._attr_native_value = value
 
 
 class AquareaConnectionStatusSensor(AquareaDataEntity, SensorEntity):

@@ -5,7 +5,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
 [![Integration Usage](https://img.shields.io/badge/dynamic/json?color=41BDF5&style=for-the-badge&logo=home-assistant&label=usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.panasonic_cc.total)](https://analytics.home-assistant.io/)
 
-This is a custom integration to control Panasonic Comfort Cloud devices in [Home Assistant](https://home-assistant.io). It supports both Panasonic air conditioners/heat pumps and Panasonic Aquarea heat pump systems.
+This is a custom integration to control Panasonic Comfort Cloud devices in [Home Assistant](https://home-assistant.io). It supports Panasonic air conditioners/heat pumps, Panasonic Aquarea air-to-water heat pump systems, and standalone HWS heat pump hot water tanks.
 
 > [!IMPORTANT]
 > Before installing this integration, please ensure the following steps have been completed in the Panasonic Comfort Cloud App:
@@ -35,6 +35,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 
 ### Water Heater
 - **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off)
+- **HWS Hot Water Tank** — Water heater entity for standalone HWS heat pump hot water tanks (e.g. HE-UM40CR), target temperature control, operation modes (Heat Pump, Off)
 
 ### Swing Control
 - Horizontal swing mode via Select entity
@@ -50,6 +51,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Force DHW** — Force domestic hot water mode (Aquarea, where available)
 - **Force Heater** — Force heater mode (Aquarea)
 - **Holiday Timer** — Enable/disable holiday timer (Aquarea)
+- **Boost Mode** — Toggle boost mode (HWS)
 
 ### Sensors
 - **Inside Temperature** — Indoor temperature reading
@@ -66,10 +68,14 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Cached Data Age** — Timestamp of cached data when device is offline (diagnostic)
 - **Data Mode** — Current data mode: LIVE, CACHED, or OFFLINE (diagnostic)
 - **Outside Temperature** — Outdoor temperature reading (Aquarea)
-- **Tank Temperature** — Hot water tank temperature (Aquarea, where available)
+- **Tank Temperature** — Hot water tank temperature (Aquarea and HWS, where available)
 - **Direction** — Current operating direction (Aquarea)
 - **Pump Status** — On/Off pump status (Aquarea)
-- **Accumulated Energy** — Heating, cooling, tank, and total accumulated energy consumption in kWh (Aquarea)
+- **Consumption Today** — Heating, cooling, tank, and total energy consumption for today, in kWh (Aquarea, optional)
+- **Cost Today** — Heating, cooling, and tank cost for today (Aquarea, optional, disabled by default)
+- **DHW/Zone/Defrost Cycles Today** — Daily cycle counters (Aquarea, diagnostic)
+- **Heat Pump Status** — On/Off status of the heat pump unit (HWS, diagnostic)
+- **Operation Mode (raw)** — Raw, unconfirmed operation mode value (HWS, diagnostic, disabled by default)
 
 ### Zone Controls
 - **Zone Damper Position** — Slider control for zone damper (0–100%, in steps of 10)
@@ -80,7 +86,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Powerful Time** — Select powerful mode duration: on-30m, on-60m, on-90m, or off (Aquarea)
 
 ### Binary Sensors
-- **Error Status** — Indicates if the Aquarea device is in an error state, with error code and message attributes (Aquarea)
+- **Error Status** — Indicates if the Aquarea device is in an error state, with a raw fault status attribute (Aquarea)
 - **Defrost** — Indicates if the Aquarea device is in defrost mode (Aquarea)
 
 ### Buttons
@@ -187,10 +193,9 @@ data:
 
 ## Dependencies
 
-This integration uses the following Python packages:
+This integration uses the following Python package:
 
-- [`aio-panasonic-comfort-cloud`](https://github.com/sockless-coding/aio-panasonic-comfort-cloud) — For Panasonic air conditioners and heat pumps
-- [`aioaquarea`](https://github.com/cjaliaga/aioaquarea) — For Panasonic Aquarea heat pump systems
+- [`aio-panasonic-comfort-cloud`](https://github.com/sockless-coding/aio-panasonic-comfort-cloud) — For Panasonic air conditioners/heat pumps, Aquarea air-to-water heat pumps, and standalone HWS hot water tanks
 
 ---
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-import aioaquarea
+from aio_panasonic_comfort_cloud.constants import AquareaDeviceModeStatus
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -69,16 +69,14 @@ class AquareaStatusBinarySensor(AquareaDataEntity, BinarySensorEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
-        self._attr_is_on = self.coordinator.device.is_on_error
+        self._attr_is_on = self.coordinator.device.parameters.is_on_error
 
     @property
     def extra_state_attributes(self) -> dict:
         """Return extra state attributes."""
-        if self.coordinator.device.current_error is not None:
-            return {
-                "error_code": self.coordinator.device.current_error.error_code,
-                "error_message": self.coordinator.device.current_error.error_message,
-            }
+        fault_status = self.coordinator.device.parameters.fault_status
+        if fault_status:
+            return {"fault_status": fault_status}
         return {}
 
 
@@ -98,6 +96,6 @@ class AquareaDefrostBinarySensor(AquareaDataEntity, BinarySensorEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
-        is_defrosting = self.coordinator.device.device_mode_status is aioaquarea.DeviceModeStatus.DEFROST
+        is_defrosting = self.coordinator.device.parameters.device_mode_status is AquareaDeviceModeStatus.Defrost
         self._attr_is_on = is_defrosting
         self._attr_icon = "mdi:snowflake-melt" if is_defrosting else "mdi:snowflake-off"

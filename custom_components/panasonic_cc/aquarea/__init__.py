@@ -4,23 +4,19 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from aio_panasonic_comfort_cloud import ApiClient
-from aioaquarea import Client as AquareaApiClient
-from aioaquarea.data import DeviceInfo as AquareaDeviceInfo
+from aio_panasonic_comfort_cloud import ApiClient, PanasonicDeviceInfo
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from ..const import (
-    CONF_DEVICE_FETCH_INTERVAL,
-    DEFAULT_DEVICE_FETCH_INTERVAL,
+    CONF_ENABLE_DAILY_ENERGY_SENSOR,
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     DOMAIN,
+    MANUFACTURER,
 )
-from .const import AQUAREA_COORDINATORS
-from .coordinator import AquareaDeviceCoordinator
+from .const import AQUAREA_COORDINATORS, AQUAREA_ENERGY_COORDINATORS
+from .coordinator import AquareaConsumptionCoordinator, AquareaDeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,45 +37,42 @@ async def async_setup_aquarea(
     entry: ConfigEntry,
     panasonic_api: ApiClient,
 ) -> list[AquareaDeviceCoordinator]:
-    """Set up Aquarea devices: create API client, coordinators, and register devices."""
-    if not panasonic_api.has_unknown_devices:
+    """Set up Aquarea devices: build coordinators from the shared ApiClient session and register devices."""
+    aquarea_devices = panasonic_api.aquarea_devices
+    if not aquarea_devices:
         hass.data[DOMAIN][AQUAREA_COORDINATORS] = []
+        hass.data[DOMAIN][AQUAREA_ENERGY_COORDINATORS] = []
         return []
 
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
     config = {**entry.data, **entry.options}
-
-    client = async_get_clientsession(hass)
-
-    try:
-        aquarea_api = AquareaApiClient(client, username, password)
-        await aquarea_api.login()
-        aquarea_devices = await aquarea_api.get_devices()
-    except Exception as exc:
-        _LOGGER.warning("Failed to setup Aquarea devices: %s", exc, exc_info=True)
-        hass.data[DOMAIN][AQUAREA_COORDINATORS] = []
-        return []
+    enable_daily_energy_sensor = entry.options.get(
+        CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+    )
 
     aquarea_coordinators: list[AquareaDeviceCoordinator] = []
-    aquarea_coordinators_uninitialized: list[tuple[AquareaDeviceCoordinator, AquareaDeviceInfo]] = []
+    energy_coordinators: list[AquareaConsumptionCoordinator] = []
+    aquarea_coordinators_uninitialized: list[tuple[AquareaDeviceCoordinator, PanasonicDeviceInfo]] = []
 
-    for aquarea_device in aquarea_devices:
+    for device_info in aquarea_devices:
         try:
             aquarea_coordinator = AquareaDeviceCoordinator(
-                hass, config, aquarea_api, aquarea_device
+                hass, config, panasonic_api, device_info
             )
-            aquarea_coordinators_uninitialized.append((aquarea_coordinator, aquarea_device))
+            aquarea_coordinators_uninitialized.append((aquarea_coordinator, device_info))
+            if enable_daily_energy_sensor:
+                energy_coordinators.append(
+                    AquareaConsumptionCoordinator(hass, config, panasonic_api, device_info)
+                )
         except Exception as exc:
             _LOGGER.warning(
                 "Failed to create coordinator for Aquarea device %s: %s",
-                aquarea_device.name,
+                device_info.name,
                 exc,
                 exc_info=True,
             )
 
     # Refresh all Aquarea coordinators in parallel
-    async def _init_aquarea(coordinator: AquareaDeviceCoordinator, device_info: AquareaDeviceInfo) -> None:
+    async def _init_aquarea(coordinator: AquareaDeviceCoordinator, device_info: PanasonicDeviceInfo) -> None:
         try:
             await coordinator.async_config_entry_first_refresh()
             aquarea_coordinators.append(coordinator)
@@ -97,6 +90,7 @@ async def async_setup_aquarea(
     )
 
     hass.data[DOMAIN][AQUAREA_COORDINATORS] = aquarea_coordinators
+    hass.data[DOMAIN][AQUAREA_ENERGY_COORDINATORS] = energy_coordinators
 
     # Register devices in device registry
     device_registry = dr.async_get(hass)
@@ -104,11 +98,17 @@ async def async_setup_aquarea(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, coordinator.device_id)},
-            name=coordinator.device.device_name,
-            manufacturer=coordinator.device.manufacturer,
-            model="",
-            sw_version=coordinator.device.firmware_version,
+            name=coordinator._device_info.name,
+            manufacturer=MANUFACTURER,
+            model=coordinator._device_info.model,
+            sw_version=coordinator.api_client.app_version,
         )
+
+    # Refresh energy coordinators (best-effort — failures shouldn't block device setup)
+    await asyncio.gather(
+        *(energy.async_config_entry_first_refresh() for energy in energy_coordinators),
+        return_exceptions=True,
+    )
 
     return aquarea_coordinators
 
