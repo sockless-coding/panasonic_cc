@@ -14,7 +14,7 @@
           "energy_fetch_interval": "Energieopphentingsintervall (sekunder)"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Konfigurer Panasonic Comfort Cloud på nytt",
         "description": "Skriv inn Panasonic ID og passord for å autentisere på nytt",
         "data": {

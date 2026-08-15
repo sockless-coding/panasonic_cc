@@ -14,7 +14,7 @@
           "energy_fetch_interval": "Prodleva vyčítání energie (sekunda)"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Překonfigurace Panasonic Comfort Cloud",
         "description": "Zadejte vaše Panasonic ID a heslo pro opětovné ověření",
         "data": {

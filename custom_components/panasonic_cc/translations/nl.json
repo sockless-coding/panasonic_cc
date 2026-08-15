@@ -14,7 +14,7 @@
           "energy_fetch_interval": "Energieophalinginterval (seconden)"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Panasonic Comfort Cloud opnieuw configureren",
         "description": "Voer uw Panasonic ID en wachtwoord in om opnieuw te authenticeren",
         "data": {
