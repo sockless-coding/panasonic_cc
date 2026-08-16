@@ -13,12 +13,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 
 from .const import (
+    CONF_AUTO_POWER_ON,
     CONF_DEVICE_FETCH_INTERVAL,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_ENERGY_FETCH_INTERVAL,
     CONF_FORCE_ENABLE_NANOE,
     CONF_FORCE_OUTSIDE_SENSOR,
     CONF_USE_PANASONIC_PRESET_NAMES,
+    DEFAULT_AUTO_POWER_ON,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENERGY_FETCH_INTERVAL,
@@ -114,8 +116,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
+    auto_power_on = entry.options.get(CONF_AUTO_POWER_ON, DEFAULT_AUTO_POWER_ON)
+
     client = async_get_clientsession(hass)
-    api = ApiClient(username, password, client)
+    api = ApiClient(username, password, client, auto_power_on=auto_power_on)
 
     try:
         await api.start_session()

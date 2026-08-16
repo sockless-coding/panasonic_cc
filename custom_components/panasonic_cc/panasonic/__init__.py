@@ -13,9 +13,11 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from ..const import (
+    CONF_AUTO_POWER_ON,
     CONF_DEVICE_FETCH_INTERVAL,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_ENERGY_FETCH_INTERVAL,
+    DEFAULT_AUTO_POWER_ON,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENERGY_FETCH_INTERVAL,
@@ -51,12 +53,13 @@ async def async_setup_panasonic(
     enable_daily_energy_sensor = entry.options.get(
         CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
     )
+    auto_power_on = entry.options.get(CONF_AUTO_POWER_ON, DEFAULT_AUTO_POWER_ON)
 
     # Merge data and options so coordinators can read fetch intervals from options
     config = {**entry.data, **entry.options}
 
     client = async_get_clientsession(hass)
-    api = ApiClient(username, password, client)
+    api = ApiClient(username, password, client, auto_power_on=auto_power_on)
 
     await api.start_session()
 
