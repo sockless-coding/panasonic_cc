@@ -14,12 +14,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from aio_panasonic_comfort_cloud import ApiClient, MFARequiredError
 
 from .const import (
+    CONF_AUTO_POWER_ON,
     CONF_DEVICE_FETCH_INTERVAL,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_ENERGY_FETCH_INTERVAL,
     CONF_FORCE_ENABLE_NANOE,
     CONF_FORCE_OUTSIDE_SENSOR,
     CONF_USE_PANASONIC_PRESET_NAMES,
+    DEFAULT_AUTO_POWER_ON,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENERGY_FETCH_INTERVAL,
@@ -172,6 +174,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     default=DEFAULT_USE_PANASONIC_PRESET_NAMES,
                 ): bool,
                 vol.Optional(
+                    CONF_AUTO_POWER_ON,
+                    default=DEFAULT_AUTO_POWER_ON,
+                ): bool,
+                vol.Optional(
                     CONF_DEVICE_FETCH_INTERVAL,
                     default=DEFAULT_DEVICE_FETCH_INTERVAL,
                 ): vol.All(vol.Coerce(int), vol.Range(min=5, max=300)),
@@ -222,6 +228,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_FORCE_ENABLE_NANOE: user_input.get(CONF_FORCE_ENABLE_NANOE, DEFAULT_FORCE_ENABLE_NANOE),
                 CONF_ENABLE_DAILY_ENERGY_SENSOR: user_input.get(CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR),
                 CONF_USE_PANASONIC_PRESET_NAMES: user_input.get(CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES),
+                CONF_AUTO_POWER_ON: user_input.get(CONF_AUTO_POWER_ON, DEFAULT_AUTO_POWER_ON),
                 CONF_DEVICE_FETCH_INTERVAL: user_input.get(CONF_DEVICE_FETCH_INTERVAL, DEFAULT_DEVICE_FETCH_INTERVAL),
                 CONF_ENERGY_FETCH_INTERVAL: user_input.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL),
             },
@@ -282,6 +289,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_USE_PANASONIC_PRESET_NAMES,
                     default=self._config_entry.options.get(
                         CONF_USE_PANASONIC_PRESET_NAMES, DEFAULT_USE_PANASONIC_PRESET_NAMES
+                    ),
+                ): bool,
+                vol.Optional(
+                    CONF_AUTO_POWER_ON,
+                    default=self._config_entry.options.get(
+                        CONF_AUTO_POWER_ON, DEFAULT_AUTO_POWER_ON
                     ),
                 ): bool,
                 vol.Optional(

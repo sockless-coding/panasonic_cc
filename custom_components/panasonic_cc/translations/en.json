@@ -10,6 +10,7 @@
           "enable_daily_energy_sensor": "Enable daily energy sensors",
           "force_enable_nanoe": "Enable Nanoe switch for all devices",
           "use_panasonic_preset_names": "Use 'Quiet' and 'Powerful' instead of 'Eco' and 'Boost' Presets",
+          "auto_power_on": "Automatically power on device when changing settings",
           "device_fetch_interval": "Device fetch interval (seconds)",
           "energy_fetch_interval": "Energy fetch interval (seconds)"
         }
@@ -52,6 +53,7 @@
           "enable_daily_energy_sensor": "Enable daily energy sensors (requires restart)",
           "force_enable_nanoe": "Enable Nanoe switch for all devices (requires restart)",
           "use_panasonic_preset_names": "Use 'Quiet' and 'Powerful' instead of 'Eco' and 'Boost' Presets (requires restart)",
+          "auto_power_on": "Automatically power on device when changing settings (requires restart)",
           "device_fetch_interval": "Device fetch interval (seconds)",
           "energy_fetch_interval": "Energy fetch interval (seconds)"
         }
