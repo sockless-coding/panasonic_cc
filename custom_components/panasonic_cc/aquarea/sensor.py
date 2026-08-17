@@ -90,9 +90,9 @@ class AquareaEnergySensorEntityDescription(SensorEntityDescription):
 
 AQUAREA_ENERGY_SENSORS = [
     AquareaEnergySensorEntityDescription(
-        key="heating_energy_consumption_today",
-        translation_key="heating_energy_consumption_today",
-        name="Heating Consumption Today",
+        key="heating_accumulated_energy_consumption",
+        translation_key="heating_accumulated_energy_consumption",
+        name="Heating Accumulated Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -100,9 +100,9 @@ AQUAREA_ENERGY_SENSORS = [
         get_state=lambda entry: entry.heat_consumption,
     ),
     AquareaEnergySensorEntityDescription(
-        key="cooling_energy_consumption_today",
-        translation_key="cooling_energy_consumption_today",
-        name="Cooling Consumption Today",
+        key="cooling_accumulated_energy_consumption",
+        translation_key="cooling_accumulated_energy_consumption",
+        name="Cooling Accumulated Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -111,9 +111,9 @@ AQUAREA_ENERGY_SENSORS = [
         exists_fn=lambda coordinator: any(zone.supports_cooling for zone in coordinator.device.parameters.zones),
     ),
     AquareaEnergySensorEntityDescription(
-        key="tank_energy_consumption_today",
-        translation_key="tank_energy_consumption_today",
-        name="Tank Consumption Today",
+        key="tank_accumulated_energy_consumption",
+        translation_key="tank_accumulated_energy_consumption",
+        name="Tank Accumulated Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -122,9 +122,9 @@ AQUAREA_ENERGY_SENSORS = [
         exists_fn=lambda coordinator: coordinator.device.parameters.has_tank,
     ),
     AquareaEnergySensorEntityDescription(
-        key="energy_consumption_today",
-        translation_key="energy_consumption_today",
-        name="Consumption Today",
+        key="accumulated_energy_consumption",
+        translation_key="accumulated_energy_consumption",
+        name="Accumulated Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
