@@ -137,9 +137,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_dismiss(hass, NOTIFICATION_AUTH_EXPIRED)
 
     devices = api.get_devices()
-
-    if not devices and not api.has_unknown_devices:
-        _LOGGER.error("Could not find any Panasonic Comfort Cloud Heat Pumps")
+    
+    if not devices and not api.has_unknown_devices and not api.has_aquarea_devices and not api.has_hws_devices:
+        _LOGGER.error("Could not find any Panasonic Comfort Cloud Devices")
         return False
 
     # Set up Panasonic slice
