@@ -1,2 +1,2 @@
 aiohttp
-aio-panasonic-comfort-cloud==2026.8.4
+aio-panasonic-comfort-cloud==2026.8.5

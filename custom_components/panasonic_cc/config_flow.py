@@ -130,9 +130,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         try:
             await api.start_session(otp_code)
-            devices = api.get_devices()
 
-            if not devices and not api.has_unknown_devices:
+            if not api.has_devices:
                 errors["base"] = "no_devices"
         except MFARequiredError:
             raise
