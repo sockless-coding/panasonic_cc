@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from aio_panasonic_comfort_cloud import ApiClient
+from aio_panasonic_comfort_cloud.exceptions import AgreementNotAcceptedError
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -123,6 +124,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await api.start_session()
+    except AgreementNotAcceptedError as err:
+        _LOGGER.error(
+            "Panasonic has updated its account agreements and they need to be "
+            "re-accepted. Please re-authenticate the integration to review and accept them."
+        )
+        raise ConfigEntryAuthFailed("Panasonic account agreements need to be accepted") from err
     except Exception as err:
         error_msg = str(err).lower()
         if any(kw in error_msg for kw in ["401", "unauthorized", "authentication", "token", "expired"]):

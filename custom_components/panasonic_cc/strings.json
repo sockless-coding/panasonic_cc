@@ -29,6 +29,20 @@
         "data": {
           "otp_code": "Verification code"
         }
+      },
+      "agreements": {
+        "title": "Updated Panasonic agreements",
+        "description": "Panasonic has updated its terms and/or policies and requires you to accept them before continuing:\n\n{agreements}",
+        "data": {
+          "accept_agreements": "I have read and accept the agreements above"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Panasonic Comfort Cloud",
+        "description": "Enter the current password for {username} to re-authenticate.",
+        "data": {
+          "password": "Password"
+        }
       }
     },
     "error":{
@@ -36,7 +50,8 @@
       "device_timeout": "Timeout connecting to the API.",
       "device_fail": "Unexpected error connecting to the API.",
       "invalid_user_password": "Invalid Panasonic ID or password.",
-      "invalid_otp": "Invalid verification code. Please try again."
+      "invalid_otp": "Invalid verification code. Please try again.",
+      "agreements_not_accepted": "You must accept the agreements to continue."
     },
     "abort": {
       "device_timeout": "Timeout connecting to the device.",
