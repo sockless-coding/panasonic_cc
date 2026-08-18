@@ -103,10 +103,10 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
         if self.coordinator.device.parameters.tank is None:
             return
         if operation_mode == STATE_HEAT_PUMP:
-            await self.coordinator.api_client.set_aquarea_tank_operation_status(
-                self.coordinator.info, AquareaOperationStatus.On
+            await self.coordinator.api_client.set_aquarea_operation_state(
+                self.coordinator.device, tank_status=AquareaOperationStatus.On
             )
         elif operation_mode == STATE_OFF:
-            await self.coordinator.api_client.set_aquarea_tank_operation_status(
-                self.coordinator.info, AquareaOperationStatus.Off
+            await self.coordinator.api_client.set_aquarea_operation_state(
+                self.coordinator.device, tank_status=AquareaOperationStatus.Off
             )

@@ -206,8 +206,10 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the climate entity's zone on."""
-        await self.coordinator.api_client.set_aquarea_zone_operation_status(
-            self.coordinator.info, self.entity_description.zone_id, AquareaOperationStatus.On
+        await self.coordinator.api_client.set_aquarea_operation_state(
+            self.coordinator.device,
+            zone_id=self.entity_description.zone_id,
+            zone_status=AquareaOperationStatus.On,
         )
         params = self.coordinator.device.parameters
         zone = params.get_zone(self.entity_description.zone_id)
@@ -222,8 +224,10 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn the climate entity's zone off."""
-        await self.coordinator.api_client.set_aquarea_zone_operation_status(
-            self.coordinator.info, self.entity_description.zone_id, AquareaOperationStatus.Off
+        await self.coordinator.api_client.set_aquarea_operation_state(
+            self.coordinator.device,
+            zone_id=self.entity_description.zone_id,
+            zone_status=AquareaOperationStatus.Off,
         )
         self._attr_hvac_mode = HVACMode.OFF
         self.async_write_ha_state()
@@ -235,11 +239,11 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
             await self.async_turn_off()
             return
         operation_mode = convert_hvac_mode_to_aquarea_operation_mode(hvac_mode)
-        await self.coordinator.api_client.set_aquarea_operation_mode(
-            self.coordinator.info, operation_mode
-        )
-        await self.coordinator.api_client.set_aquarea_zone_operation_status(
-            self.coordinator.info, self.entity_description.zone_id, AquareaOperationStatus.On
+        await self.coordinator.api_client.set_aquarea_operation_state(
+            self.coordinator.device,
+            mode=operation_mode,
+            zone_id=self.entity_description.zone_id,
+            zone_status=AquareaOperationStatus.On,
         )
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
