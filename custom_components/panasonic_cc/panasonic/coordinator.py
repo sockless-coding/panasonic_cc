@@ -218,8 +218,21 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                 )
                 _create_auth_expired_notification(self.hass)
                 raise UpdateFailed("Authentication failed — coordinator disabled") from err
-            self._handle_failure(err)
             friendly = classify_error(err)
+            if (
+                friendly.category in (ErrorCategory.RATE_LIMIT, ErrorCategory.SERVER_ERROR)
+                and self._device is not None
+            ):
+                self._handle_failure(err)
+                _LOGGER.warning(
+                    "%s Transient error %s: %s — keeping last device data and retrying after backoff.",
+                    self._device_info.name,
+                    friendly.title,
+                    friendly.message,
+                )
+                self.async_update_listeners()
+                return self._update_id
+            self._handle_failure(err)
             raise UpdateFailed(f"{friendly.title}: {friendly.message}") from err
         return self._update_id
 
@@ -359,8 +372,21 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
                 )
                 _create_auth_expired_notification(self.hass)
                 raise UpdateFailed("Authentication failed — coordinator disabled") from err
-            self._handle_failure(err)
             friendly = classify_error(err)
+            if (
+                friendly.category in (ErrorCategory.RATE_LIMIT, ErrorCategory.SERVER_ERROR)
+                and self._energy is not None
+            ):
+                self._handle_failure(err)
+                _LOGGER.warning(
+                    "%s Transient error %s: %s — keeping last energy data and retrying after backoff.",
+                    self._device_info.name,
+                    friendly.title,
+                    friendly.message,
+                )
+                self.async_update_listeners()
+                return self._update_id
+            self._handle_failure(err)
             raise UpdateFailed(f"{friendly.title}: {friendly.message}") from err
         return self._update_id
 
