@@ -34,6 +34,8 @@ from .const import (
     PRESET_BOOST,
     PRESET_QUIET,
     PRESET_POWERFUL,
+    DEFAULT_MIN_TEMPERATURE,
+    LOWERED_MIN_TEMPERATURE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,7 +130,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
-    _attr_min_temp = 16
+    _attr_min_temp = DEFAULT_MIN_TEMPERATURE
     _attr_max_temp = 30
     _attr_supported_features = SUPPORT_FLAGS
     _attr_fan_modes = [f.name for f in constants.FanSpeed]
@@ -227,7 +229,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     def _set_temp_range(self) -> None:
         """Set new target temperature range."""
         device = self.coordinator.device
-        self._attr_min_temp = 8 if device.in_summer_house_mode else 16
+        self._attr_min_temp = (
+            8 if device.in_summer_house_mode else LOWERED_MIN_TEMPERATURE
+        )
         if device.in_summer_house_mode:
             self._attr_max_temp = 15 if device.features.summer_house == 2 else 10
         else:
@@ -317,6 +321,10 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         try:
             builder = self.coordinator.get_change_request_builder()
             if temp := kwargs.get(ATTR_TEMPERATURE):
+                if temp < self._attr_min_temp:
+                    temp = self._attr_min_temp
+                elif temp > self._attr_max_temp:
+                    temp = self._attr_max_temp
                 builder.set_target_temperature(temp)
             if mode := kwargs.get("hvac_mode"):
                 if op_mode := convert_hvac_mode_to_operation_mode(mode):
@@ -371,7 +379,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
     async def _async_exit_summer_house_mode(self, builder: ChangeRequestBuilder):
         """Exit summer house mode."""
-        self._attr_min_temp = 16
+        self._attr_min_temp = LOWERED_MIN_TEMPERATURE
         self._attr_max_temp = 30
         if not self.coordinator.device.in_summer_house_mode:
             return

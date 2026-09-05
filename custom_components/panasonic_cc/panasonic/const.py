@@ -18,6 +18,9 @@ SERVICE_SET_SWING_LR_MODE = "set_horizontal_swing_mode"
 
 SENSOR_TYPE_TEMPERATURE = "temperature"
 
+DEFAULT_MIN_TEMPERATURE = 16
+LOWERED_MIN_TEMPERATURE = 13.5
+
 PRESET_8_15 = "heat_8_15"
 PRESET_QUIET = "quiet"
 PRESET_POWERFUL = "powerful"

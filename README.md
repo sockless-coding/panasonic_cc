@@ -32,6 +32,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - Target temperature control
 - Fan mode selection
 - Preset modes (Quiet, Powerful, +8/15°C heat)
+- Minimum target temperature is set to 13.5°C to support units that allow lower setpoints. If your unit rejects low temperatures, it simply won't go below its hardware limit; per-model minimums are not exposed by the upstream library.
 
 ### Water Heater
 - **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off)
