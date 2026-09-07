@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -148,6 +149,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate entity."""
         self.entity_description = description
+        self._off_command_at: float | None = None
         device = coordinator.device
         hvac_modes = [HVACMode.OFF]
         if device.features.auto_mode:
@@ -196,14 +198,24 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     def _async_update_attrs(self) -> None:
         """Update attributes."""
         state = self.coordinator.device.parameters
-        self._attr_hvac_mode = (
-            HVACMode.OFF
-            if state.power == constants.Power.Off
-            else convert_operation_mode_to_hvac_mode(
+        if state.power == constants.Power.Off:
+            self._off_command_at = None
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_action = HVACAction.OFF
+        elif (
+            self._off_command_at is not None
+            and (time.monotonic() - self._off_command_at) < 10.0
+            and state.power == constants.Power.On
+        ):
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_action = HVACAction.OFF
+        else:
+            if self._off_command_at is not None:
+                self._off_command_at = None
+            self._attr_hvac_mode = convert_operation_mode_to_hvac_mode(
                 state.mode,
                 state.iautox_mode == constants.IAutoXMode.On,
             )
-        )
 
         self._set_temp_range()
         self._attr_current_temperature = state.inside_temperature
@@ -221,7 +233,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             self._attr_preset_mode = self._powerful_preset
         else:
             self._attr_preset_mode = PRESET_NONE
-        if self.coordinator.device.has_inside_temperature:
+        if self.coordinator.device.has_inside_temperature and self._attr_hvac_mode != HVACMode.OFF:
             self._attr_hvac_action = convert_state_to_hvac_action(state)
 
     def _set_temp_range(self) -> None:
@@ -283,7 +295,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             builder.set_power_mode(constants.Power.Off)
             await self.coordinator.async_apply_changes(builder)
             await self.coordinator.async_schedule_refresh()
+            self._off_command_at = time.monotonic()
             self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_action = HVACAction.OFF
         except Exception:
             _LOGGER.exception(
                 "Failed to turn off device %s",
