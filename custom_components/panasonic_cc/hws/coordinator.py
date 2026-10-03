@@ -1,4 +1,5 @@
 """Coordinators for HWS (standalone Heat Pump Hot Water tank) devices."""
+
 import asyncio
 import logging
 from datetime import timedelta
@@ -32,7 +33,17 @@ def _is_auth_error(err: Exception) -> bool:
     if isinstance(err, ClientResponseError) and err.status == 401:
         return True
     error_str = str(err).lower()
-    return any(kw in error_str for kw in ["401", "unauthorized", "authentication", "token", "expired", "invalid session"])
+    return any(
+        kw in error_str
+        for kw in [
+            "401",
+            "unauthorized",
+            "authentication",
+            "token",
+            "expired",
+            "invalid session",
+        ]
+    )
 
 
 def _create_auth_expired_notification(hass: HomeAssistant) -> None:
@@ -129,12 +140,16 @@ class HwsDeviceCoordinator(DataUpdateCoordinator[int]):
         if self._device is None:
             return 0
         params = self._device.parameters
-        return hash((
-            params.hpu_operation_status,
-            params.operation_mode,
-            params.boost_mode,
-            params.tank_temperature,
-        ))
+        if params:
+            return hash(
+                (
+                    params.hpu_operation_status,
+                    params.operation_mode,
+                    params.boost_mode,
+                    params.tank_temperature,
+                )
+            )
+        return ""
 
     async def _async_update_data(self) -> int:
         """Fetch data from API."""
@@ -143,7 +158,7 @@ class HwsDeviceCoordinator(DataUpdateCoordinator[int]):
 
         try:
             if self._device is None:
-                self._device = self._api_client.get_hws_device(self._device_info)
+                self._device = await self._api_client.get_hws_device(self._device_info)
                 self._update_id = 1
                 self._last_device_state_hash = self._device_state_hash()
                 self._reset_backoff()
@@ -165,7 +180,9 @@ class HwsDeviceCoordinator(DataUpdateCoordinator[int]):
                     exc_info=True,
                 )
                 _create_auth_expired_notification(self.hass)
-                raise UpdateFailed("Authentication failed — coordinator disabled") from err
+                raise UpdateFailed(
+                    "Authentication failed — coordinator disabled"
+                ) from err
             self._handle_failure(err)
             friendly = classify_error(err)
             raise UpdateFailed(f"{friendly.title}: {friendly.message}") from err
@@ -187,7 +204,7 @@ class HwsDeviceCoordinator(DataUpdateCoordinator[int]):
         """Handle API failure with exponential backoff."""
         self._consecutive_failures += 1
         new_interval = min(
-            self._base_interval * (BACKOFF_MULTIPLIER ** self._consecutive_failures),
+            self._base_interval * (BACKOFF_MULTIPLIER**self._consecutive_failures),
             MAX_UPDATE_INTERVAL,
         )
         self.update_interval = timedelta(seconds=new_interval)
