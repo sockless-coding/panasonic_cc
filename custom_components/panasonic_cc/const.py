@@ -13,6 +13,7 @@ ENERGY_COORDINATORS = "energy_coordinators"
 AQUAREA_COORDINATORS = "aquarea_coordinators"
 AQUAREA_ENERGY_COORDINATORS = "aquarea_energy_coordinators"
 HWS_COORDINATORS = "hws_coordinators"
+HWS_ENERGY_COORDINATORS = "hws_energy_coordinators"
 
 NOTIFICATION_AUTH_EXPIRED = f"{DOMAIN}_auth_expired"
 
