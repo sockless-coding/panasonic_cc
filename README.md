@@ -189,6 +189,12 @@ data:
 - **Energy data not updating** — Ensure "Enable daily energy sensors" is checked in the integration options. Note that energy data resets daily.
 - **Current power seems inaccurate** — Current power is extrapolated from the daily energy reading and may not reflect instantaneous power accurately.
 
+### Known upstream limitations
+Some features cannot be fixed in this integration because they require changes to the underlying `aio-panasonic-comfort-cloud` library. They are tracked here for visibility:
+
+- **Inside Cleaning (#410):** The "Inside Cleaning" command and the corresponding "Cleaning" status are not yet supported. They require a new command in the upstream `aio-panasonic-comfort-cloud` library and need to be implemented there before this integration can expose them.
+- **HE-UM40CR CO2 hot water heat pump (#476):** Status and energy requests return HTTP 403 (error code 4300) for this model. The Comfort Cloud hot water heat pump endpoint differs (`/device/a2wInfo/` rather than `/deviceStatus/now/`), so resolving this requires an upstream library fix in `aio-panasonic-comfort-cloud` and is not fixable in this integration today.
+
 ---
 
 ## Dependencies
