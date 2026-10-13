@@ -235,6 +235,9 @@
       },
       "holiday_timer": {
         "name": "Holiday Timer"
+      },
+      "boost_mode": {
+        "name": "Boost Mode"
       }
     },
     "button": {

@@ -1,4 +1,5 @@
 """Water heater entities for Aquarea and HWS devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,4 +18,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the water heater entities for Aquarea and HWS devices."""
     await aquarea_setup(hass, entry, async_add_entities)
-    await hws_setup(hass, entry, async_add_entities)
+    #
+    # await hws_setup(hass, entry, async_add_entities)
+    # HWS temperature settings are set in Weekly schedule.  Don't set this up at the moment to avoid confusion
+    #

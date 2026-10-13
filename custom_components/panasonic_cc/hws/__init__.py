@@ -9,9 +9,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from ..const import DOMAIN, MANUFACTURER
-from .const import HWS_COORDINATORS
-from .coordinator import HwsDeviceCoordinator
+from ..const import (
+    CONF_ENABLE_DAILY_ENERGY_SENSOR,
+    DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
+    DOMAIN,
+    MANUFACTURER,
+)
+from .const import HWS_COORDINATORS, HWS_ENERGY_COORDINATORS
+from .coordinator import HwsConsumptionCoordinator, HwsDeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,17 +37,25 @@ async def async_setup_hws(
     hws_devices = panasonic_api.hws_devices
     if not hws_devices:
         hass.data[DOMAIN][HWS_COORDINATORS] = []
+        hass.data[DOMAIN][HWS_ENERGY_COORDINATORS] = []        
         return []
 
     config = {**entry.data, **entry.options}
-
+    enable_daily_energy_sensor = entry.options.get(
+        CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
+    )
     hws_coordinators: list[HwsDeviceCoordinator] = []
+    energy_coordinators: list[HwsConsumptionCoordinator] = []
     hws_coordinators_uninitialized: list[tuple[HwsDeviceCoordinator, PanasonicDeviceInfo]] = []
 
     for device_info in hws_devices:
         try:
             hws_coordinator = HwsDeviceCoordinator(hass, config, panasonic_api, device_info)
             hws_coordinators_uninitialized.append((hws_coordinator, device_info))
+            if enable_daily_energy_sensor:
+                energy_coordinators.append(
+                    HwsConsumptionCoordinator(hass, config, panasonic_api, device_info)
+                )
         except Exception as exc:
             _LOGGER.warning(
                 "Failed to create coordinator for HWS device %s: %s",
@@ -70,6 +83,7 @@ async def async_setup_hws(
     )
 
     hass.data[DOMAIN][HWS_COORDINATORS] = hws_coordinators
+    hass.data[DOMAIN][HWS_ENERGY_COORDINATORS] = energy_coordinators
 
     # Register devices in device registry
     device_registry = dr.async_get(hass)
@@ -82,7 +96,11 @@ async def async_setup_hws(
             model=coordinator._device_info.model,
             sw_version=coordinator.api_client.app_version,
         )
-
+    # Refresh energy coordinators (best-effort — failures shouldn't block device setup)
+    await asyncio.gather(
+        *(energy.async_config_entry_first_refresh() for energy in energy_coordinators),
+        return_exceptions=True,
+    )
     return hws_coordinators
 
 
