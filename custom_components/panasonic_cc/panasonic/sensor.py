@@ -3,6 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+import math
 from typing import Any
 
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature, EntityCategory
@@ -258,9 +259,12 @@ class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
 
     entity_description: PanasonicEnergySensorEntityDescription  # type: ignore[reportIncompatibleVariableOverride]
 
+    _POWER_KEYS = frozenset({"current_power", "cooling_power", "heating_power"})
+
     def __init__(self, coordinator: PanasonicDeviceEnergyCoordinator, description: PanasonicEnergySensorEntityDescription):
         self.entity_description = description  # type: ignore[reportIncompatibleVariableOverride]
         super().__init__(coordinator, description.key)
+        self._prev_power: dict[str, float | None] = {}
 
     @property  # type: ignore[reportIncompatibleOverride]
     def available(self) -> bool:
@@ -275,7 +279,36 @@ class PanasonicEnergySensorEntity(PanasonicEnergyEntity, SensorEntity):
         if self.entity_description.get_state is None:
             return
         value = self.entity_description.get_state(energy)
-        self._attr_available = value is not None
+        key = self.entity_description.key
+        if value is None:
+            self._attr_available = False
+            return
+        try:
+            value = float(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            self._attr_available = self._prev_power.get(key) is not None
+            self._attr_native_value = self._prev_power.get(key)  # type: ignore[assignment]
+            _LOGGER.debug("Discarding implausible power reading %r for %s", value, key)
+            return
+        prev = self._prev_power.get(key)
+        if math.isnan(value) or value < 0:
+            self._attr_available = prev is not None
+            self._attr_native_value = prev  # type: ignore[assignment]
+            _LOGGER.debug("Discarding implausible power reading %r for %s", value, key)
+            return
+        if (
+            key in self._POWER_KEYS
+            and prev is not None
+            and prev > 0
+            and value > prev * 10
+            and value > 5000
+        ):
+            self._attr_available = True
+            self._attr_native_value = prev  # type: ignore[assignment]
+            _LOGGER.debug("Discarding implausible power reading %r for %s", value, key)
+            return
+        self._prev_power[key] = value
+        self._attr_available = True
         self._attr_native_value = value  # type: ignore[assignment]
 
 
