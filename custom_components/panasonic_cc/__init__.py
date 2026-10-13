@@ -34,6 +34,11 @@ from .const import (
     STARTUP,
     COMPONENT_TYPES,
 )
+from .token_storage import (
+    async_migrate_legacy_token_file,
+    async_remove_token_file,
+    get_token_file,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +125,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auto_power_on = entry.options.get(CONF_AUTO_POWER_ON, DEFAULT_AUTO_POWER_ON)
 
     client = async_get_clientsession(hass)
-    api = ApiClient(username, password, client, auto_power_on=auto_power_on)
+    await async_migrate_legacy_token_file(hass, username)
+    api = ApiClient(
+        username,
+        password,
+        client,
+        token_file_name=get_token_file(hass, username),
+        auto_power_on=auto_power_on,
+    )
 
     try:
         await api.start_session()
@@ -149,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Set up Panasonic slice
     from .panasonic import async_setup_panasonic
-    data_coordinators, energy_coordinators = await async_setup_panasonic(hass, entry)
+    data_coordinators, energy_coordinators = await async_setup_panasonic(hass, entry, api)
 
     # Set up Aquarea slice
     from .aquarea import async_setup_aquarea
@@ -175,5 +187,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
-    # Clean up any stored data if needed
-    pass
+    await async_remove_token_file(hass, entry.data[CONF_USERNAME])

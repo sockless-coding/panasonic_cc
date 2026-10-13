@@ -6,3 +6,44 @@ set_horizontal_swing_mode:
       example: "climate.nest"
     swing_mode:
       description: New value of swing mode.
+
+set_weekly_timer_day:
+  target:
+    entity:
+      integration: panasonic_cc
+      domain: switch
+  fields:
+    weekdays:
+      required: true
+      example: '["monday", "tuesday"]'
+      selector:
+        select:
+          multiple: true
+          options:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+    patterns:
+      required: true
+      example: '[{"start_time": "06:30", "power": "on", "mode": "heat", "temperature": 21.5, "fan_speed": "auto"}, {"start_time": "22:00", "power": "off"}]'
+      selector:
+        object:
+    enabled:
+      default: true
+      selector:
+        boolean:
+
+set_hws_weekly_schedule:
+  target:
+    entity:
+      integration: panasonic_cc
+      domain: water_heater
+  fields:
+    weekly_schedule:
+      required: true
+      selector:
+        object:

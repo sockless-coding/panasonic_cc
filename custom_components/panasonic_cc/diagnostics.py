@@ -15,6 +15,7 @@ from .const import (
     ENERGY_COORDINATORS,
     HWS_COORDINATORS,
 )
+from .panasonic.const import WEEKLY_TIMER_COORDINATORS
 
 TO_REDACT = {
     CONF_PASSWORD,
@@ -22,6 +23,7 @@ TO_REDACT = {
     "access_token",
     "refresh_token",
     "token",
+    "deviceGuid",
 }
 
 
@@ -92,13 +94,32 @@ async def async_get_config_entry_diagnostics(
     for coordinator in hws_coordinators:
         if coordinator._device is not None:
             hws_params = coordinator._device.parameters
+            hws_capabilities = coordinator._device.device_parameters
             hws_devices.append(
                 {
                     "id": coordinator.device_id,
                     "name": coordinator._device_info.name,
                     "model": coordinator._device_info.model,
                     "hpu_operation_status": hws_params.hpu_operation_status.name,
+                    "operation_mode": hws_params.operation_mode.name,
+                    "boost_mode": hws_params.boost_mode.name,
                     "tank_temperature": hws_params.tank_temperature,
+                    "outdoor_temperature": hws_params.outdoor_temperature,
+                    "weekly_settings": [day.to_dict() for day in hws_params.weekly_settings or []],
+                    "permission": hws_capabilities.permission,
+                    "weekly_mode": hws_capabilities.weekly_mode,
+                    "pv_mode": hws_capabilities.pv_mode,
+                    "holiday_mode": hws_capabilities.holiday_mode,
+                }
+            )
+
+    weekly_timers = []
+    for coordinator in hass.data[DOMAIN].get(WEEKLY_TIMER_COORDINATORS, []):
+        if coordinator._weekly_timer is not None:
+            weekly_timers.append(
+                {
+                    "id": coordinator.device_id,
+                    "weekly_timer": coordinator._weekly_timer.to_dict(),
                 }
             )
 
@@ -109,6 +130,7 @@ async def async_get_config_entry_diagnostics(
             "energy_data": energy_data,
             "aquarea_devices": aquarea_devices,
             "hws_devices": hws_devices,
+            "weekly_timers": weekly_timers,
         },
         TO_REDACT,
     )

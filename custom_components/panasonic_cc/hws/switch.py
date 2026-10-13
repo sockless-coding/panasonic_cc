@@ -14,9 +14,8 @@ from homeassistant.components.switch import (
 )
 
 from aio_panasonic_comfort_cloud.constants import (
-    HwsBoostModeSettings,
-    HwsOperationModeSettings,
-    HwsOperationStatus,
+    HwsBoostMode,
+    HwsOperationMode,
 )
 
 
@@ -29,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HwsBaseSwitch(HwsDataEntity, SwitchEntity):
-    """Base class for Aquarea switches with optimistic updates."""
+    """Base class for HWS switches with optimistic updates."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
     _optimistic_is_on: bool | None = None
@@ -61,7 +60,7 @@ class HwsBaseSwitch(HwsDataEntity, SwitchEntity):
 class HwsBoostModeSwitch(HwsBaseSwitch):
     """Switch to enable/disable boost mode on HWS devices.
 
-    Uses the library's ``set_hws_boost_mode`` setter, which is a POST request to the /hphw/setBoostMode endpoint.
+    Uses the library's ``set_hws_boost_mode`` setter, which posts to /hphw/deviceStatus/control.
     """
 
     def __init__(self, coordinator: HwsDeviceCoordinator) -> None:
@@ -75,14 +74,14 @@ class HwsBoostModeSwitch(HwsBaseSwitch):
         return "mdi:water-boiler" if self.is_on else "mdi:water-boiler-off"
 
     def _get_is_on(self) -> bool:
-        return self.coordinator.device.parameters.boost_mode is HwsBoostModeSettings.On
+        return self.coordinator.device.parameters.boost_mode is HwsBoostMode.On
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on boost mode."""
         self._optimistic_is_on = True
         self.async_write_ha_state()
         await self.coordinator.api_client.set_hws_boost_mode(
-            self.coordinator.info, HwsBoostModeSettings.On
+            self.coordinator.info, HwsBoostMode.On
         )
         self.hass.async_create_task(self._schedule_refresh())
 
@@ -91,7 +90,7 @@ class HwsBoostModeSwitch(HwsBaseSwitch):
         self._optimistic_is_on = False
         self.async_write_ha_state()
         await self.coordinator.api_client.set_hws_boost_mode(
-            self.coordinator.info, HwsBoostModeSettings.Off
+            self.coordinator.info, HwsBoostMode.Off
         )
         self.hass.async_create_task(self._schedule_refresh())
 
@@ -102,7 +101,7 @@ class HwsBoostModeSwitch(HwsBaseSwitch):
 class HwsHolidayModeSwitch(HwsBaseSwitch):
     """Switch to enable/disable holiday mode on HWS devices.
 
-    Uses the library's ``set_hws_holiday_mode`` setter, which is a POST request to the /hphw/  endpoint.
+    Turning it off switches back to Schedule mode, like the app does.
     """
 
     def __init__(self, coordinator: HwsDeviceCoordinator) -> None:
@@ -119,7 +118,7 @@ class HwsHolidayModeSwitch(HwsBaseSwitch):
         """Return the switch state."""
         return (
             self.coordinator.device.parameters.operation_mode
-            is HwsOperationModeSettings.Holiday
+            is HwsOperationMode.Holiday
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

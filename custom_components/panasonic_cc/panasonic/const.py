@@ -59,6 +59,9 @@ SUPPORT_FLAGS = (
 
 DATA_COORDINATORS = "data_coordinators"
 ENERGY_COORDINATORS = "energy_coordinators"
+WEEKLY_TIMER_COORDINATORS = "weekly_timer_coordinators"
+
+SERVICE_SET_WEEKLY_TIMER_DAY = "set_weekly_timer_day"
 
 SELECT_HORIZONTAL_SWING = "horizontal_swing"
 SELECT_VERTICAL_SWING = "vertical_swing"

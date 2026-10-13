@@ -30,6 +30,7 @@ from .const import (
     DEFAULT_USE_PANASONIC_PRESET_NAMES,
     DOMAIN,
 )
+from .token_storage import get_token_file
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,7 +197,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         just entered.
         """
         client = async_get_clientsession(self.hass)
-        api = ApiClient(username, password, client)
+        api = ApiClient(username, password, client, token_file_name=get_token_file(self.hass, username))
         errors: dict[str, str] = {}
         try:
             if origin == "reauth_confirm":
@@ -304,8 +305,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._pending_api is not None
         if self._pending_agreements is None:
             try:
-                self._pending_agreements = await self._async_fetch_pending_agreements(
-                    self._pending_api
+                self._pending_agreements = await self._pending_api.get_pending_agreements(
+                    include_content=True
                 )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to fetch pending Panasonic account agreements")
@@ -330,25 +331,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"agreements": agreements_text},
             errors=errors,
         )
-
-    @staticmethod
-    async def _async_fetch_pending_agreements(api: ApiClient) -> list[dict[str, Any]]:
-        """Return the agreement documents the account hasn't accepted yet."""
-        documents = await api.get_agreement_documents()
-        accepted = await api.get_agreement_status()
-        accepted_versions = {item.get("type"): item.get("version") for item in accepted}
-
-        pending: list[dict[str, Any]] = []
-        for document in documents:
-            try:
-                doc_type = int(document.get("type"))
-            except (TypeError, ValueError):
-                continue
-            version = document.get("version")
-            if accepted_versions.get(doc_type) == version:
-                continue
-            pending.append({**document, "type": doc_type})
-        return pending
 
     async def _async_create_entry(self, user_input: dict[str, Any]) -> config_entries.ConfigFlowResult:
         """Create a config entry."""

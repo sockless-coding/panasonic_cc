@@ -16,7 +16,10 @@ from aio_panasonic_comfort_cloud import (
     PanasonicDeviceInfo,
     PanasonicDeviceEnergy,
     ChangeRequestBuilder,
+    WeeklyTimer,
+    WeeklyTimerPattern,
 )
+from aio_panasonic_comfort_cloud.constants import WeeklyTimerWeekday
 
 from ..const import (
     DOMAIN,
@@ -403,3 +406,97 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
                 MAX_CONSECUTIVE_FAILURES,
                 new_interval,
             )
+
+
+class PanasonicWeeklyTimerCoordinator(DataUpdateCoordinator[int]):
+    """Weekly timer (weekly schedule) coordinator for an air conditioner.
+
+    Polled at the energy interval: the schedule only changes when someone
+    edits it, so it doesn't need the device status cadence.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict,
+        api_client: ApiClient,
+        device_info: PanasonicDeviceInfo,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"Panasonic Weekly Timer Coordinator ({device_info.name})",
+            update_interval=timedelta(
+                seconds=config.get(CONF_ENERGY_FETCH_INTERVAL, DEFAULT_ENERGY_FETCH_INTERVAL)
+            ),
+        )
+        self._api_client = api_client
+        self._device_info = device_info
+        self._weekly_timer: WeeklyTimer | None = None
+        self._update_id = 0
+
+    @property
+    def device_id(self) -> str:
+        """Return the device ID, matching PanasonicDeviceCoordinator.device_id."""
+        return self._device_info.id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_info.id)},
+            manufacturer=MANUFACTURER,
+            model=self._device_info.model,
+            name=self._device_info.name,
+            sw_version=self._api_client.app_version,
+        )
+
+    @property
+    def weekly_timer(self) -> WeeklyTimer:
+        """Return the current weekly schedule."""
+        if self._weekly_timer is None:
+            raise ValueError("Weekly timer has not been initialized")
+        return self._weekly_timer
+
+    async def _async_update_data(self) -> int:
+        """Fetch the weekly schedule from the API."""
+        try:
+            if self._weekly_timer is None:
+                self._weekly_timer = await self._api_client.get_weekly_timer(self._device_info)
+                self._update_id += 1
+            elif await self._api_client.try_update_weekly_timer(self._device_info, self._weekly_timer):
+                self._update_id += 1
+        except Exception as err:
+            friendly = classify_error(err)
+            raise UpdateFailed(f"{friendly.title}: {friendly.message}") from err
+        return self._update_id
+
+    async def async_set_enabled(self, enabled: bool) -> None:
+        """Turn the schedule on or off, keeping its patterns."""
+        self._weekly_timer = await self._api_client.set_weekly_timer_enabled(self._device_info, enabled)
+        self._update_id += 1
+        self.async_set_updated_data(self._update_id)
+
+    async def async_set_days(
+        self,
+        weekdays: list[WeeklyTimerWeekday],
+        patterns: list[WeeklyTimerPattern],
+        enabled: bool,
+    ) -> None:
+        """Replace the patterns of the given days and save the schedule.
+
+        Re-reads the schedule first so changes made elsewhere (e.g. the app)
+        to the other days aren't overwritten with a stale copy.
+        """
+        weekly_timer = await self._api_client.get_weekly_timer(self._device_info)
+        for weekday in weekdays:
+            # Each day gets its own pattern objects; they're mutable.
+            weekly_timer.day(weekday).set_patterns(
+                [WeeklyTimerPattern(pattern.raw) for pattern in patterns]
+            )
+        weekly_timer.enabled = enabled
+        await self._api_client.set_weekly_timer(weekly_timer)
+        self._weekly_timer = weekly_timer
+        self._update_id += 1
+        self.async_set_updated_data(self._update_id)
