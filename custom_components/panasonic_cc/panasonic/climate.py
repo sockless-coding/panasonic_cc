@@ -237,13 +237,10 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         """Update attributes."""
         if builder.power_mode == constants.Power.Off:
             self._attr_hvac_mode = HVACMode.OFF
-        default_preset = PRESET_NONE
         if builder.target_temperature:
             self._attr_target_temperature = builder.target_temperature
             if builder.target_temperature > 15 and self._attr_preset_mode == PRESET_8_15:
-                self._attr_preset_mode = default_preset
-            elif builder.target_temperature < 15 and self._attr_preset_mode != PRESET_8_15:
-                self._attr_preset_mode = default_preset = PRESET_8_15
+                self._attr_preset_mode = PRESET_NONE
 
         if builder.eco_mode:
             if builder.eco_mode.name in (PRESET_QUIET, PRESET_ECO):
@@ -251,7 +248,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             elif builder.eco_mode.name in (PRESET_POWERFUL, PRESET_BOOST):
                 self._attr_preset_mode = self._powerful_preset
             else:
-                self._attr_preset_mode = default_preset
+                self._attr_preset_mode = PRESET_NONE
 
         if builder.fan_speed:
             self._attr_fan_mode = builder.fan_speed.name
@@ -369,12 +366,12 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         self._attr_min_temp = 8
         self._attr_max_temp = 15 if device.features.summer_house == 2 else 10
 
-    async def _async_exit_summer_house_mode(self, builder: ChangeRequestBuilder):
+    async def _async_exit_summer_house_mode(self, builder: ChangeRequestBuilder) -> bool:
         """Exit summer house mode."""
         self._attr_min_temp = 16
         self._attr_max_temp = 30
         if not self.coordinator.device.in_summer_house_mode:
-            return
+            return False
         stored_data = await self.coordinator.async_get_stored_data()
         try:
             hvac_mode = constants.OperationMode(stored_data["mode"]) if "mode" in stored_data else constants.OperationMode.Heat
@@ -394,6 +391,17 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         builder.set_eco_mode(eco_mode)
         builder.set_target_temperature(target_temperature)
         builder.set_fan_speed(fan_speed)
+        return True
+
+    async def async_clear_summer_house_stored_data(self) -> None:
+        """Clear stored summer house restore data."""
+        try:
+            await self.coordinator.async_store_data({})
+        except Exception:
+            _LOGGER.exception(
+                "Failed to clear summer house stored data for device %s",
+                self.coordinator.device_id,
+            )
 
     async def async_set_preset_mode(self, preset_mode: str | None) -> None:
         """Set new preset mode."""
@@ -404,7 +412,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
         try:
             builder = self.coordinator.get_change_request_builder()
-            await self._async_exit_summer_house_mode(builder)
+            exit_prepared = await self._async_exit_summer_house_mode(builder)
             builder.set_eco_mode(constants.EcoMode.Auto)
             if preset_mode in (PRESET_QUIET, PRESET_ECO):
                 builder.set_eco_mode(constants.EcoMode.Quiet)
@@ -413,6 +421,8 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             elif preset_mode == PRESET_8_15:
                 await self._async_enter_summer_house_mode(builder)
             await self.coordinator.async_apply_changes(builder)
+            if exit_prepared:
+                await self.async_clear_summer_house_stored_data()
             await self.coordinator.async_schedule_refresh()
         except Exception:
             _LOGGER.exception(
