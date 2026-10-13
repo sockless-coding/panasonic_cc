@@ -224,6 +224,32 @@
           "disconnected": "Disconnected",
           "authentication_error": "Authentication Error"
         }
+      },
+      "hpu_operation_status": {
+        "name": "Heat Pump Status",
+        "state": {
+          "off": "Off",
+          "on": "On",
+          "unknown": "Unknown"
+        }
+      },
+      "tank_cost_today": {
+        "name": "Tank Cost Today"
+      },
+      "boost_mode_status": {
+        "name": "Boost Mode Status",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "operation_mode": {
+        "name": "Operation Mode",
+        "state": {
+          "schedule": "Schedule",
+          "pv_timer": "PV Timer",
+          "holiday": "Holiday"
+        }
       }
     },
     "switch": {
@@ -238,6 +264,19 @@
       },
       "boost_mode": {
         "name": "Boost Mode"
+      },
+      "weekly_timer": {
+        "name": "Weekly Timer"
+      }
+    },
+    "water_heater": {
+      "tank": {
+        "name": "Tank",
+        "state": {
+          "schedule": "Schedule",
+          "pv_timer": "PV Timer",
+          "holiday": "Holiday"
+        }
       }
     },
     "button": {
@@ -258,6 +297,34 @@
             "swing_mode": {
                 "name": "Swing mode",
                 "description": "New horizontal swing mode."
+            }
+        }
+    },
+    "set_weekly_timer_day": {
+        "name": "Set weekly timer day",
+        "description": "Replace the patterns of one or more days of an air conditioner's weekly timer. Saving also turns the weekly timer on unless enabled is false, like the Comfort Cloud app does.",
+        "fields": {
+            "weekdays": {
+                "name": "Weekdays",
+                "description": "Days to replace (monday ... sunday)."
+            },
+            "patterns": {
+                "name": "Patterns",
+                "description": "Up to 6 patterns, each with start_time (HH:MM) and optionally power (on/off), mode (auto/dry/cool/heat/fan), temperature and fan_speed (auto/low/low_mid/mid/high_mid/high). An empty list clears the days. Uses the same shape as the schedule attribute of the weekly timer switch."
+            },
+            "enabled": {
+                "name": "Enabled",
+                "description": "Whether the weekly timer should be on after saving."
+            }
+        }
+    },
+    "set_hws_weekly_schedule": {
+        "name": "Set hot water weekly schedule",
+        "description": "Replace the weekly schedule of a standalone hot water heat pump.",
+        "fields": {
+            "weekly_schedule": {
+                "name": "Weekly schedule",
+                "description": "List of days in the same shape as the weekly_schedule attribute of the water heater. Each day needs a weekday and a mode."
             }
         }
     }

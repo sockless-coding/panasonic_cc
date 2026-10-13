@@ -6,7 +6,11 @@ import logging
 from typing import Any
 
 from aio_panasonic_comfort_cloud import HwsDevice
-from aio_panasonic_comfort_cloud.constants import HwsOperationStatus
+from aio_panasonic_comfort_cloud.constants import (
+    HwsBoostMode,
+    HwsOperationMode,
+    HwsOperationStatus,
+)
 from aio_panasonic_comfort_cloud.models.hws import HwsConsumption
 
 from homeassistant.const import UnitOfTemperature, EntityCategory, UnitOfEnergy
@@ -63,10 +67,10 @@ HWS_BOOST_MODE_STATUS_DESCRIPTION = HwsSensorEntityDescription(
     translation_key="boost_mode_status",
     name="Boost Mode Status",
     icon="mdi:arrow-up-circle",
-    # device_class=SensorDeviceClass.ENUM,
-    # options=[status.name for status in HwsOperationStatus],
+    device_class=SensorDeviceClass.ENUM,
+    options=[mode.name.lower() for mode in HwsBoostMode],
     entity_category=EntityCategory.DIAGNOSTIC,
-    get_state=lambda device: device.parameters.boost_mode.name,
+    get_state=lambda device: device.parameters.boost_mode.name.lower(),
 )
 
 HWS_HPU_STATUS_DESCRIPTION = HwsSensorEntityDescription(
@@ -75,23 +79,27 @@ HWS_HPU_STATUS_DESCRIPTION = HwsSensorEntityDescription(
     name="Heat Pump Status",
     icon="mdi:heat-pump",
     device_class=SensorDeviceClass.ENUM,
-    options=[status.name for status in HwsOperationStatus],
+    options=[status.name.lower() for status in HwsOperationStatus],
     entity_category=EntityCategory.DIAGNOSTIC,
-    get_state=lambda device: device.parameters.hpu_operation_status.name,
+    get_state=lambda device: device.parameters.hpu_operation_status.name.lower(),
 )
 
-# The meaning of operation_mode hasn't been confirmed against a real device
-# (see aio_panasonic_comfort_cloud/models/hws.py) — exposed as a raw
-# diagnostic value, disabled by default, so testers can report back what
-# they observe.
+# Diagnostic and disabled by default: the tank water heater entity shows and
+# sets the operation mode.
 HWS_OPERATION_MODE_DESCRIPTION = HwsSensorEntityDescription(
     key="operation_mode",
     translation_key="operation_mode",
-    name="Operation Mode (raw)",
+    name="Operation Mode",
     icon="mdi:cog",
+    device_class=SensorDeviceClass.ENUM,
+    options=["schedule", "pv_timer", "holiday"],
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
-    get_state=lambda device: device.parameters.operation_mode.name,
+    get_state=lambda device: {
+        HwsOperationMode.Schedule: "schedule",
+        HwsOperationMode.PVTimer: "pv_timer",
+        HwsOperationMode.Holiday: "holiday",
+    }.get(device.parameters.operation_mode),
 )
 
 # Connection status sensor options
@@ -103,10 +111,10 @@ HWS_CONNECTION_STATUS_OPTIONS = [
 ]
 
 
-# Energy consumption sensor descriptions for Aquarea, backed by AquareaConsumptionCoordinator
+# Energy consumption sensor descriptions for HWS, backed by HwsConsumptionCoordinator
 @dataclass(frozen=True, kw_only=True)
 class HwsEnergySensorEntityDescription(SensorEntityDescription):
-    """Describes Aquarea energy sensor entity."""
+    """Describes HWS energy sensor entity."""
 
     get_state: Callable[[HwsConsumption], Any]
     exists_fn: Callable[[HwsDeviceCoordinator], bool] = lambda _: True
@@ -165,9 +173,7 @@ async def async_setup_entry(
         coordinator._device_info.id: coordinator for coordinator in hws_coordinators
     }
     for energy_coordinator in energy_coordinators:
-        device_coordinator = hws_by_id.get(
-            energy_coordinator._device_info.id, 0
-        )  # FIXME?
+        device_coordinator = hws_by_id.get(energy_coordinator._device_info.id)
         if device_coordinator is None:
             continue
         for desc in HWS_ENERGY_SENSORS:
@@ -200,7 +206,7 @@ class HwsSensorEntity(HwsDataEntity, SensorEntity):
 
 
 class HwsEnergySensorEntity(HwsEnergyEntity, SensorEntity, RestoreEntity):
-    """Sensor for today's energy consumption/cost from the Aquarea consumption endpoint."""
+    """Sensor for today's energy consumption/cost from the HWS history endpoint."""
 
     entity_description: HwsEnergySensorEntityDescription  # type: ignore[reportIncompatibleVariableOverride]
 

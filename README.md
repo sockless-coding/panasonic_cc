@@ -35,7 +35,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 
 ### Water Heater
 - **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off)
-- **HWS Hot Water Tank** — Water heater entity for standalone HWS heat pump hot water tanks (e.g. HE-UM40CR), target temperature control, operation modes (Heat Pump, Off)
+- **HWS Hot Water Tank** — Water heater entity for standalone HWS heat pump hot water tanks (e.g. HE-UM40CR) with the current tank temperature, operation modes (Schedule, PV Timer, Holiday — as supported by the unit), away mode (Holiday) and the weekly schedule as the `weekly_schedule` attribute
 
 ### Swing Control
 - Horizontal swing mode via Select entity
@@ -52,6 +52,8 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Force Heater** — Force heater mode (Aquarea)
 - **Holiday Timer** — Enable/disable holiday timer (Aquarea)
 - **Boost Mode** — Toggle boost mode (HWS)
+- **Holiday Timer** — Switch between Holiday and Schedule mode (HWS)
+- **Weekly Timer** — Turn the weekly schedule of an air conditioner on/off; the schedule is in the `schedule` attribute (where available)
 
 ### Sensors
 - **Inside Temperature** — Indoor temperature reading
@@ -74,8 +76,12 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Consumption Today** — Heating, cooling, tank, and total energy consumption for today, in kWh (Aquarea, optional)
 - **Cost Today** — Heating, cooling, and tank cost for today (Aquarea, optional, disabled by default)
 - **DHW/Zone/Defrost Cycles Today** — Daily cycle counters (Aquarea, diagnostic)
-- **Heat Pump Status** — On/Off status of the heat pump unit (HWS, diagnostic)
-- **Operation Mode (raw)** — Raw, unconfirmed operation mode value (HWS, diagnostic, disabled by default)
+- **Heat Pump Status** — Whether the heat pump unit is running: on, off or unknown (HWS, diagnostic)
+- **Outside Temperature** — Outdoor temperature reading (HWS)
+- **Tank Consumption Today** — Tank energy consumption for today, in kWh (HWS, optional)
+- **Tank Cost Today** — Tank cost for today (HWS, optional, disabled by default)
+- **Boost Mode Status** — Whether boost mode is active (HWS, diagnostic)
+- **Operation Mode** — Schedule, PV Timer or Holiday (HWS, diagnostic, disabled by default)
 
 ### Zone Controls
 - **Zone Damper Position** — Slider control for zone damper (0–100%, in steps of 10)
@@ -170,6 +176,38 @@ data:
   entity_id: climate.living_room_ac
   swing_mode: Auto
 ```
+
+### Set Weekly Timer Day
+
+The `panasonic_cc.set_weekly_timer_day` service replaces the patterns of one or more days of an air conditioner's weekly timer. Target the device's **Weekly Timer** switch. Like the Comfort Cloud app, saving turns the weekly timer on unless `enabled` is `false`.
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| `weekdays` | Days to replace: `monday` … `sunday` | Yes |
+| `patterns` | Up to 6 patterns. Each has `start_time` (`HH:MM`) and optionally `power` (`on`/`off`), `mode` (`auto`, `dry`, `cool`, `heat`, `fan`), `temperature` (°C) and `fan_speed` (`auto`, `low`, `low_mid`, `mid`, `high_mid`, `high`). An empty list clears the days. | Yes |
+| `enabled` | Whether the weekly timer is on after saving (default `true`) | No |
+
+The switch's `schedule` attribute uses the same format, so a day can be copied from it.
+
+```yaml
+service: panasonic_cc.set_weekly_timer_day
+target:
+  entity_id: switch.living_room_ac_weekly_timer
+data:
+  weekdays: [monday, tuesday, wednesday, thursday, friday]
+  patterns:
+    - start_time: "06:30"
+      power: "on"
+      mode: heat
+      temperature: 21.5
+      fan_speed: auto
+    - start_time: "22:00"
+      power: "off"
+```
+
+### Set Hot Water Weekly Schedule
+
+The `panasonic_cc.set_hws_weekly_schedule` service replaces the weekly schedule of a standalone HWS hot water tank. It takes `weekly_schedule`, a list of days in the same format as the water heater's `weekly_schedule` attribute (every day needs a `weekday` and a `mode`), so copy the attribute, edit it, and send it back.
 
 ---
 

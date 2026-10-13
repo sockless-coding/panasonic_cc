@@ -7,27 +7,24 @@ from typing import Any
 
 from aio_panasonic_comfort_cloud import ApiClient, PanasonicDeviceInfo
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from ..const import (
-    CONF_AUTO_POWER_ON,
     CONF_DEVICE_FETCH_INTERVAL,
     CONF_ENABLE_DAILY_ENERGY_SENSOR,
     CONF_ENERGY_FETCH_INTERVAL,
-    DEFAULT_AUTO_POWER_ON,
     DEFAULT_DEVICE_FETCH_INTERVAL,
     DEFAULT_ENABLE_DAILY_ENERGY_SENSOR,
     DEFAULT_ENERGY_FETCH_INTERVAL,
     DOMAIN,
     MANUFACTURER,
 )
-from .const import DATA_COORDINATORS, ENERGY_COORDINATORS
+from .const import DATA_COORDINATORS, ENERGY_COORDINATORS, WEEKLY_TIMER_COORDINATORS
 from .coordinator import (
     PanasonicDeviceCoordinator,
     PanasonicDeviceEnergyCoordinator,
+    PanasonicWeeklyTimerCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,22 +43,17 @@ PLATFORMS = [
 async def async_setup_panasonic(
     hass: HomeAssistant,
     entry: ConfigEntry,
+    panasonic_api: ApiClient,
 ) -> tuple[list[PanasonicDeviceCoordinator], list[PanasonicDeviceEnergyCoordinator]]:
-    """Set up Panasonic devices: create API client, coordinators, and register devices."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
+    """Set up Panasonic devices: build coordinators from the shared ApiClient session and register devices."""
     enable_daily_energy_sensor = entry.options.get(
         CONF_ENABLE_DAILY_ENERGY_SENSOR, DEFAULT_ENABLE_DAILY_ENERGY_SENSOR
     )
-    auto_power_on = entry.options.get(CONF_AUTO_POWER_ON, DEFAULT_AUTO_POWER_ON)
 
     # Merge data and options so coordinators can read fetch intervals from options
     config = {**entry.data, **entry.options}
 
-    client = async_get_clientsession(hass)
-    api = ApiClient(username, password, client, auto_power_on=auto_power_on)
-
-    await api.start_session()
+    api = panasonic_api
 
     devices = api.get_devices()
     _LOGGER.info("Got %s Panasonic devices", len(devices))
@@ -116,15 +108,34 @@ async def async_setup_panasonic(
         return_exceptions=True,
     )
 
+    # Weekly timers: no capability flag says which units have one, so only
+    # keep the ones whose schedule could be read.
+    weekly_timer_coordinators: list[PanasonicWeeklyTimerCoordinator] = []
+
+    async def _init_weekly_timer(coordinator: PanasonicDeviceCoordinator) -> None:
+        weekly_timer = PanasonicWeeklyTimerCoordinator(hass, config, api, coordinator._device_info)
+        try:
+            await weekly_timer.async_config_entry_first_refresh()
+            weekly_timer_coordinators.append(weekly_timer)
+        except Exception as exc:
+            _LOGGER.debug("No weekly timer for device %s: %s", coordinator._device_info.name, exc)
+
+    await asyncio.gather(
+        *(_init_weekly_timer(coordinator) for coordinator in data_coordinators),
+        return_exceptions=True,
+    )
+    hass.data[DOMAIN][WEEKLY_TIMER_COORDINATORS] = weekly_timer_coordinators
+
     return data_coordinators, energy_coordinators
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
+    panasonic_api: ApiClient,
 ) -> bool:
     """Set up Panasonic from a config entry."""
-    data_coordinators, energy_coordinators = await async_setup_panasonic(hass, entry)
+    data_coordinators, energy_coordinators = await async_setup_panasonic(hass, entry, panasonic_api)
 
     if not data_coordinators:
         _LOGGER.error("Could not find any Panasonic Comfort Cloud Heat Pumps")

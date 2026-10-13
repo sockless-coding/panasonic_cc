@@ -35,7 +35,7 @@ class HwsDataEntity(CoordinatorEntity[HwsDeviceCoordinator]):
         """Update the attributes of the entity."""
 
 class HwsEnergyEntity(CoordinatorEntity[HwsConsumptionCoordinator]):
-    """Base class for Aquarea energy consumption entities."""
+    """Base class for HWS energy consumption entities."""
 
     _attr_has_entity_name = True
 

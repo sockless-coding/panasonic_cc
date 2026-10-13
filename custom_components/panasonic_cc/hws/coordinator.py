@@ -148,16 +148,16 @@ class HwsDeviceCoordinator(DataUpdateCoordinator[int]):
         if self._device is None:
             return 0
         params = self._device.parameters
-        if params:
-            return hash(
-                (
-                    params.hpu_operation_status,
-                    params.operation_mode,
-                    params.boost_mode,
-                    params.tank_temperature,
-                )
+        return hash(
+            (
+                params.hpu_operation_status,
+                params.operation_mode,
+                params.boost_mode,
+                params.tank_temperature,
+                params.outdoor_temperature,
+                repr([day.to_dict() for day in params.weekly_settings or []]),
             )
-        return ""
+        )
 
     async def _async_update_data(self) -> int:
         """Fetch data from API."""
@@ -255,7 +255,7 @@ class HwsDeviceCoordinator(DataUpdateCoordinator[int]):
 
 
 class HwsConsumptionCoordinator(DataUpdateCoordinator[int]):
-    """Aquarea energy consumption data coordinator (today's heat/cool/tank consumption+cost)."""
+    """HWS energy consumption data coordinator (today's tank consumption+cost)."""
 
     def __init__(
         self,

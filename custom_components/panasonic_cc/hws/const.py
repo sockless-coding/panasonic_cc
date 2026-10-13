@@ -5,3 +5,5 @@ HWS_ENERGY_COORDINATORS = "hws_energy_coordinators"
 
 HWS_SWITCH_DELAY = 10.0
 HWS_WATER_HEATER_DELAY = 10.0
+
+SERVICE_SET_HWS_WEEKLY_SCHEDULE = "set_hws_weekly_schedule"
