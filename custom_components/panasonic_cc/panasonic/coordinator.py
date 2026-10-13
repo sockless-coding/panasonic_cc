@@ -201,6 +201,19 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                     self._device.has_eco_navi,
                     self._device.has_eco_function,
                 )
+                _LOGGER.debug(
+                    "%s (model %s) fan/preset features - quiet_mode: %s, powerful_mode: %s, auto_mode: %s, cool_mode: %s, heat_mode: %s, dry_mode: %s, summer_house: %s, has_iauto_x: %s",
+                    self._device_info.name,
+                    self._device_info.model,
+                    self._device.features.quiet_mode,
+                    self._device.features.powerful_mode,
+                    self._device.features.auto_mode,
+                    self._device.features.cool_mode,
+                    self._device.features.heat_mode,
+                    self._device.features.dry_mode,
+                    self._device.features.summer_house,
+                    self._device.has_iauto_x,
+                )
                 self._update_id = 1
                 self._reset_backoff()
                 return self._update_id

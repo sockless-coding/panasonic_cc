@@ -193,6 +193,15 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
         super().__init__(coordinator, description.key)
 
+        _LOGGER.debug(
+            "%s (model %s) setup - hvac_modes: %s, preset_modes: %s, fan_modes: %s",
+            coordinator.device_info.name,
+            coordinator.device_info.model,
+            self._attr_hvac_modes,
+            self._attr_preset_modes,
+            self._attr_fan_modes,
+        )
+
     def _async_update_attrs(self) -> None:
         """Update attributes."""
         state = self.coordinator.device.parameters
