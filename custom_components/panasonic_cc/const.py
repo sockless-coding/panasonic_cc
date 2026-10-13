@@ -38,6 +38,7 @@ SERVICE_SET_SWING_LR_MODE = "set_horizontal_swing_mode"
 # Platforms
 COMPONENT_TYPES = [
     Platform.CLIMATE,
+    Platform.FAN,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.BUTTON,
