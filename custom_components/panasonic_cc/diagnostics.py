@@ -16,6 +16,7 @@ from .const import (
     HWS_COORDINATORS,
 )
 from .panasonic.const import WEEKLY_TIMER_COORDINATORS
+from .aquarea.const import AQUAREA_WEEKLY_TIMER_COORDINATORS
 
 TO_REDACT = {
     CONF_PASSWORD,
@@ -24,6 +25,7 @@ TO_REDACT = {
     "refresh_token",
     "token",
     "deviceGuid",
+    "gwid",
 }
 
 
@@ -114,7 +116,10 @@ async def async_get_config_entry_diagnostics(
             )
 
     weekly_timers = []
-    for coordinator in hass.data[DOMAIN].get(WEEKLY_TIMER_COORDINATORS, []):
+    for coordinator in (
+        *hass.data[DOMAIN].get(WEEKLY_TIMER_COORDINATORS, []),
+        *hass.data[DOMAIN].get(AQUAREA_WEEKLY_TIMER_COORDINATORS, []),
+    ):
         if coordinator._weekly_timer is not None:
             weekly_timers.append(
                 {

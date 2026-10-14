@@ -37,6 +37,36 @@ set_weekly_timer_day:
       selector:
         boolean:
 
+set_aquarea_weekly_timer_day:
+  target:
+    entity:
+      integration: panasonic_cc
+      domain: switch
+  fields:
+    weekdays:
+      required: true
+      example: '["monday", "tuesday"]'
+      selector:
+        select:
+          multiple: true
+          options:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+    patterns:
+      required: true
+      example: '[{"start_time": "06:00", "mode": "heat", "zone1": "on", "zone1_heat": 22, "tank": "on", "tank_temperature": 50}, {"start_time": "22:00", "mode": "heat", "zone1": "on", "zone1_heat": 18}]'
+      selector:
+        object:
+    enabled:
+      default: true
+      selector:
+        boolean:
+
 set_hws_weekly_schedule:
   target:
     entity:

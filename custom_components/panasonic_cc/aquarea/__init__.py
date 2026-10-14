@@ -15,8 +15,16 @@ from ..const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .const import AQUAREA_COORDINATORS, AQUAREA_ENERGY_COORDINATORS
-from .coordinator import AquareaConsumptionCoordinator, AquareaDeviceCoordinator
+from .const import (
+    AQUAREA_COORDINATORS,
+    AQUAREA_ENERGY_COORDINATORS,
+    AQUAREA_WEEKLY_TIMER_COORDINATORS,
+)
+from .coordinator import (
+    AquareaConsumptionCoordinator,
+    AquareaDeviceCoordinator,
+    AquareaWeeklyTimerCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +50,7 @@ async def async_setup_aquarea(
     if not aquarea_devices:
         hass.data[DOMAIN][AQUAREA_COORDINATORS] = []
         hass.data[DOMAIN][AQUAREA_ENERGY_COORDINATORS] = []
+        hass.data[DOMAIN][AQUAREA_WEEKLY_TIMER_COORDINATORS] = []
         return []
 
     config = {**entry.data, **entry.options}
@@ -109,6 +118,23 @@ async def async_setup_aquarea(
         *(energy.async_config_entry_first_refresh() for energy in energy_coordinators),
         return_exceptions=True,
     )
+
+    # Weekly timers (best-effort): only keep the ones whose schedule could be read.
+    weekly_timer_coordinators: list[AquareaWeeklyTimerCoordinator] = []
+
+    async def _init_weekly_timer(coordinator: AquareaDeviceCoordinator) -> None:
+        weekly_timer = AquareaWeeklyTimerCoordinator(hass, config, panasonic_api, coordinator.info)
+        try:
+            await weekly_timer.async_config_entry_first_refresh()
+            weekly_timer_coordinators.append(weekly_timer)
+        except Exception as exc:
+            _LOGGER.debug("No weekly timer for Aquarea device %s: %s", coordinator.info.name, exc)
+
+    await asyncio.gather(
+        *(_init_weekly_timer(coordinator) for coordinator in aquarea_coordinators),
+        return_exceptions=True,
+    )
+    hass.data[DOMAIN][AQUAREA_WEEKLY_TIMER_COORDINATORS] = weekly_timer_coordinators
 
     return aquarea_coordinators
 

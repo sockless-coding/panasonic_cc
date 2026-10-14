@@ -178,6 +178,24 @@
             }
         }
     },
+    "set_aquarea_weekly_timer_day": {
+        "name": "Set Aquarea weekly timer day",
+        "description": "Replace the patterns of one or more days of an Aquarea heat pump's weekly timer. Saving also turns the weekly timer on unless enabled is false, like the Comfort Cloud app does.",
+        "fields": {
+            "weekdays": {
+                "name": "Weekdays",
+                "description": "Days to replace (monday ... sunday)."
+            },
+            "patterns": {
+                "name": "Patterns",
+                "description": "Up to 6 patterns, each with start_time (HH:MM) and optionally mode (heat/cool/auto), zone1/zone2 (on/off) with zone1_heat/zone1_cool/zone2_heat/zone2_cool setpoints, and tank (on/off) with tank_temperature. Leave out zones or the tank the unit doesn't have. An empty list clears the days. Uses the same shape as the schedule attribute of the weekly timer switch."
+            },
+            "enabled": {
+                "name": "Enabled",
+                "description": "Whether the weekly timer should be on after saving."
+            }
+        }
+    },
     "set_hws_weekly_schedule": {
         "name": "Set hot water weekly schedule",
         "description": "Replace the weekly schedule of a standalone hot water heat pump.",

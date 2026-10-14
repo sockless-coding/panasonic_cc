@@ -7,18 +7,32 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
 
-from aio_panasonic_comfort_cloud.constants import AquareaForceDHW, AquareaForceHeater, AquareaHolidayTimer
+from aio_panasonic_comfort_cloud import AquareaWeeklyTimerPattern
+from aio_panasonic_comfort_cloud.constants import (
+    AquareaForceDHW,
+    AquareaForceHeater,
+    AquareaHolidayTimer,
+    AquareaOperationStatus,
+    AquareaUpdateOperationMode,
+)
 
 from ..const import DOMAIN
+from ..panasonic.switch import WEEKLY_TIMER_WEEKDAYS, _option_name
 from .base import AquareaDataEntity
-from .coordinator import AquareaDeviceCoordinator
-from .const import AQUAREA_COORDINATORS, AQUAREA_SWITCH_DELAY
+from .coordinator import AquareaDeviceCoordinator, AquareaWeeklyTimerCoordinator
+from .const import (
+    AQUAREA_COORDINATORS,
+    AQUAREA_SWITCH_DELAY,
+    AQUAREA_WEEKLY_TIMER_COORDINATORS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,4 +186,141 @@ async def async_setup_entry(
         devices.append(AquareaForceHeaterSwitch(coordinator))
         devices.append(AquareaHolidayTimerSwitch(coordinator))
 
+    for weekly_timer_coordinator in hass.data[DOMAIN].get(AQUAREA_WEEKLY_TIMER_COORDINATORS, []):
+        devices.append(AquareaWeeklyTimerSwitch(weekly_timer_coordinator))
+
     async_add_entities(devices)
+
+
+# The app only offers Heat, Cool and Auto for a pattern.
+AQUAREA_WEEKLY_TIMER_MODES = {
+    _option_name(mode): mode
+    for mode in (
+        AquareaUpdateOperationMode.Heat,
+        AquareaUpdateOperationMode.Cool,
+        AquareaUpdateOperationMode.Auto,
+    )
+}
+AQUAREA_WEEKLY_TIMER_ON_OFF = {
+    _option_name(status): status
+    for status in (AquareaOperationStatus.On, AquareaOperationStatus.Off)
+}
+AQUAREA_WEEKLY_TIMER_ZONES = (1, 2)
+
+
+def _aquarea_pattern_to_dict(pattern: AquareaWeeklyTimerPattern) -> dict[str, Any]:
+    """Summarize a pattern with the same keys/values the service accepts."""
+    data: dict[str, Any] = {"start_time": pattern.start_time}
+    if pattern.mode is not None:
+        data["mode"] = _option_name(pattern.mode)
+    elif pattern.mode_raw is not None:
+        data["mode"] = pattern.mode_raw
+    for zone_id in AQUAREA_WEEKLY_TIMER_ZONES:
+        if (on_off := pattern.zone_on_off(zone_id)) is not None:
+            data[f"zone{zone_id}"] = _option_name(on_off)
+        if (heat := pattern.zone_heat(zone_id)) is not None:
+            data[f"zone{zone_id}_heat"] = heat
+        if (cool := pattern.zone_cool(zone_id)) is not None:
+            data[f"zone{zone_id}_cool"] = cool
+    if pattern.tank_on_off is not None:
+        data["tank"] = _option_name(pattern.tank_on_off)
+    if pattern.tank_temperature is not None:
+        data["tank_temperature"] = pattern.tank_temperature
+    return data
+
+
+def _aquarea_pattern_from_dict(data: dict[str, Any]) -> AquareaWeeklyTimerPattern:
+    """Build a pattern from a validated service call entry."""
+    try:
+        pattern = AquareaWeeklyTimerPattern(
+            start_time=data["start_time"],
+            mode=AQUAREA_WEEKLY_TIMER_MODES[data["mode"]] if "mode" in data else None,
+        )
+    except ValueError as err:
+        raise ServiceValidationError(str(err)) from err
+    for zone_id in AQUAREA_WEEKLY_TIMER_ZONES:
+        on_off = data.get(f"zone{zone_id}")
+        pattern.set_zone(
+            zone_id,
+            AQUAREA_WEEKLY_TIMER_ON_OFF[on_off] if on_off is not None else None,
+            heat=data.get(f"zone{zone_id}_heat"),
+            cool=data.get(f"zone{zone_id}_cool"),
+        )
+    if "tank" in data:
+        pattern.tank_on_off = AQUAREA_WEEKLY_TIMER_ON_OFF[data["tank"]]
+    pattern.tank_temperature = data.get("tank_temperature")
+    return pattern
+
+
+class AquareaWeeklyTimerSwitch(CoordinatorEntity[AquareaWeeklyTimerCoordinator], SwitchEntity):
+    """Turns an Aquarea heat pump's weekly schedule on/off and exposes its patterns."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "weekly_timer"
+    _attr_icon = "mdi:calendar-clock"
+
+    def __init__(self, coordinator: AquareaWeeklyTimerCoordinator) -> None:
+        """Initialize the switch entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device_id}-weekly_timer"
+        self._attr_device_info = coordinator.device_info
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether the schedule is active."""
+        return self.coordinator.weekly_timer.enabled
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the schedule, one list of patterns per weekday, and the setpoint limits."""
+        weekly_timer = self.coordinator.weekly_timer
+        attrs: dict[str, Any] = {
+            "schedule": {
+                _option_name(day.weekday): [_aquarea_pattern_to_dict(pattern) for pattern in day.patterns]
+                for day in weekly_timer.days
+            },
+        }
+        for zone_id in AQUAREA_WEEKLY_TIMER_ZONES:
+            if (limits := weekly_timer.zone_limits(zone_id)) is not None:
+                attrs[f"zone{zone_id}_limits"] = {
+                    key: value for key, value in limits.items() if key != "zoneId"
+                }
+        if weekly_timer.tank_status is not None:
+            attrs["tank_limits"] = weekly_timer.tank_status
+        return attrs
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the schedule on."""
+        await self._async_set_enabled(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the schedule off."""
+        await self._async_set_enabled(False)
+
+    async def _async_set_enabled(self, enabled: bool) -> None:
+        try:
+            await self.coordinator.async_set_enabled(enabled)
+        except Exception as err:
+            raise HomeAssistantError(f"Failed to update the weekly timer: {err}") from err
+
+    async def async_set_aquarea_weekly_timer_day(
+        self,
+        weekdays: list[str],
+        patterns: list[dict[str, Any]],
+        enabled: bool = True,
+    ) -> None:
+        """Replace the patterns of the given weekdays."""
+        new_patterns = [_aquarea_pattern_from_dict(pattern) for pattern in patterns]
+        start_times = [pattern.start_time for pattern in new_patterns]
+        if len(set(start_times)) != len(start_times):
+            raise ServiceValidationError("Each pattern of a day needs a different start time")
+        try:
+            await self.coordinator.async_set_days(
+                [WEEKLY_TIMER_WEEKDAYS[weekday] for weekday in weekdays],
+                new_patterns,
+                enabled,
+            )
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        except Exception as err:
+            raise HomeAssistantError(f"Failed to update the weekly timer: {err}") from err
