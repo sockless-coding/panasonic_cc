@@ -59,7 +59,7 @@ NANOE_DESCRIPTION = PanasonicSwitchEntityDescription(
         constants.NanoeMode.ModeG,
         constants.NanoeMode.All,
     ],
-    is_available=lambda device: device.has_nanoe,
+    is_available=lambda device: device.has_nanoe and not device.info.is_cac,
 )
 ECONAVI_DESCRIPTION = PanasonicSwitchEntityDescription(
     key="eco-navi",
@@ -85,7 +85,7 @@ ECO_FUNCTION_DESCRIPTION = PanasonicSwitchEntityDescription(
     ),
     get_state=lambda device: device.parameters.eco_function_mode
     == constants.EcoFunctionMode.On,
-    is_available=lambda device: device.has_eco_function,
+    is_available=lambda device: device.has_eco_function and not device.info.is_cac,
 )
 IAUTOX_DESCRIPTION = PanasonicSwitchEntityDescription(
     key="iauto-x",

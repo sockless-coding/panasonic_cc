@@ -30,8 +30,8 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - Full climate entity for Panasonic Aquarea zones
 - Support for Heat, Cool, Auto, Dry, and Fan modes
 - Target temperature control
-- Fan mode selection
-- Preset modes (Quiet, Powerful, +8/15°C heat)
+- Fan mode selection, limited to the fan speeds the unit supports (ducted/commercial units may have only Low/Mid/High or a fixed fan speed)
+- Preset modes (Quiet, Powerful, +8/15°C heat), where the unit supports them
 
 ### Water Heater
 - **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off)
@@ -54,6 +54,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Boost Mode** — Toggle boost mode (HWS)
 - **Holiday Timer** — Switch between Holiday and Schedule mode (HWS)
 - **Weekly Timer** — Turn the weekly schedule of an air conditioner on/off; the schedule is in the `schedule` attribute (where available)
+- **Weekly Timer** — Turn the weekly schedule of an Aquarea heat pump on/off; the schedule is in the `schedule` attribute and the allowed setpoint ranges in `zone1_limits`, `zone2_limits` and `tank_limits` (where available)
 
 ### Sensors
 - **Inside Temperature** — Indoor temperature reading
@@ -203,6 +204,37 @@ data:
       fan_speed: auto
     - start_time: "22:00"
       power: "off"
+```
+
+### Set Aquarea Weekly Timer Day
+
+The `panasonic_cc.set_aquarea_weekly_timer_day` service replaces the patterns of one or more days of an Aquarea heat pump's weekly timer. Target the Aquarea device's **Weekly Timer** switch. Like the Comfort Cloud app, saving turns the weekly timer on unless `enabled` is `false`.
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| `weekdays` | Days to replace: `monday` … `sunday` | Yes |
+| `patterns` | Up to 6 patterns. Each has `start_time` (`HH:MM`) and optionally `mode` (`heat`, `cool`, `auto`), `zone1`/`zone2` (`on`/`off`) with `zone1_heat`, `zone1_cool`, `zone2_heat`, `zone2_cool` setpoints (whole °C), and `tank` (`on`/`off`) with `tank_temperature` (whole °C). Leave out zones or the tank the unit doesn't have. An empty list clears the days. | Yes |
+| `enabled` | Whether the weekly timer is on after saving (default `true`) | No |
+
+The switch's `schedule` attribute uses the same format, so a day can be copied from it. Keep setpoints within the ranges in the switch's `zone1_limits`, `zone2_limits` and `tank_limits` attributes. This follows the Comfort Cloud app's requests but hasn't been tested against a real unit yet.
+
+```yaml
+service: panasonic_cc.set_aquarea_weekly_timer_day
+target:
+  entity_id: switch.aquarea_weekly_timer
+data:
+  weekdays: [monday, tuesday, wednesday, thursday, friday]
+  patterns:
+    - start_time: "06:00"
+      mode: heat
+      zone1: "on"
+      zone1_heat: 22
+      tank: "on"
+      tank_temperature: 50
+    - start_time: "22:00"
+      mode: heat
+      zone1: "on"
+      zone1_heat: 18
 ```
 
 ### Set Hot Water Weekly Schedule

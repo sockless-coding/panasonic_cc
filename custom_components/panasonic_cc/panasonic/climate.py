@@ -131,7 +131,6 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
     _attr_min_temp = 16
     _attr_max_temp = 30
     _attr_supported_features = SUPPORT_FLAGS
-    _attr_fan_modes = [f.name for f in constants.FanSpeed]
     _attr_translation_key = "climate"
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_action = None
@@ -168,10 +167,15 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             PRESET_POWERFUL if use_panasonic_preset_names else PRESET_BOOST
         )
 
+        # Ducted/commercial (CAC) units may have fewer or no fan speeds.
+        self._attr_fan_modes = [f.name for f in device.supported_fan_speeds]
+        if not self._attr_fan_modes:
+            self._attr_supported_features &= ~ClimateEntityFeature.FAN_MODE
+
         preset_modes = [PRESET_NONE]
-        if device.features.quiet_mode:
+        if device.supports_quiet_mode:
             preset_modes.append(self._quiet_preset)
-        if device.features.powerful_mode:
+        if device.supports_powerful_mode:
             preset_modes.append(self._powerful_preset)
         if device.features.summer_house > 0:
             preset_modes.append(PRESET_8_15)
@@ -208,6 +212,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         self._set_temp_range()
         self._attr_current_temperature = state.inside_temperature
         self._attr_target_temperature = state.target_temperature
+        # Auto fan speed can depend on the current mode (CAC units in Fan mode).
+        if self._attr_fan_modes:
+            self._attr_fan_modes = [f.name for f in self.coordinator.device.supported_fan_speeds]
         self._attr_fan_mode = state.fan_speed.name
         self._attr_swing_mode = state.vertical_swing_mode.name
         if self.coordinator.device.has_horizontal_swing:
