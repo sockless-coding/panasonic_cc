@@ -124,7 +124,7 @@
         "name": "Verbindingsstatus",
         "state": {
           "connected": "Verbonden",
-          "degraded": "Verslechterd",
+          "degraded": "Verstoord",
           "disconnected": "Verbroken",
           "authentication_error": "Authenticatiefout"
         }
