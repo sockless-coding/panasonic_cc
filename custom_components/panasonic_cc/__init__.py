@@ -2,14 +2,15 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from aio_panasonic_comfort_cloud import ApiClient
-from aio_panasonic_comfort_cloud.exceptions import AgreementNotAcceptedError
+from aio_panasonic_comfort_cloud.exceptions import AgreementNotAcceptedError, ResponseError
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 
@@ -143,6 +144,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         raise ConfigEntryAuthFailed("Panasonic account agreements need to be accepted") from err
     except Exception as err:
+        # ResponseError exposes the HTTP status only in check_response's message.
+        # Match that prefix, not numbers or error codes in the response body.
+        if isinstance(err, ResponseError) and re.match(
+            r"^\([^:\n]+: Expected status code [^:\n]+, received: 5\d{2}:",
+            str(err),
+        ):
+            raise ConfigEntryNotReady(
+                "Panasonic Comfort Cloud is temporarily unavailable"
+            ) from err
         error_msg = str(err).lower()
         if any(kw in error_msg for kw in ["401", "unauthorized", "authentication", "token", "expired"]):
             _LOGGER.error(

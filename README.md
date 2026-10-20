@@ -245,6 +245,9 @@ The `panasonic_cc.set_hws_weekly_schedule` service replaces the weekly schedule 
 
 ## Troubleshooting
 
+### Service Outages
+- **HTTP 5xx during startup or reload** — The Panasonic cloud service may be undergoing maintenance or experiencing an outage. The integration retries setup automatically. A `503` response with code `5300` can include a maintenance window in UTC; wait for the service to recover rather than changing your credentials.
+
 ### Authentication Issues
 - **Account has 2FA enabled** — The setup/reconfigure flow shows an extra "Verification code" step after your Panasonic ID and password. Enter the current one-time code from your authenticator app to continue.
 - **Authentication fails repeatedly** — Try resetting your MFA by logging in and out of the Panasonic Comfort Cloud app, then try again.
