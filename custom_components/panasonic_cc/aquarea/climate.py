@@ -148,6 +148,9 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
         params = self.coordinator.device.parameters
         zone = params.get_zone(self.entity_description.zone_id)
 
+        # The zone temperature is reported even when the zone is off
+        self._attr_current_temperature = zone.temperature if zone is not None else None
+
         if zone is None or zone.operation_status == AquareaOperationStatus.Off:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
@@ -167,8 +170,6 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
         self._attr_hvac_action = _get_hvac_action_from_device_direction(
             params.direction, self._attr_hvac_mode
         )
-
-        self._attr_current_temperature = zone.temperature
 
         if params.operation_mode in (
             AquareaOperationMode.Heat,
