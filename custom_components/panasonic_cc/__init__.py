@@ -4,12 +4,16 @@ from __future__ import annotations
 import logging
 
 from aio_panasonic_comfort_cloud import ApiClient
-from aio_panasonic_comfort_cloud.exceptions import AgreementNotAcceptedError
+from aio_panasonic_comfort_cloud.exceptions import (
+    AgreementNotAcceptedError,
+    RequestError,
+)
+from aiohttp import ClientConnectionError
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 
@@ -41,6 +45,14 @@ from .token_storage import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_connection_error(err: Exception) -> bool:
+    """Return True if err is a network problem rather than an authentication one."""
+    if isinstance(err, RequestError) and err.args:
+        # The library wraps aiohttp errors from regular API calls in RequestError
+        err = err.args[0]
+    return isinstance(err, (ClientConnectionError, TimeoutError))
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -143,6 +155,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         raise ConfigEntryAuthFailed("Panasonic account agreements need to be accepted") from err
     except Exception as err:
+        if _is_connection_error(err):
+            reason = str(err) or type(err).__name__
+            raise ConfigEntryNotReady(
+                f"Unable to connect to Panasonic Comfort Cloud: {reason}"
+            ) from err
         error_msg = str(err).lower()
         if any(kw in error_msg for kw in ["401", "unauthorized", "authentication", "token", "expired"]):
             _LOGGER.error(
