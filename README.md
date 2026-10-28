@@ -74,6 +74,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Tank Temperature** — Hot water tank temperature (Aquarea and HWS, where available)
 - **Direction** — Current operating direction (Aquarea)
 - **Pump Status** — On/Off pump status (Aquarea)
+- **Water Pressure** — Water circuit pressure in bar (Aquarea, where reported by the unit)
 - **Consumption Today** — Heating, cooling, tank, and total energy consumption for today, in kWh (Aquarea, optional)
 - **Cost Today** — Heating, cooling, and tank cost for today (Aquarea, optional, disabled by default)
 - **DHW/Zone/Defrost Cycles Today** — Daily cycle counters (Aquarea, diagnostic)

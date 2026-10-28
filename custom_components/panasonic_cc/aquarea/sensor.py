@@ -9,7 +9,7 @@ from aio_panasonic_comfort_cloud import AquareaDevice
 from aio_panasonic_comfort_cloud.constants import AquareaDeviceDirection, AquareaDeviceModeStatus, AquareaOperationStatus, AquareaPumpDuty
 from aio_panasonic_comfort_cloud.models.aquarea import AquareaConsumption
 
-from homeassistant.const import UnitOfEnergy, UnitOfTemperature, EntityCategory
+from homeassistant.const import UnitOfEnergy, UnitOfPressure, UnitOfTemperature, EntityCategory
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
@@ -75,6 +75,18 @@ AQUAREA_PUMP_STATUS_DESCRIPTION = AquareaSensorEntityDescription(
     icon="mdi:pump",
     get_state=lambda device: "On" if device.parameters.pump_duty == AquareaPumpDuty.On else "Off",
     is_available=lambda device: True,
+)
+
+AQUAREA_WATER_PRESSURE_DESCRIPTION = AquareaSensorEntityDescription(
+    key="water_pressure",
+    translation_key="water_pressure",
+    name="Water Pressure",
+    icon="mdi:gauge",
+    device_class=SensorDeviceClass.PRESSURE,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfPressure.BAR,
+    get_state=lambda device: device.parameters.water_pressure,
+    is_available=lambda device: device.parameters.water_pressure is not None,
 )
 
 # Connection status sensor options
@@ -222,6 +234,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(AquareaPumpStatusSensor(coordinator))
         if coordinator.device.parameters.has_tank:
             entities.append(AquareaSensorEntity(coordinator, AQUAREA_TANK_TEMPERATURE_DESCRIPTION))
+        if coordinator.device.parameters.water_pressure is not None:
+            entities.append(AquareaSensorEntity(coordinator, AQUAREA_WATER_PRESSURE_DESCRIPTION))
         # Daily edge counters
         for desc in AQUAREA_DAILY_COUNTERS:
             entities.append(AquareaDailyCounterSensor(coordinator, desc))
