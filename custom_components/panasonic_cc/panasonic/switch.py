@@ -146,6 +146,8 @@ async def async_setup_entry(
             PanasonicSwitchEntity(data_coordinator, ECO_FUNCTION_DESCRIPTION)
         )
         devices.append(PanasonicSwitchEntity(data_coordinator, IAUTOX_DESCRIPTION))
+        if data_coordinator.device.features.fireplace is True:
+            devices.append(PanasonicFireplaceSwitch(data_coordinator))
         if data_coordinator.device.has_zones:
             for zone in data_coordinator.device.parameters.zones:
                 devices.append(
@@ -219,6 +221,57 @@ class PanasonicSwitchEntity(PanasonicDataEntity, SwitchEntity):
                 self.entity_description.key,
                 self.coordinator.device_id,
             )
+
+
+class PanasonicFireplaceSwitch(PanasonicDataEntity, SwitchEntity):
+    """Fireplace control whose state is confirmed only by device status reads."""
+
+    _attr_name = "Fireplace"
+    _attr_icon = "mdi:fireplace"
+    _attr_device_class = SwitchDeviceClass.SWITCH
+
+    def __init__(self, coordinator: PanasonicDeviceCoordinator) -> None:
+        """Initialize without changing existing entity identities."""
+        super().__init__(coordinator, "fireplace")
+
+    @property
+    def available(self) -> bool:
+        """Require a successful live read, explicit support and a valid integer."""
+        device = self.coordinator.device
+        value = device.parameters.fireplace
+        return (
+            super().available
+            and device.info.status_data_mode == constants.StatusDataMode.LIVE
+            and device.features.fireplace is True
+            and type(value) is int
+            and value in (1, 2)
+        )
+
+    def _async_update_attrs(self) -> None:
+        """Expose unknown values as unknown, never as an assumed off state."""
+        value = self.coordinator.device.parameters.fireplace
+        self._attr_is_on = (
+            value == 2 if type(value) is int and value in (1, 2) else None
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Request Fireplace on (2)."""
+        await self._async_set_fireplace(2)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Request Fireplace off (1), never unavailable (0)."""
+        await self._async_set_fireplace(1)
+
+    async def _async_set_fireplace(self, value: int) -> None:
+        if not self.available:
+            raise HomeAssistantError("Fireplace is unavailable for this device")
+        try:
+            await self.coordinator.async_apply_raw_changes({"fireplace": value})
+            # This may have been buffered while power is off. Even an accepted
+            # HTTP request is not confirmation: keep the last observed state.
+            await self.coordinator.async_schedule_refresh()
+        except Exception as err:
+            raise HomeAssistantError("Failed to update Fireplace") from err
 
 
 def _option_name(value: Enum) -> str:

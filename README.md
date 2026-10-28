@@ -43,6 +43,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - Legacy `set_horizontal_swing_mode` service for automations
 
 ### Switches
+- **Fireplace** — Circulates air to distribute heat from a fireplace or other heat source (where supported)
 - **Nanoe** — Toggle Nanoe air purification (where available)
 - **ECONAVI** — Toggle ECONAVI energy-saving mode (where available)
 - **AI ECO** — Toggle AI ECO mode (where available)

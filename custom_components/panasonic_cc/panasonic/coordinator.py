@@ -143,8 +143,12 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
 
     async def async_apply_changes(self, request_builder: ChangeRequestBuilder) -> None:
         """Apply changes to the device."""
+        await self.async_apply_raw_changes(request_builder.build())
+
+    async def async_apply_raw_changes(self, parameters: dict) -> None:
+        """Apply raw parameters through the shared session and error handling."""
         try:
-            await self._api_client.set_device_raw(self.device, request_builder.build())
+            await self._api_client.set_device_raw(self.device, parameters)
             # Clear command error on success
             self._last_command_error = None
         except Exception as err:
@@ -207,7 +211,24 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                 self._update_id = 1
                 self._reset_backoff()
                 return self._update_id
-            if await self._api_client.try_update_device(self._device):
+            # The library retains omitted fields. Clear only Fireplace before a
+            # status read so an omitted value cannot masquerade as confirmed on/off.
+            previous_fireplace = self._device.parameters.fireplace
+            previous_support = self._device.features.fireplace
+            self._device.parameters.fireplace = None
+            self._device.features.fireplace = False
+            try:
+                changed = await self._api_client.try_update_device(self._device)
+            except BaseException:
+                # Preserve the last observation if the read fails or is cancelled.
+                self._device.parameters.fireplace = previous_fireplace
+                self._device.features.fireplace = previous_support
+                raise
+            if (
+                changed
+                or previous_fireplace != self._device.parameters.fireplace
+                or previous_support != self._device.features.fireplace
+            ):
                 self._update_id += 1
                 self._reset_backoff()
                 return self._update_id

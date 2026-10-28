@@ -51,6 +51,11 @@
     }
   },
   "entity": {
+    "switch": {
+      "fireplace": {
+        "name": "Fireplace"
+      }
+    },
     "climate": {
       "climate": {
         "state_attributes": {
