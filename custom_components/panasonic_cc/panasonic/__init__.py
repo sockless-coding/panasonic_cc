@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 # Platforms that the Panasonic slice provides
 PLATFORMS = [
     "climate",
+    "fan",
     "sensor",
     "switch",
     "button",
