@@ -177,6 +177,17 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 },
             )
+        if origin == "reconfigure":
+            # A reconfigure flow must update the entry it was started for;
+            # Home Assistant rejects async_create_entry() from this source.
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                title=user_input[CONF_USERNAME],
+                data_updates={
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                },
+            )
         return await self._async_create_entry(user_input)
 
     async def _async_try_login(

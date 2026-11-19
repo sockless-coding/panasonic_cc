@@ -57,7 +57,8 @@
       "device_timeout": "Timeout connecting to the device.",
       "device_fail": "Unexpected error creating device.",
       "already_configured": "Device is already configured",
-      "reauth_successful": "Re-authentication successful."
+      "reauth_successful": "Re-authentication successful.",
+      "reconfigure_successful": "Re-configuration was successful."
     }
   },
   "options": {
