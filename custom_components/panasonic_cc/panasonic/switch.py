@@ -99,6 +99,19 @@ IAUTOX_DESCRIPTION = PanasonicSwitchEntityDescription(
     and device.parameters.mode == constants.OperationMode.Auto,
     is_available=lambda device: device.has_iauto_x,
 )
+FIREPLACE_DESCRIPTION = PanasonicSwitchEntityDescription(
+    key="fireplace",
+    translation_key="fireplace",
+    name="Fireplace",
+    icon="mdi:fireplace",
+    on_func=lambda builder: builder.set_fireplace_mode(constants.FireplaceMode.On),
+    off_func=lambda builder: builder.set_fireplace_mode(constants.FireplaceMode.Off),
+    get_state=lambda device: device.parameters.fireplace
+    == constants.FireplaceMode.On.value,
+    # The app only offers fireplace while the unit is in Heat mode.
+    is_available=lambda device: device.has_fireplace
+    and device.parameters.mode == constants.OperationMode.Heat,
+)
 
 
 def create_zone_mode_description(zone: PanasonicDeviceZone) -> PanasonicSwitchEntityDescription:
@@ -146,6 +159,8 @@ async def async_setup_entry(
             PanasonicSwitchEntity(data_coordinator, ECO_FUNCTION_DESCRIPTION)
         )
         devices.append(PanasonicSwitchEntity(data_coordinator, IAUTOX_DESCRIPTION))
+        if data_coordinator.device.has_fireplace:
+            devices.append(PanasonicSwitchEntity(data_coordinator, FIREPLACE_DESCRIPTION))
         if data_coordinator.device.has_zones:
             for zone in data_coordinator.device.parameters.zones:
                 devices.append(

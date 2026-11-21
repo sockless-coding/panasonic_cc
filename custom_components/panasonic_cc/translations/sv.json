@@ -51,6 +51,11 @@
     }
   },
   "entity": {
+    "switch": {
+      "fireplace": {
+        "name": "Eldstadsläge"
+      }
+    },
     "climate": {
       "climate": {
         "state_attributes": {

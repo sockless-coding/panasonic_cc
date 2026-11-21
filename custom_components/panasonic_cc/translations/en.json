@@ -256,6 +256,9 @@
       }
     },
     "switch": {
+      "fireplace": {
+        "name": "Fireplace"
+      },
       "force_dhw": {
         "name": "Force DHW"
       },

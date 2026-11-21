@@ -59,6 +59,8 @@ async def async_get_config_entry_diagnostics(
                 "swing_mode": panasonic_device.parameters.vertical_swing_mode.name
                 if panasonic_device.parameters.vertical_swing_mode
                 else None,
+                "fireplace_supported": panasonic_device.features.fireplace,
+                "fireplace": panasonic_device.parameters.fireplace,
                 "has_nanoe": panasonic_device.has_nanoe,
                 "has_eco_navi": panasonic_device.has_eco_navi,
                 "has_eco_function": panasonic_device.has_eco_function,
