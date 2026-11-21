@@ -186,8 +186,10 @@ def create_zone_temperature_description(zone: PanasonicDeviceZone):
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        get_state=lambda device: zone.temperature,
-        is_available=lambda device: zone.has_temperature
+        # Look the zone up on every read: the library rebuilds the zone
+        # objects on each refresh, so a captured object would go stale.
+        get_state=lambda device, z=zone.id: device.parameters.get_zone(z).temperature,
+        is_available=lambda device, z=zone.id: device.parameters.get_zone(z).has_temperature
     )
 
 

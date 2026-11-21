@@ -43,8 +43,10 @@ def create_zone_damper_description(zone: PanasonicDeviceZone) -> PanasonicNumber
         native_min_value=0,
         native_step=10,
         mode=NumberMode.SLIDER,
-        get_value=lambda device, z=zone: z.level,
-        set_value=lambda builder, value, z=zone: builder.set_zone_damper(z.id, value),
+        # Look the zone up on every read: the library rebuilds the zone
+        # objects on each refresh, so a captured object would go stale.
+        get_value=lambda device, z=zone.id: device.parameters.get_zone(z).level,
+        set_value=lambda builder, value, z=zone.id: builder.set_zone_damper(z, value),
     )
 
 
