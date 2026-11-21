@@ -1,0 +1,15 @@
+# Test runner image. Build once, then mount the repo to run the tests:
+#   docker build -f Dockerfile.test -t panasonic-cc-test .
+#   docker run --rm -v "$PWD:/src:ro" panasonic-cc-test
+FROM python:3.14-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_ROOT_USER_ACTION=ignore
+
+COPY requirements.txt requirements_test.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements_test.txt
+
+WORKDIR /src
+# The repo is mounted read-only, so keep pytest's cache out of it.
+ENTRYPOINT ["python", "-m", "pytest", "-p", "no:cacheprovider"]
