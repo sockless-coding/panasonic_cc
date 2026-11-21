@@ -27,6 +27,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - `set_horizontal_swing_mode` service for automations
 
 ### Switches
+- **Fireplace** — Circulates air to distribute heat from a fireplace or other heat source (Heat mode only, where supported)
 - **Nanoe** — Air purification (where available)
 - **ECONAVI** — Energy-saving mode (where available)
 - **AI ECO** — Intelligent eco mode (where available)
@@ -54,6 +55,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Tank Temperature** — Hot water tank temperature (Aquarea, where available)
 - **Direction** — Current operating direction (Aquarea)
 - **Pump Status** — On/Off pump status (Aquarea)
+- **Water Pressure** — Water circuit pressure in bar (Aquarea, where reported by the unit)
 - **Accumulated Energy** — Heating, cooling, tank, and total accumulated energy consumption in kWh (Aquarea)
 
 ### Zone Controls
