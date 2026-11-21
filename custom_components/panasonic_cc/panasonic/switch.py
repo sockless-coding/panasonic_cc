@@ -94,8 +94,9 @@ IAUTOX_DESCRIPTION = PanasonicSwitchEntityDescription(
     icon="mdi:snowflake",
     on_func=lambda builder: builder.set_iautox_mode(constants.IAutoXMode.On),
     off_func=lambda builder: builder.set_iautox_mode(constants.IAutoXMode.Off),
-    get_state=lambda device: device.parameters.iautox_mode
-    == constants.IAutoXMode.On
+    # The cloud keeps iAuto/operationMode after power-off; only operate changes.
+    get_state=lambda device: device.parameters.power == constants.Power.On
+    and device.parameters.iautox_mode == constants.IAutoXMode.On
     and device.parameters.mode == constants.OperationMode.Auto,
     is_available=lambda device: device.has_iauto_x,
 )
