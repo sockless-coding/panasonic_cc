@@ -1,19 +1,17 @@
-# Panasonic Comfort Cloud - Home Assistant Integration
+# Panasonic Comfort Cloud for Home Assistant
 
 [![GitHub Release][releases-shield]][releases]
 [![License][license-shield]](LICENSE)
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![Marketplace][marketplace-shield]][marketplace]
 [![Integration Usage](https://img.shields.io/badge/dynamic/json?color=41BDF5&style=for-the-badge&logo=home-assistant&label=usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.panasonic_cc.total)](https://analytics.home-assistant.io/)
 
-This is a custom integration to control Panasonic Comfort Cloud devices in [Home Assistant](https://home-assistant.io). It supports Panasonic air conditioners/heat pumps, Panasonic Aquarea air-to-water heat pump systems, and standalone HWS heat pump hot water tanks.
+Control your Panasonic Comfort Cloud devices from [Home Assistant](https://home-assistant.io): air conditioners, Aquarea air-to-water heat pumps and standalone HWS hot water tanks. Everything the Comfort Cloud app shows becomes an entity you can put on a dashboard, use in automations and track in the Energy dashboard.
 
-> [!IMPORTANT]
-> Before installing this integration, please ensure the following steps have been completed in the Panasonic Comfort Cloud App:
->
-> - **Set Up Two-Factor Authentication (2FA):** Complete the entire 2FA setup process.
-> - **Select the SMS Option:** It is crucial to choose the SMS option for 2FA. Failing to do so will result in the error "Missing required parameter: code."
->
-> For optimal operation, it is also recommended that you use separate accounts for Home Assistant and the Comfort Cloud App.
+| Device family | What you get |
+|---|---|
+| **Air conditioners / heat pumps** | Climate control, swing, presets, Nanoe/ECONAVI/AI ECO and other feature switches, zone dampers, weekly timer, temperature and energy sensors |
+| **Aquarea air-to-water heat pumps** | Climate entity per zone, hot water tank, quiet/powerful modes, force DHW/heater, holiday and weekly timer, favorite schedules, energy/cost, pressure, defrost and error sensors |
+| **HWS hot water tanks** (e.g. HE-UM40CR) | Water heater with schedule/PV timer/holiday modes, boost mode, weekly schedule, tank temperature and energy/cost sensors |
 
 <p>
     <img src="https://github.com/sockless-coding/panasonic_cc/raw/master/doc/controls.png" alt="Example controls" style="vertical-align: top;max-width:100%" align="top" />
@@ -21,174 +19,211 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
     <img src="https://github.com/sockless-coding/panasonic_cc/raw/master/doc/diagnostics.png" alt="Example diagnostics" style="vertical-align: top;max-width:100%" align="top" />
 </p>
 
----
+## Before you install
 
-## Features
+> [!IMPORTANT]
+> Panasonic requires two-factor authentication (2FA). Finish the whole 2FA setup in the Panasonic Comfort Cloud app before adding the integration.
+>
+> - **Authenticator app (TOTP), recommended.** During setup, the integration asks for the current 6-digit code from your authenticator app. You only enter it when you set up or sign in again, not on every poll.
+> - **SMS.** Also works. The integration can't take an SMS code, but Panasonic doesn't ask for one when the integration signs in, so setup goes straight through without a verification step.
+>
+> We also recommend a separate Panasonic account for Home Assistant, so it doesn't conflict with the account you use in the app.
 
-### Climate Control
-- Full climate entity for Panasonic air conditioners and heat pumps
-- Full climate entity for Panasonic Aquarea zones
-- Support for Heat, Cool, Auto, Dry, and Fan modes
-- Target temperature control
-- Fan mode selection, limited to the fan speeds the unit supports (ducted/commercial units may have only Low/Mid/High or a fixed fan speed)
-- Preset modes (Quiet, Powerful, +8/15°C heat), where the unit supports them
+**Requirements**
 
-### Water Heater
-- **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off). Turning the tank or a zone on/off sends the same requests as the Comfort Cloud app
-- **Aquarea DHW / EcoFlex** — Standalone domestic hot water units are supported through the same water heater entity, with the setpoint range following the unit's current DHW operation mode (untested against a real unit)
-- **HWS Hot Water Tank** — Water heater entity for standalone HWS heat pump hot water tanks (e.g. HE-UM40CR) with the current tank temperature, operation modes (Schedule, PV Timer, Holiday — as supported by the unit), away mode (Holiday) and the weekly schedule as the `weekly_schedule` attribute
-
-### Swing Control
-- Horizontal swing mode via Select entity
-- Vertical swing mode via Select entity
-- Legacy `set_horizontal_swing_mode` service for automations
-
-### Switches
-- **Fireplace** — Circulates air to distribute heat from a fireplace or other heat source (Heat mode only, where supported)
-- **Nanoe** — Toggle Nanoe air purification (where available)
-- **ECONAVI** — Toggle ECONAVI energy-saving mode (where available)
-- **AI ECO** — Toggle AI ECO mode (where available)
-- **iAUTO-X** — Toggle iAUTO-X intelligent auto mode (where available)
-- **Inside Cleaning** — Toggle inside cleaning (where available)
-- **nanoe Stand-alone** — Run nanoe air purification without heating or cooling; turning it off turns the unit off (where available)
-- **Clothes Drying** — Run the clothes drying mode; turning it off turns the unit off (where available)
-- **Zone controls** — Toggle individual zone on/off (where available)
-- **Force DHW** — Force domestic hot water mode (Aquarea, where available)
-- **Force Heater** — Force heater mode (Aquarea)
-- **Holiday Timer** — Enable/disable holiday timer (Aquarea)
-- **Boost Mode** — Toggle boost mode (HWS)
-- **Holiday Timer** — Switch between Holiday and Schedule mode (HWS)
-- **Weekly Timer** — Turn the weekly schedule of an air conditioner on/off; the schedule is in the `schedule` attribute (where available)
-- **Weekly Timer** — Turn the weekly schedule of an Aquarea heat pump on/off; the schedule is in the `schedule` attribute and the allowed setpoint ranges in `zone1_limits`, `zone2_limits` and `tank_limits`, and the names of the favorite schedules saved in the app in `favorites` (where available)
-
-### Sensors
-- **Inside Temperature** — Indoor temperature reading
-- **Outside Temperature** — Outdoor temperature reading (where available)
-- **Daily Energy** — Daily energy consumption in kWh (optional)
-- **Daily Heating Energy** — Daily heating energy consumption in kWh (optional)
-- **Daily Cooling Energy** — Daily cooling energy consumption in kWh (optional)
-- **Current Extrapolated Power** — Current power consumption in W (calculated from energy readings)
-- **Cooling Extrapolated Power** — Cooling power consumption in W (calculated from energy readings)
-- **Heating Extrapolated Power** — Heating power consumption in W (calculated from energy readings)
-- **Zone Temperature** — Per-zone temperature reading (where zones are available)
-- **Connection Status** — Current connection status: connected, degraded, disconnected, or authentication_error (diagnostic)
-- **Last Updated** — Timestamp of last device data update (diagnostic)
-- **Cached Data Age** — Timestamp of cached data when device is offline (diagnostic)
-- **Data Mode** — Current data mode: LIVE, CACHED, or OFFLINE (diagnostic)
-- **Outside Temperature** — Outdoor temperature reading (Aquarea)
-- **Tank Temperature** — Hot water tank temperature (Aquarea and HWS, where available)
-- **Direction** — Current operating direction (Aquarea)
-- **Pump Status** — On/Off pump status (Aquarea)
-- **Water Pressure** — Water circuit pressure in bar (Aquarea, where reported by the unit)
-- **Consumption Today** — Heating, cooling, tank, and total energy consumption for today, in kWh (Aquarea, optional)
-- **Cost Today** — Heating, cooling, and tank cost for today (Aquarea, optional, disabled by default)
-- **DHW/Zone/Defrost Cycles Today** — Daily cycle counters (Aquarea, diagnostic)
-- **Heat Pump Status** — Whether the heat pump unit is running: on, off or unknown (HWS, diagnostic)
-- **Outside Temperature** — Outdoor temperature reading (HWS)
-- **Tank Consumption Today** — Tank energy consumption for today, in kWh (HWS, optional)
-- **Tank Cost Today** — Tank cost for today (HWS, optional, disabled by default)
-- **Boost Mode Status** — Whether boost mode is active (HWS, diagnostic)
-- **Operation Mode** — Schedule, PV Timer or Holiday (HWS, diagnostic, disabled by default)
-- **Schedule Mode Today / Set 1 Today / Set 2 Today / Inhibit Time Today** — Today's entry of the weekly schedule: the day's mode (timer or continuous) and its time windows; Set 2 also has its start/end temperatures as attributes (HWS, diagnostic)
-
-### Zone Controls
-- **Zone Damper Position** — Slider control for zone damper (0–100%, in steps of 10)
-- **Zone Mode** — Switch to enable/disable individual zones
-
-### Select
-- **Quiet Mode** — Select quiet mode level: level1, level2, level3, or off (Aquarea)
-- **Powerful Time** — Select powerful mode duration: on-30m, on-60m, on-90m, or off (Aquarea heat pumps)
-- **DHW Operation Mode** — Select heat_pump, heater_only or auto (Aquarea DHW / EcoFlex units)
-
-### Binary Sensors
-- **Error Status** — Indicates if the Aquarea device is in an error state, with a raw fault status attribute (Aquarea)
-- **Defrost** — Indicates if the Aquarea device is in defrost mode (Aquarea)
-
-### Buttons
-- **Fetch latest data** — Manually refresh device data from the cloud
-- **Fetch latest energy data** — Manually refresh energy data from the cloud
-- **Fetch latest app version** — Refresh the app version information
-- **Request Defrost** — Request the Aquarea device to start the defrost process (Aquarea)
+- Home Assistant 2026.3.0 or newer
+- A Panasonic Comfort Cloud account with your devices added in the app
+- Internet access. The integration polls the Panasonic cloud (`cloud_polling`) and does not talk to devices on your local network.
 
 ## Installation
 
-### HACS (recommended)
-1. [Install HACS](https://hacs.xyz/docs/setup/download), if you haven't already
-2. [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sockless-coding&repository=panasonic_cc&category=integration)
-3. Press the **Download** button
-4. Restart Home Assistant
-5. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=panasonic_cc)
+<!-- ha-marketplace:exclude-start -->
+### Home Assistant Marketplace (recommended)
 
-### Manual Installation
-1. Clone or download this repository
-2. Copy the `custom_components/panasonic_cc` folder into `<homeassistant config>/custom_components/panasonic_cc`
+Home Assistant 2026.11 and newer include the Marketplace.
+
+1. [![Open your Home Assistant instance and open a repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=sockless-coding&repository=panasonic_cc&category=integration)
+2. Press **Download**
 3. Restart Home Assistant
-4. Add the integration via **Settings → Devices & Services → Add Integration** and search for "Panasonic Comfort Cloud"
 
-## Configuration
+### HACS (Home Assistant before 2026.11)
 
-### Initial Setup
-Once installed, add the integration via the Home Assistant UI and enter your Panasonic ID and password:
+1. [Install HACS](https://hacs.xyz/docs/use/), if you haven't already
+2. [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sockless-coding&repository=panasonic_cc&category=integration)
+3. Press **Download**
+4. Restart Home Assistant
+
+### Manual installation
+
+1. Download the latest [release](https://github.com/sockless-coding/panasonic_cc/releases)
+2. Copy the `custom_components/panasonic_cc` folder to `<config>/custom_components/panasonic_cc`
+3. Restart Home Assistant
+<!-- ha-marketplace:exclude-end -->
+
+### Set up the integration
+
+After installing and restarting:
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=panasonic_cc)
+
+Or go to **Settings → Devices & services → Add integration** and search for **Panasonic Comfort Cloud**. Then enter your Panasonic ID and password:
 
 ![Setup](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/setup.png)
-
-The initial setup form includes the following options:
 
 | Option | Description | Default |
 |--------|-------------|---------|
 | **Panasonic ID** | Your Panasonic Comfort Cloud account ID | — |
 | **Password** | Your Panasonic Comfort Cloud password | — |
 | **Enable daily energy sensors** | Create daily energy and current power sensors | Disabled |
-| **Enable Nanoe switch for all devices** | Force the Nanoe switch to appear even if the device doesn't report Nanoe support | Disabled |
-| **Use Panasonic preset names** | Use "Quiet" and "Powerful" instead of "Eco" and "Boost" preset names | Enabled |
+| **Enable Nanoe switch for all devices** | Show the Nanoe switch even if the device doesn't report Nanoe support | Disabled |
+| **Use Panasonic preset names** | Use "Quiet" and "Powerful" instead of "Eco" and "Boost" | Enabled |
 | **Device fetch interval** | How often to poll device data (5–300 seconds) | 120s |
 | **Energy fetch interval** | How often to poll energy data (10–600 seconds) | 300s |
 
 ### Options
-After initial setup, you can modify the following options from the integration's configuration:
+
+After setup, change these from the integration's **Configure** button:
 
 ![Options](https://github.com/sockless-coding/panasonic_cc/raw/master/doc/configuration.png)
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| **Force outside sensor** | Force the outside temperature sensor to appear even if no reading is available | Disabled |
+| **Force outside sensor** | Show the outside temperature sensor even if no reading is available | Disabled |
 | **Enable daily energy sensors** | Create daily energy and current power sensors | Disabled |
-| **Enable Nanoe switch for all devices** | Force the Nanoe switch to appear on all devices | Disabled |
+| **Enable Nanoe switch for all devices** | Show the Nanoe switch on all devices | Disabled |
 | **Use Panasonic preset names** | Use "Quiet" and "Powerful" instead of "Eco" and "Boost" | Enabled |
 | **Device fetch interval** | How often to poll device data (5–300 seconds) | 120s |
 | **Energy fetch interval** | How often to poll energy data (10–600 seconds) | 300s |
 
 > [!TIP]
-> Some options require a Home Assistant restart to take effect. The integration will indicate which options need a restart.
+> Some options only take effect after a Home Assistant restart. The integration tells you which ones.
 
 ---
 
-## Services
+## Entities
 
-### Set Horizontal Swing Mode
+Entities only appear when your unit supports the feature. Entities marked *optional* need **Enable daily energy sensors**. Some entities are disabled by default and can be enabled from the entity settings.
 
-The `panasonic_cc.set_horizontal_swing_mode` service allows you to set the horizontal swing mode for a climate entity.
+### Air conditioners and heat pumps
 
-**Service data:**
+**Climate**
+- Heat, Cool, Auto, Dry and Fan modes with target temperature
+- Fan modes limited to the speeds the unit supports. Ducted and commercial units may only have Low/Mid/High or a fixed speed.
+- Preset modes (Quiet, Powerful, +8/15°C heat), where the unit supports them
+
+**Select**
+- **Horizontal swing** and **Vertical swing**
+
+**Switches**
+- **Fireplace**: circulates air to spread heat from a fireplace or other heat source (Heat mode only)
+- **Nanoe**: Nanoe air purification
+- **ECONAVI**: ECONAVI energy-saving mode
+- **AI ECO**: AI ECO mode
+- **iAUTO-X**: iAUTO-X intelligent auto mode
+- **Inside Cleaning**: inside cleaning
+- **nanoe Stand-alone**: runs nanoe air purification without heating or cooling. Turning it off turns the unit off.
+- **Clothes Drying**: runs the clothes drying mode. Turning it off turns the unit off.
+- **Zone Mode**: turns individual zones on/off
+- **Weekly Timer**: turns the weekly schedule on/off. The schedule is in the `schedule` attribute.
+
+**Number**
+- **Zone Damper Position**: zone damper from 0 to 100%, in steps of 10
+
+**Sensors**
+- **Inside Temperature**, **Outside Temperature** and per-zone **Zone Temperature**
+- **Daily Energy**, **Daily Heating Energy**, **Daily Cooling Energy** in kWh (optional)
+- **Current / Heating / Cooling Extrapolated Power** in W, calculated from the energy readings (optional)
+
+### Aquarea air-to-water heat pumps
+
+**Climate and water heater**
+- A climate entity for each zone
+- **Hot water tank**: water heater with target temperature (40–65°C) and operation modes (Heat Pump, Off). Turning the tank or a zone on/off sends the same requests as the Comfort Cloud app.
+- **DHW / EcoFlex**: standalone domestic hot water units use the same water heater entity. The setpoint range follows the unit's current DHW operation mode. Not yet tested against a real unit.
+
+**Select**
+- **Quiet Mode**: level1, level2, level3 or off
+- **Powerful Time**: on-30m, on-60m, on-90m or off (heat pumps)
+- **DHW Operation Mode**: heat_pump, heater_only or auto (DHW / EcoFlex units)
+
+**Switches**
+- **Force DHW**: forces domestic hot water mode
+- **Force Heater**: forces heater mode
+- **Holiday Timer**: turns the holiday timer on/off
+- **Weekly Timer**: turns the weekly schedule on/off. Its attributes hold the schedule (`schedule`), the allowed setpoint ranges (`zone1_limits`, `zone2_limits`, `tank_limits`) and the names of the favorite schedules saved in the app (`favorites`).
+
+**Sensors**
+- **Outside Temperature** and **Tank Temperature**
+- **Direction** and **Pump Status**
+- **Water Pressure** in bar, where the unit reports it
+- **Consumption Today**: heating, cooling, tank and total energy in kWh (optional)
+- **Cost Today**: heating, cooling and tank cost (optional, disabled by default)
+- **DHW / Zone / Defrost Cycles Today**: daily cycle counters (diagnostic)
+
+**Binary sensors**
+- **Error Status**: on when the unit is in an error state, with the raw fault status as an attribute
+- **Defrost**: on while the unit is defrosting
+
+**Button**
+- **Request Defrost**: asks the unit to start defrosting
+
+### HWS hot water tanks
+
+**Water heater**
+- Current tank temperature
+- Operation modes Schedule, PV Timer and Holiday, as supported by the unit
+- Away mode (Holiday)
+- The weekly schedule as the `weekly_schedule` attribute
+
+**Switches**
+- **Boost Mode**: turns boost mode on/off
+- **Holiday Timer**: switches between Holiday and Schedule mode
+
+**Sensors**
+- **Tank Temperature** and **Outside Temperature**
+- **Tank Consumption Today** in kWh (optional)
+- **Tank Cost Today** (optional, disabled by default)
+- **Heat Pump Status**: on, off or unknown (diagnostic)
+- **Boost Mode Status** (diagnostic)
+- **Operation Mode**: Schedule, PV Timer or Holiday (diagnostic, disabled by default)
+- **Schedule Mode Today / Set 1 Today / Set 2 Today / Inhibit Time Today**: today's entry of the weekly schedule, with the mode (timer or continuous) and its time windows. Set 2 also has its start/end temperatures as attributes. (diagnostic)
+
+### All devices
+
+**Diagnostic sensors**
+- **Connection Status**: connected, degraded, disconnected or authentication_error
+- **Data Mode**: LIVE, CACHED or OFFLINE
+- **Last Updated**: when device data was last updated
+- **Cached Data Age**: age of the cached data while the device is offline
+
+**Buttons**
+- **Fetch latest data**: refreshes device data from the cloud
+- **Fetch latest energy data**: refreshes energy data from the cloud
+- **Fetch latest app version**: refreshes the Comfort Cloud app version the integration sends
+
+---
+
+## Actions
+
+### Set horizontal swing mode
+
+`panasonic_cc.set_horizontal_swing_mode` sets the horizontal swing mode of a climate entity. It was kept for older automations; new ones can use the **Horizontal swing** select entity.
 
 | Field | Description | Required |
 |-------|-------------|----------|
 | `entity_id` | The climate entity to control | Yes |
-| `swing_mode` | The horizontal swing mode to set | Yes |
+| `swing_mode` | `Auto`, `Left`, `LeftMid`, `Mid`, `RightMid` or `Right` | Yes |
 
-**Available swing modes:** `Auto`, `Left`, `LeftMid`, `Mid`, `RightMid`, `Right`
-
-**Example automation:**
 ```yaml
-service: panasonic_cc.set_horizontal_swing_mode
+action: panasonic_cc.set_horizontal_swing_mode
 data:
   entity_id: climate.living_room_ac
   swing_mode: Auto
 ```
 
-### Set Weekly Timer Day
+### Set weekly timer day
 
-The `panasonic_cc.set_weekly_timer_day` service replaces the patterns of one or more days of an air conditioner's weekly timer. Target the device's **Weekly Timer** switch. Like the Comfort Cloud app, saving turns the weekly timer on unless `enabled` is `false`.
+`panasonic_cc.set_weekly_timer_day` replaces the patterns of one or more days of an air conditioner's weekly timer. Target the device's **Weekly Timer** switch. As in the Comfort Cloud app, saving turns the weekly timer on unless `enabled` is `false`.
 
 | Field | Description | Required |
 |-------|-------------|----------|
@@ -196,10 +231,10 @@ The `panasonic_cc.set_weekly_timer_day` service replaces the patterns of one or 
 | `patterns` | Up to 6 patterns. Each has `start_time` (`HH:MM`) and optionally `power` (`on`/`off`), `mode` (`auto`, `dry`, `cool`, `heat`, `fan`, plus `nanoe_stand_alone` and `clothes_drying` on units that have them), `temperature` (°C) and `fan_speed` (`auto`, `low`, `low_mid`, `mid`, `high_mid`, `high`). An empty list clears the days. | Yes |
 | `enabled` | Whether the weekly timer is on after saving (default `true`) | No |
 
-The switch's `schedule` attribute uses the same format, so a day can be copied from it.
+The switch's `schedule` attribute uses the same format, so you can copy a day from it.
 
 ```yaml
-service: panasonic_cc.set_weekly_timer_day
+action: panasonic_cc.set_weekly_timer_day
 target:
   entity_id: switch.living_room_ac_weekly_timer
 data:
@@ -214,20 +249,20 @@ data:
       power: "off"
 ```
 
-### Set Aquarea Weekly Timer Day
+### Set Aquarea weekly timer day
 
-The `panasonic_cc.set_aquarea_weekly_timer_day` service replaces the patterns of one or more days of an Aquarea heat pump's weekly timer. Target the Aquarea device's **Weekly Timer** switch. Like the Comfort Cloud app, saving turns the weekly timer on unless `enabled` is `false`.
+`panasonic_cc.set_aquarea_weekly_timer_day` replaces the patterns of one or more days of an Aquarea heat pump's weekly timer. Target the Aquarea device's **Weekly Timer** switch. As in the Comfort Cloud app, saving turns the weekly timer on unless `enabled` is `false`.
 
 | Field | Description | Required |
 |-------|-------------|----------|
 | `weekdays` | Days to replace: `monday` … `sunday` | Yes |
-| `patterns` | Up to 6 patterns. Each has `start_time` (`HH:MM`) and optionally `mode` (`heat`, `cool`, `auto`), `zone1`/`zone2` (`on`/`off`) with `zone1_heat`, `zone1_cool`, `zone2_heat`, `zone2_cool` setpoints (whole °C), and `tank` (`on`/`off`) with `tank_temperature` (whole °C). Leave out zones or the tank the unit doesn't have. An empty list clears the days. | Yes |
+| `patterns` | Up to 6 patterns. Each has `start_time` (`HH:MM`) and optionally `mode` (`heat`, `cool`, `auto`), `zone1`/`zone2` (`on`/`off`) with `zone1_heat`, `zone1_cool`, `zone2_heat`, `zone2_cool` setpoints (whole °C), and `tank` (`on`/`off`) with `tank_temperature` (whole °C). Leave out zones or a tank the unit doesn't have. An empty list clears the days. | Yes |
 | `enabled` | Whether the weekly timer is on after saving (default `true`) | No |
 
-The switch's `schedule` attribute uses the same format, so a day can be copied from it. Keep setpoints within the ranges in the switch's `zone1_limits`, `zone2_limits` and `tank_limits` attributes. This follows the Comfort Cloud app's requests but hasn't been tested against a real unit yet.
+The switch's `schedule` attribute uses the same format, so you can copy a day from it. Keep setpoints within the ranges in the switch's `zone1_limits`, `zone2_limits` and `tank_limits` attributes. This action sends the same requests as the Comfort Cloud app but hasn't been tested against a real unit yet.
 
 ```yaml
-service: panasonic_cc.set_aquarea_weekly_timer_day
+action: panasonic_cc.set_aquarea_weekly_timer_day
 target:
   entity_id: switch.aquarea_weekly_timer
 data:
@@ -245,9 +280,9 @@ data:
       zone1_heat: 18
 ```
 
-### Apply Aquarea Favorite Schedule
+### Apply Aquarea favorite schedule
 
-The `panasonic_cc.apply_aquarea_favorite_schedule` service replaces an Aquarea unit's whole weekly timer with one of the favorite schedules saved in the Comfort Cloud app (app 5.x). Target the Aquarea device's **Weekly Timer** switch; the saved names are in its `favorites` attribute. Like the app, saving turns the weekly timer on unless `enabled` is `false`.
+`panasonic_cc.apply_aquarea_favorite_schedule` replaces an Aquarea unit's whole weekly timer with one of the favorite schedules saved in the Comfort Cloud app (app 5.x). Target the Aquarea device's **Weekly Timer** switch. The saved names are in its `favorites` attribute. As in the app, saving turns the weekly timer on unless `enabled` is `false`.
 
 | Field | Description | Required |
 |-------|-------------|----------|
@@ -255,51 +290,51 @@ The `panasonic_cc.apply_aquarea_favorite_schedule` service replaces an Aquarea u
 | `enabled` | Whether the weekly timer is on after saving (default `true`) | No |
 
 ```yaml
-service: panasonic_cc.apply_aquarea_favorite_schedule
+action: panasonic_cc.apply_aquarea_favorite_schedule
 target:
   entity_id: switch.aquarea_weekly_timer
 data:
   name: Winter
 ```
 
-### Set Hot Water Weekly Schedule
+### Set hot water weekly schedule
 
-The `panasonic_cc.set_hws_weekly_schedule` service replaces the weekly schedule of a standalone HWS hot water tank. It takes `weekly_schedule`, a list of days in the same format as the water heater's `weekly_schedule` attribute (every day needs a `weekday` and a `mode`), so copy the attribute, edit it, and send it back.
+`panasonic_cc.set_hws_weekly_schedule` replaces the weekly schedule of a standalone HWS hot water tank. Target the tank's water heater entity. It takes `weekly_schedule`, a list of days in the same format as the water heater's `weekly_schedule` attribute. Every day needs a `weekday` and a `mode`. The easiest way is to copy the attribute, edit it, and send it back.
 
 ---
 
 ## Troubleshooting
 
-### Authentication Issues
-- **Account has 2FA enabled** — The setup/reconfigure flow shows an extra "Verification code" step after your Panasonic ID and password. Enter the current one-time code from your authenticator app to continue.
-- **Authentication fails repeatedly** — Try resetting your MFA by logging in and out of the Panasonic Comfort Cloud app, then try again.
-- **Session expired** — The integration will notify you when authentication expires. Use the reconfigure option from the integration settings to re-authenticate.
+### Authentication
+- **Verification code step**: if your account uses an authenticator app, setup and reconfigure show an extra "Verification code" step after your Panasonic ID and password. Enter the current code from the app. Codes change every 30 seconds, so if one is rejected, wait for the next one.
+- **Authentication keeps failing**: reset MFA by logging out of the Comfort Cloud app and back in, then try again.
+- **Session expired**: Home Assistant notifies you when authentication expires. Use **Reconfigure** on the integration to sign in again.
 
-### Device Data Issues
-- **Cached data** — If your device is offline, the integration will show cached data. Check the "Data Mode" diagnostic sensor to see if data is LIVE, CACHED, or OFFLINE.
-- **Stale readings** — Use the "Fetch latest data" button to manually refresh device data.
-- **No outside temperature** — Not all devices report outside temperature. Use the "Force outside sensor" option if you want the sensor entity to always appear.
+### Device data
+- **Cached data**: while a device is offline, the integration shows its cached data. The **Data Mode** diagnostic sensor shows whether data is LIVE, CACHED or OFFLINE.
+- **Stale readings**: press **Fetch latest data** to refresh straight away.
+- **No outside temperature**: not every device reports it. Turn on **Force outside sensor** if you want the entity to always exist.
 
-### Energy Sensors
-- **Energy data not updating** — Ensure "Enable daily energy sensors" is checked in the integration options. Note that energy data resets daily.
-- **Current power seems inaccurate** — Current power is extrapolated from the daily energy reading and may not reflect instantaneous power accurately.
+### Energy sensors
+- **Energy sensors missing or not updating**: make sure **Enable daily energy sensors** is on in the options. Energy values reset every day.
+- **Current power looks wrong**: current power is extrapolated from the daily energy reading, so it isn't an instantaneous measurement.
 
----
-
-## Dependencies
-
-This integration uses the following Python package:
-
-- [`aio-panasonic-comfort-cloud`](https://github.com/sockless-coding/aio-panasonic-comfort-cloud) — For Panasonic air conditioners/heat pumps, Aquarea air-to-water heat pumps, and standalone HWS hot water tanks
+### Reporting a problem
+Open an [issue](https://github.com/sockless-coding/panasonic_cc/issues) and attach the integration's diagnostics: **Settings → Devices & services → Panasonic Comfort Cloud → ⋮ → Download diagnostics**.
 
 ---
 
-## Support & Development
+## Support and development
 
-- **Report issues:** [GitHub Issues](https://github.com/sockless-coding/panasonic_cc/issues)
-- **Contribute:** See [CONTRIBUTING.md](CONTRIBUTING.md)
-- **Buy me a coffee:** ☕ [Buy Me a Coffee](https://www.buymeacoffee.com/sockless)
+- **Issues and feature requests:** [GitHub Issues](https://github.com/sockless-coding/panasonic_cc/issues)
+- **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Cloud library:** [`aio-panasonic-comfort-cloud`](https://github.com/sockless-coding/aio-panasonic-comfort-cloud)
+- **Say thanks:** ☕ [Buy Me a Coffee](https://www.buymeacoffee.com/sockless)
+
+This project is not affiliated with or endorsed by Panasonic.
 
 [license-shield]: https://img.shields.io/github/license/sockless-coding/panasonic_cc.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/sockless-coding/panasonic_cc.svg?style=for-the-badge
 [releases]: https://github.com/sockless-coding/panasonic_cc/releases
+[marketplace-shield]: https://img.shields.io/badge/Marketplace-Default-41BDF5.svg?style=for-the-badge&logo=home-assistant
+[marketplace]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=sockless-coding&repository=panasonic_cc&category=integration
