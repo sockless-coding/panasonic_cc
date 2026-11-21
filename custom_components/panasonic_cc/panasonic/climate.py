@@ -23,6 +23,7 @@ from ..const import (
     DEFAULT_USE_PANASONIC_PRESET_NAMES,
     DOMAIN,
 )
+from ..compat import NativeTemperatureCompat
 from .base import PanasonicDataEntity
 from .coordinator import PanasonicDeviceCoordinator
 from .const import (
@@ -128,12 +129,12 @@ PANASONIC_CLIMATE_DESCRIPTION = PanasonicClimateEntityDescription(
 )
 
 
-class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
+class PanasonicClimateEntity(NativeTemperatureCompat, PanasonicDataEntity, ClimateEntity):
     """Representation of a Panasonic Climate Device."""
 
     entity_description: PanasonicClimateEntityDescription
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
     _attr_min_temp = 16
     _attr_max_temp = 30
@@ -217,9 +218,9 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
         )
 
         self._set_temp_range()
-        self._attr_current_temperature = state.inside_temperature
+        self._attr_native_current_temperature = state.inside_temperature
         # Clothes drying runs with temperatureSet 0, which isn't a real setpoint.
-        self._attr_target_temperature = (
+        self._attr_native_target_temperature = (
             None
             if state.mode == constants.OperationMode.ClothesDrying
             else state.target_temperature
@@ -258,7 +259,7 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
         default_preset = PRESET_NONE
         if builder.target_temperature:
-            self._attr_target_temperature = builder.target_temperature
+            self._attr_native_target_temperature = builder.target_temperature
             if builder.target_temperature > 15 and self._attr_preset_mode == PRESET_8_15:
                 self._attr_preset_mode = default_preset
             elif builder.target_temperature < 15 and self._attr_preset_mode != PRESET_8_15:

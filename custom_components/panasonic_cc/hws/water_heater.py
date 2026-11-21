@@ -19,6 +19,7 @@ from aio_panasonic_comfort_cloud.constants import HwsOperationMode
 from aio_panasonic_comfort_cloud.exceptions import DeviceIsNotReadyError
 
 from ..const import DOMAIN
+from ..compat import NativeTemperatureCompat
 from .base import HwsDataEntity
 from .coordinator import HwsDeviceCoordinator
 from .const import HWS_COORDINATORS, HWS_WATER_HEATER_DELAY
@@ -71,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities(entities)
 
 
-class HwsWaterHeater(HwsDataEntity, WaterHeaterEntity):
+class HwsWaterHeater(NativeTemperatureCompat, HwsDataEntity, WaterHeaterEntity):
     """Representation of an HWS hot water tank.
 
     The API has no tank setpoint to write; heating is driven by the weekly
@@ -79,7 +80,7 @@ class HwsWaterHeater(HwsDataEntity, WaterHeaterEntity):
     temperature, the operation mode and the schedule itself.
     """
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_WHOLE
 
     def __init__(
@@ -96,7 +97,7 @@ class HwsWaterHeater(HwsDataEntity, WaterHeaterEntity):
         """Update attributes."""
         device = self.coordinator.device
         params = device.parameters
-        self._attr_current_temperature = params.tank_temperature
+        self._attr_native_current_temperature = params.tank_temperature
 
         modes = _supported_operation_modes(device)
         self._attr_operation_list = [OPERATION_MODE_REVERSE_LOOKUP[mode] for mode in modes]

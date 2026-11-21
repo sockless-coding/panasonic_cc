@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from aio_panasonic_comfort_cloud.constants import AquareaOperationStatus
 
 from ..const import DOMAIN
+from ..compat import NativeTemperatureCompat
 from .base import AquareaDataEntity
 from .coordinator import AquareaDeviceCoordinator
 from .const import AQUAREA_COORDINATORS
@@ -47,10 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities(entities)
 
 
-class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
+class AquareaWaterHeater(NativeTemperatureCompat, AquareaDataEntity, WaterHeaterEntity):
     """Representation of a Aquarea Water Tank."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE | WaterHeaterEntityFeature.OPERATION_MODE
     _attr_operation_list = [STATE_HEAT_PUMP, STATE_OFF]
     _attr_precision = PRECISION_WHOLE
@@ -79,8 +80,8 @@ class AquareaWaterHeater(AquareaDataEntity, WaterHeaterEntity):
             self._attr_min_temp = tank.heat_min
         if tank.heat_max is not None:
             self._attr_max_temp = tank.heat_max
-        self._attr_target_temperature = tank.heat_set
-        self._attr_current_temperature = tank.temperature
+        self._attr_native_target_temperature = tank.heat_set
+        self._attr_native_current_temperature = tank.temperature
 
         if tank.operation_status == AquareaOperationStatus.Off:
             self._attr_current_operation = STATE_OFF
