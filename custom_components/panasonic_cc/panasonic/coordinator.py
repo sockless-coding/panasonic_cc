@@ -176,7 +176,10 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
             except asyncio.CancelledError:
                 pass
             finally:
-                self._refresh_task = None
+                # A cancelled task finishes after its replacement was
+                # stored; only clear the reference if it's still ours.
+                if self._refresh_task is asyncio.current_task():
+                    self._refresh_task = None
 
         self._refresh_task = self.hass.async_create_task(_delayed_refresh())
 
@@ -209,8 +212,9 @@ class PanasonicDeviceCoordinator(DataUpdateCoordinator[int]):
                 return self._update_id
             if await self._api_client.try_update_device(self._device):
                 self._update_id += 1
-                self._reset_backoff()
-                return self._update_id
+            # Any successful poll means the API is reachable again,
+            # even when nothing on the device changed.
+            self._reset_backoff()
         except Exception as err:
             if _is_auth_error(err):
                 self._auth_failed = True
@@ -350,8 +354,9 @@ class PanasonicDeviceEnergyCoordinator(DataUpdateCoordinator[int]):
                 return self._update_id
             if await self._api_client.async_try_update_energy(self._energy):
                 self._update_id += 1
-                self._reset_backoff()
-                return self._update_id
+            # Any successful poll means the API is reachable again,
+            # even when nothing on the device changed.
+            self._reset_backoff()
         except Exception as err:
             if _is_auth_error(err):
                 self._auth_failed = True

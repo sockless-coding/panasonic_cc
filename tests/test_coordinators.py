@@ -176,11 +176,6 @@ async def test_recovery_with_changes_resets_backoff(
     assert coordinator.last_error is None
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Backoff is only reset when the poll returns changed data; "
-    "Aquarea and HWS reset it on any successful poll.",
-)
 async def test_recovery_without_changes_resets_backoff(
     coordinator: PanasonicDeviceCoordinator, api: MagicMock
 ) -> None:
@@ -242,11 +237,6 @@ async def test_apply_changes_failure_is_tracked(
     listener.assert_called()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="A cancelled refresh task's `finally` clears _refresh_task, dropping "
-    "the reference to the newer task, so the next call can't cancel it.",
-)
 async def test_schedule_refresh_is_debounced(
     hass: HomeAssistant, coordinator: PanasonicDeviceCoordinator
 ) -> None:
@@ -256,7 +246,11 @@ async def test_schedule_refresh_is_debounced(
     async def fake_sleep(_seconds: float) -> None:
         await delay_over.wait()
 
-    fake_asyncio = SimpleNamespace(sleep=fake_sleep, CancelledError=asyncio.CancelledError)
+    fake_asyncio = SimpleNamespace(
+        sleep=fake_sleep,
+        CancelledError=asyncio.CancelledError,
+        current_task=asyncio.current_task,
+    )
     with (
         patch.object(coordinator, "async_request_refresh", AsyncMock()) as refresh,
         patch("custom_components.panasonic_cc.panasonic.coordinator.asyncio", fake_asyncio),
@@ -302,6 +296,24 @@ async def test_energy_coordinator(
     await coord.async_refresh()
     assert coord.connection_status == "authentication_error"
     notify.assert_called_once()
+
+
+async def test_energy_recovery_without_changes_resets_backoff(
+    hass: HomeAssistant, api: MagicMock, device_info: SimpleNamespace
+) -> None:
+    """Energy polling returns to normal even if the numbers didn't change."""
+    coord = PanasonicDeviceEnergyCoordinator(hass, CONFIG, api, device_info)
+    await coord.async_refresh()
+    api.async_try_update_energy.side_effect = NETWORK_ERROR
+    await coord.async_refresh()
+
+    api.async_try_update_energy.side_effect = None
+    api.async_try_update_energy.return_value = False
+    await coord.async_refresh()
+
+    assert coord.connection_status == "connected"
+    assert interval(coord) == 300
+    assert coord.data == 1
 
 
 # --- Weekly timer coordinator -----------------------------------------------

@@ -260,7 +260,10 @@ class AquareaDeviceCoordinator(DataUpdateCoordinator[int]):
             except asyncio.CancelledError:
                 pass
             finally:
-                self._refresh_task = None
+                # A cancelled task finishes after its replacement was
+                # stored; only clear the reference if it's still ours.
+                if self._refresh_task is asyncio.current_task():
+                    self._refresh_task = None
 
         self._refresh_task = self.hass.async_create_task(_delayed_refresh())
 
