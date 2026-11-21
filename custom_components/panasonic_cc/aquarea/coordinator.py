@@ -13,6 +13,7 @@ from aio_panasonic_comfort_cloud import (
     ApiClient,
     AquareaDevice,
     AquareaConsumption,
+    AquareaFavoriteTimer,
     AquareaWeeklyTimer,
     AquareaWeeklyTimerPattern,
     PanasonicDeviceInfo,
@@ -438,6 +439,7 @@ class AquareaWeeklyTimerCoordinator(DataUpdateCoordinator[int]):
         self._api_client = api_client
         self._device_info = device_info
         self._weekly_timer: AquareaWeeklyTimer | None = None
+        self._favorites: list[AquareaFavoriteTimer] = []
         self._update_id = 0
 
     @property
@@ -474,7 +476,46 @@ class AquareaWeeklyTimerCoordinator(DataUpdateCoordinator[int]):
         except Exception as err:
             friendly = classify_error(err)
             raise UpdateFailed(f"{friendly.title}: {friendly.message}") from err
+        await self._async_update_favorites()
         return self._update_id
+
+    @property
+    def favorites(self) -> list[AquareaFavoriteTimer]:
+        """Return the saved ("favorite") schedules, as last fetched."""
+        return self._favorites
+
+    async def _async_update_favorites(self) -> None:
+        """Refresh the favorite schedules (best-effort; older accounts/units may not have them)."""
+        try:
+            favorites = await self._api_client.get_aquarea_favorite_timers(self._device_info)
+        except Exception as err:
+            _LOGGER.debug("Could not fetch favorite schedules for %s: %s", self._device_info.name, err)
+            return
+        if [f.to_dict() for f in favorites] != [f.to_dict() for f in self._favorites]:
+            self._favorites = favorites
+            self._update_id += 1
+
+    async def async_apply_favorite(self, name: str, enabled: bool) -> None:
+        """Copy the favorite schedule called `name` into the weekly timer and save it.
+
+        Re-reads both the favorites and the schedule first, so a favorite
+        renamed or edited in the app is picked up.
+        """
+        favorites = await self._api_client.get_aquarea_favorite_timers(self._device_info)
+        self._favorites = favorites
+        favorite = next((f for f in favorites if f.name == name), None)
+        if favorite is None:
+            raise ValueError(
+                f"No favorite schedule named '{name}'. "
+                f"Available: {', '.join(f.name for f in favorites) or 'none'}"
+            )
+        weekly_timer = await self._api_client.get_aquarea_weekly_timer(self._device_info)
+        favorite.apply_to(weekly_timer)
+        weekly_timer.enabled = enabled
+        await self._api_client.set_aquarea_weekly_timer(weekly_timer)
+        self._weekly_timer = weekly_timer
+        self._update_id += 1
+        self.async_set_updated_data(self._update_id)
 
     async def async_set_enabled(self, enabled: bool) -> None:
         """Turn the schedule on or off, keeping its patterns."""

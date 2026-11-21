@@ -80,6 +80,15 @@
     "switch": {
       "fireplace": {
         "name": "Fireplace"
+      },
+      "inside_cleaning": {
+        "name": "Inside Cleaning"
+      },
+      "nanoe_stand_alone": {
+        "name": "nanoe Stand-alone"
+      },
+      "clothes_drying": {
+        "name": "Clothes Drying"
       }
     },
     "climate": {
@@ -148,6 +157,14 @@
           "Down": "Bottom",
           "Swing": "Swing"
         }
+      },
+      "dhw_operation_mode": {
+        "name": "DHW Operation Mode",
+        "state": {
+          "heat_pump": "Heat pump",
+          "heater_only": "Heater only",
+          "auto": "Auto"
+        }
       }
     }
   },
@@ -176,7 +193,7 @@
             },
             "patterns": {
                 "name": "Patterns",
-                "description": "Up to 6 patterns, each with start_time (HH:MM) and optionally power (on/off), mode (auto/dry/cool/heat/fan), temperature and fan_speed (auto/low/low_mid/mid/high_mid/high). An empty list clears the days. Uses the same shape as the schedule attribute of the weekly timer switch."
+                "description": "Up to 6 patterns, each with start_time (HH:MM) and optionally power (on/off), mode (auto/dry/cool/heat/fan, or nanoe_stand_alone/clothes_drying on units that have them), temperature and fan_speed (auto/low/low_mid/mid/high_mid/high). An empty list clears the days. Uses the same shape as the schedule attribute of the weekly timer switch."
             },
             "enabled": {
                 "name": "Enabled",
@@ -195,6 +212,20 @@
             "patterns": {
                 "name": "Patterns",
                 "description": "Up to 6 patterns, each with start_time (HH:MM) and optionally mode (heat/cool/auto), zone1/zone2 (on/off) with zone1_heat/zone1_cool/zone2_heat/zone2_cool setpoints, and tank (on/off) with tank_temperature. Leave out zones or the tank the unit doesn't have. An empty list clears the days. Uses the same shape as the schedule attribute of the weekly timer switch."
+            },
+            "enabled": {
+                "name": "Enabled",
+                "description": "Whether the weekly timer should be on after saving."
+            }
+        }
+    },
+    "apply_aquarea_favorite_schedule": {
+        "name": "Apply Aquarea favorite schedule",
+        "description": "Replace an Aquarea unit's whole weekly timer with one of the favorite schedules saved in the Comfort Cloud app. The names are listed in the favorites attribute of the weekly timer switch. Saving also turns the weekly timer on unless enabled is false, like the app does.",
+        "fields": {
+            "name": {
+                "name": "Name",
+                "description": "Name of the favorite schedule, as saved in the app."
             },
             "enabled": {
                 "name": "Enabled",

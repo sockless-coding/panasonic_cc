@@ -16,7 +16,10 @@ from .panasonic.switch import (
     WEEKLY_TIMER_WEEKDAYS,
     async_setup_entry as panasonic_setup,
 )
-from .aquarea.const import SERVICE_SET_AQUAREA_WEEKLY_TIMER_DAY
+from .aquarea.const import (
+    SERVICE_APPLY_AQUAREA_FAVORITE_SCHEDULE,
+    SERVICE_SET_AQUAREA_WEEKLY_TIMER_DAY,
+)
 from .aquarea.switch import (
     AQUAREA_WEEKLY_TIMER_MODES,
     AQUAREA_WEEKLY_TIMER_ON_OFF,
@@ -94,4 +97,12 @@ async def async_setup_entry(
                 vol.Optional("enabled", default=True): cv.boolean,
             },
             "async_set_aquarea_weekly_timer_day",
+        )
+        platform.async_register_entity_service(
+            SERVICE_APPLY_AQUAREA_FAVORITE_SCHEDULE,
+            {
+                vol.Required("name"): cv.string,
+                vol.Optional("enabled", default=True): cv.boolean,
+            },
+            "async_apply_aquarea_favorite_schedule",
         )

@@ -5,7 +5,11 @@ import asyncio
 import logging
 from typing import Any
 
-from aio_panasonic_comfort_cloud.constants import AquareaPowerfulTime, AquareaQuietMode
+from aio_panasonic_comfort_cloud.constants import (
+    AquareaDhwOperationMode,
+    AquareaPowerfulTime,
+    AquareaQuietMode,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -35,6 +39,14 @@ POWERFUL_TIME_LOOKUP = {
 }
 
 POWERFUL_TIME_REVERSE_LOOKUP = {v: k for k, v in POWERFUL_TIME_LOOKUP.items()}
+
+DHW_OPERATION_MODE_LOOKUP = {
+    "heat_pump": AquareaDhwOperationMode.HeatPump,
+    "heater_only": AquareaDhwOperationMode.HeaterOnly,
+    "auto": AquareaDhwOperationMode.Auto,
+}
+
+DHW_OPERATION_MODE_REVERSE_LOOKUP = {v: k for k, v in DHW_OPERATION_MODE_LOOKUP.items()}
 
 
 class AquareaQuietModeSelect(AquareaDataEntity, SelectEntity):
@@ -138,6 +150,55 @@ class AquareaPowerfulTimeSelect(AquareaDataEntity, SelectEntity):
         pass
 
 
+class AquareaDhwOperationModeSelect(AquareaDataEntity, SelectEntity):
+    """Select entity for the operation mode of a standalone DHW unit
+    (Aquarea DHW tank or EcoFlex)."""
+
+    def __init__(self, coordinator: AquareaDeviceCoordinator) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator, "dhw_operation_mode")
+        self._attr_translation_key = "dhw_operation_mode"
+        self._attr_options = list(DHW_OPERATION_MODE_LOOKUP.keys())
+        self._attr_icon = "mdi:water-boiler"
+        self._optimistic_option: str | None = None
+
+    @property
+    def current_option(self) -> str | None:
+        """The current select option."""
+        if self._optimistic_option is not None:
+            return self._optimistic_option
+        return DHW_OPERATION_MODE_REVERSE_LOOKUP.get(
+            self.coordinator.device.parameters.dhw_operation_mode
+        )
+
+    async def _schedule_refresh(self, delay: float = AQUAREA_SELECT_DELAY) -> None:
+        """Clear optimistic state and request a coordinator refresh after a short delay."""
+        await asyncio.sleep(delay)
+        self._optimistic_option = None
+        await self.coordinator.async_request_refresh()
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        if (mode := DHW_OPERATION_MODE_LOOKUP.get(option)) is None:
+            return
+        if mode is self.coordinator.device.parameters.dhw_operation_mode:
+            return
+        _LOGGER.debug(
+            "Setting DHW operation mode of device %s, from %s to %s",
+            self.coordinator.device_id,
+            str(self.coordinator.device.parameters.dhw_operation_mode),
+            str(mode),
+        )
+        self._optimistic_option = option
+        self.async_write_ha_state()
+        await self.coordinator.api_client.set_aquarea_dhw_operation_mode(self.coordinator.info, mode)
+        self.hass.async_create_task(self._schedule_refresh())
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the select entity."""
+        pass
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -149,6 +210,11 @@ async def async_setup_entry(
 
     for coordinator in aquarea_coordinators:
         entities.append(AquareaQuietModeSelect(coordinator))
-        entities.append(AquareaPowerfulTimeSelect(coordinator))
+        if coordinator.info.is_aquarea_dhw:
+            # Standalone DHW units have their own operation mode and no
+            # powerful mode (it isn't part of their control body).
+            entities.append(AquareaDhwOperationModeSelect(coordinator))
+        else:
+            entities.append(AquareaPowerfulTimeSelect(coordinator))
 
     async_add_entities(entities)

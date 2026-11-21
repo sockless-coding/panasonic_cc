@@ -8,10 +8,11 @@ from typing import Any
 from aio_panasonic_comfort_cloud import HwsDevice
 from aio_panasonic_comfort_cloud.constants import (
     HwsBoostMode,
+    HwsDailyMode,
     HwsOperationMode,
     HwsOperationStatus,
 )
-from aio_panasonic_comfort_cloud.models.hws import HwsConsumption
+from aio_panasonic_comfort_cloud.models.hws import HwsConsumption, HwsDailySettings
 
 from homeassistant.const import UnitOfTemperature, EntityCategory, UnitOfEnergy
 from homeassistant.components.sensor import (
@@ -23,6 +24,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 from ..const import DOMAIN
 from .base import HwsDataEntity, HwsEnergyEntity
@@ -37,6 +39,60 @@ class HwsSensorEntityDescription(SensorEntityDescription):
     """Describes HWS sensor entity."""
 
     get_state: Callable[[HwsDevice], Any]
+    get_attributes: Callable[[HwsDevice], dict[str, Any] | None] | None = None
+
+
+def _today_settings(device: HwsDevice) -> HwsDailySettings | None:
+    """Today's entry (HA local time) of the unit's weekly schedule."""
+    weekday = dt_util.now().isoweekday()  # Monday = 1, like HwsWeekday
+    for day in device.parameters.weekly_settings or []:
+        if day.weekday is not None and day.weekday.value == weekday:
+            return day
+    return None
+
+
+def _time_window(start: Any, end: Any) -> str | None:
+    if start is None and end is None:
+        return None
+    return f"{start}-{end}"
+
+
+def _today_set1(device: HwsDevice) -> str | None:
+    day = _today_settings(device)
+    if day is None or day.set1 is None:
+        return None
+    return _time_window(day.set1.start_time, day.set1.end_time)
+
+
+def _today_set2(device: HwsDevice) -> str | None:
+    day = _today_settings(device)
+    if day is None or day.set2 is None or not day.set2.set2_available:
+        return None
+    return _time_window(day.set2.start_time, day.set2.end_time)
+
+
+def _today_set2_attributes(device: HwsDevice) -> dict[str, Any] | None:
+    day = _today_settings(device)
+    if day is None or day.set2 is None or not day.set2.set2_available:
+        return None
+    return {
+        "start_temperature": day.set2.start_temperature,
+        "end_temperature": day.set2.end_temperature,
+    }
+
+
+def _today_inhibit_time(device: HwsDevice) -> str | None:
+    day = _today_settings(device)
+    if day is None or day.inhibit_time is None or not day.inhibit_time.inhibit_time_available:
+        return None
+    return _time_window(day.inhibit_time.start_time, day.inhibit_time.end_time)
+
+
+def _today_mode(device: HwsDevice) -> str | None:
+    day = _today_settings(device)
+    if day is None or day.mode is None:
+        return None
+    return day.mode.name.lower()
 
 
 HWS_TANK_TEMPERATURE_DESCRIPTION = HwsSensorEntityDescription(
@@ -101,6 +157,46 @@ HWS_OPERATION_MODE_DESCRIPTION = HwsSensorEntityDescription(
         HwsOperationMode.Holiday: "holiday",
     }.get(device.parameters.operation_mode),
 )
+
+# Today's entry of the weekly schedule. The whole schedule is in the water
+# heater's weekly_schedule attribute; these make the current day readable.
+HWS_SCHEDULE_SENSORS = [
+    HwsSensorEntityDescription(
+        key="schedule_mode_today",
+        translation_key="schedule_mode_today",
+        name="Schedule Mode Today",
+        icon="mdi:calendar-today",
+        device_class=SensorDeviceClass.ENUM,
+        options=[mode.name.lower() for mode in HwsDailyMode],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        get_state=_today_mode,
+    ),
+    HwsSensorEntityDescription(
+        key="schedule_set1_today",
+        translation_key="schedule_set1_today",
+        name="Set 1 Today",
+        icon="mdi:clock-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        get_state=_today_set1,
+    ),
+    HwsSensorEntityDescription(
+        key="schedule_set2_today",
+        translation_key="schedule_set2_today",
+        name="Set 2 Today",
+        icon="mdi:clock-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        get_state=_today_set2,
+        get_attributes=_today_set2_attributes,
+    ),
+    HwsSensorEntityDescription(
+        key="schedule_inhibit_time_today",
+        translation_key="schedule_inhibit_time_today",
+        name="Inhibit Time Today",
+        icon="mdi:clock-remove-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        get_state=_today_inhibit_time,
+    ),
+]
 
 # Connection status sensor options
 HWS_CONNECTION_STATUS_OPTIONS = [
@@ -167,6 +263,9 @@ async def async_setup_entry(
         entities.append(HwsSensorEntity(coordinator, HWS_HPU_STATUS_DESCRIPTION))
         entities.append(HwsSensorEntity(coordinator, HWS_OPERATION_MODE_DESCRIPTION))
         entities.append(HwsSensorEntity(coordinator, HWS_BOOST_MODE_STATUS_DESCRIPTION))
+        if coordinator.device.parameters.weekly_settings:
+            for desc in HWS_SCHEDULE_SENSORS:
+                entities.append(HwsSensorEntity(coordinator, desc))
         entities.append(HwsConnectionStatusSensor(coordinator))
 
     hws_by_id = {
@@ -203,6 +302,10 @@ class HwsSensorEntity(HwsDataEntity, SensorEntity):
         self._attr_native_value = self.entity_description.get_state(
             self.coordinator.device
         )
+        if self.entity_description.get_attributes is not None:
+            self._attr_extra_state_attributes = self.entity_description.get_attributes(
+                self.coordinator.device
+            )
 
 
 class HwsEnergySensorEntity(HwsEnergyEntity, SensorEntity, RestoreEntity):

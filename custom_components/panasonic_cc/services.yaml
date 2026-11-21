@@ -67,6 +67,22 @@ set_aquarea_weekly_timer_day:
       selector:
         boolean:
 
+apply_aquarea_favorite_schedule:
+  target:
+    entity:
+      integration: panasonic_cc
+      domain: switch
+  fields:
+    name:
+      required: true
+      example: "Winter"
+      selector:
+        text:
+    enabled:
+      default: true
+      selector:
+        boolean:
+
 set_hws_weekly_schedule:
   target:
     entity:

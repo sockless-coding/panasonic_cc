@@ -287,6 +287,7 @@ class AquareaWeeklyTimerSwitch(CoordinatorEntity[AquareaWeeklyTimerCoordinator],
                 }
         if weekly_timer.tank_status is not None:
             attrs["tank_limits"] = weekly_timer.tank_status
+        attrs["favorites"] = [favorite.name for favorite in self.coordinator.favorites]
         return attrs
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -302,6 +303,15 @@ class AquareaWeeklyTimerSwitch(CoordinatorEntity[AquareaWeeklyTimerCoordinator],
             await self.coordinator.async_set_enabled(enabled)
         except Exception as err:
             raise HomeAssistantError(f"Failed to update the weekly timer: {err}") from err
+
+    async def async_apply_aquarea_favorite_schedule(self, name: str, enabled: bool = True) -> None:
+        """Replace the whole weekly schedule with a saved favorite."""
+        try:
+            await self.coordinator.async_apply_favorite(name, enabled)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        except Exception as err:
+            raise HomeAssistantError(f"Failed to apply the favorite schedule: {err}") from err
 
     async def async_set_aquarea_weekly_timer_day(
         self,
