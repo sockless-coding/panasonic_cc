@@ -183,6 +183,9 @@
       "pump_status": {
         "name": "Pump Status"
       },
+      "water_pressure": {
+        "name": "Water Pressure"
+      },
       "dhw_cycles_today": {
         "name": "DHW Cycles Today"
       },
