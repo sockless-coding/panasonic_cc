@@ -30,7 +30,7 @@ from .const import (
     DEFAULT_USE_PANASONIC_PRESET_NAMES,
     DOMAIN,
 )
-from .token_storage import get_token_file
+from .token_storage import async_remove_token_file, get_token_file
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,6 +177,23 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 },
             )
+        if origin == "reconfigure":
+            # A reconfigure flow must update the entry it was started for;
+            # Home Assistant rejects async_create_entry() from this source.
+            reconfigure_entry = self._get_reconfigure_entry()
+            old_username = reconfigure_entry.data[CONF_USERNAME]
+            new_username = user_input[CONF_USERNAME]
+            if new_username != old_username:
+                # The entry no longer uses the old account's tokens.
+                await async_remove_token_file(self.hass, old_username)
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                title=user_input[CONF_USERNAME],
+                data_updates={
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                },
+            )
         return await self._async_create_entry(user_input)
 
     async def _async_try_login(
@@ -273,10 +290,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema({
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-            }),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }),
+                {CONF_USERNAME: self._get_reconfigure_entry().data[CONF_USERNAME]},
+            ),
             errors=errors,
         )
 
@@ -362,6 +382,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow."""
         if user_input is None:
             return self._show_reconfigure_form()
+
+        if user_input[CONF_USERNAME] != self._get_reconfigure_entry().data[CONF_USERNAME]:
+            # Switching accounts: refuse one that another entry already uses,
+            # before logging in, since both entries would share one token file.
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
         return await self._async_handle_login(user_input, "reconfigure")
 

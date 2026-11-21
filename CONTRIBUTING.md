@@ -48,6 +48,22 @@ Use [black](https://github.com/ambv/black) to make sure the code follows the sty
 
 ## Test your code modification
 
+### Unit tests
+
+The tests use [pytest-homeassistant-custom-component](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component),
+which needs Python 3.14 and runs best on Linux, macOS or WSL:
+
+```bash
+python3.14 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements_test.txt
+pytest
+```
+
+The same tests run on every push and pull request in GitHub Actions.
+
+### Running Home Assistant
+
 This custom component is based on [integration_blueprint template](https://github.com/ludeeus/integration_blueprint).
 
 It comes with development environment in a container, easy to launch
