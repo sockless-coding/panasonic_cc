@@ -53,7 +53,7 @@
   "entity": {
     "switch": {
       "fireplace": {
-        "name": "Fireplace"
+        "name": "Eldstadsläge"
       }
     },
     "climate": {
