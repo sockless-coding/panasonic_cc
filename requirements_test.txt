@@ -1,1 +1,3 @@
-pytest-homeassistant-custom-component
+-r requirements.txt
+# Pins a matching homeassistant release; needs Python 3.14.
+pytest-homeassistant-custom-component==0.13.375

@@ -171,6 +171,75 @@ async def test_reconfigure_can_change_account(
     assert entry.title == "new@example.com"
 
 
+async def test_reconfigure_suggests_current_username(
+    hass: HomeAssistant, api: MagicMock, entry: MockConfigEntry
+) -> None:
+    """The reconfigure form is pre-filled with the entry's Panasonic ID."""
+    result = await entry.start_reconfigure_flow(hass)
+
+    schema = result["data_schema"].schema
+    username_key = next(key for key in schema if key == CONF_USERNAME)
+    assert username_key.description == {"suggested_value": "old@example.com"}
+
+
+async def test_reconfigure_rejects_account_of_other_entry(
+    hass: HomeAssistant, api: MagicMock, entry: MockConfigEntry
+) -> None:
+    """Reconfigure cannot switch to an account another entry already uses."""
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        title="other@example.com",
+        data={CONF_USERNAME: "other@example.com", CONF_PASSWORD: "other"},
+        version=3,
+        minor_version=1,
+    )
+    other.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "other@example.com", CONF_PASSWORD: "secret"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == OLD_CREDENTIALS
+    api.start_session.assert_not_awaited()
+
+
+async def test_reconfigure_account_change_removes_old_tokens(
+    hass: HomeAssistant, api: MagicMock, entry: MockConfigEntry
+) -> None:
+    """Switching accounts deletes the old account's token file."""
+    with patch(
+        "custom_components.panasonic_cc.config_flow.async_remove_token_file"
+    ) as remove_tokens:
+        result = await entry.start_reconfigure_flow(hass)
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new@example.com", CONF_PASSWORD: "secret"},
+        )
+        await hass.async_block_till_done()
+
+    remove_tokens.assert_awaited_once_with(hass, "old@example.com")
+
+
+async def test_reconfigure_same_account_keeps_tokens(
+    hass: HomeAssistant, api: MagicMock, entry: MockConfigEntry
+) -> None:
+    """Changing only the password keeps the account's token file."""
+    with patch(
+        "custom_components.panasonic_cc.config_flow.async_remove_token_file"
+    ) as remove_tokens:
+        result = await entry.start_reconfigure_flow(hass)
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], NEW_CREDENTIALS
+        )
+        await hass.async_block_till_done()
+
+    remove_tokens.assert_not_called()
+
+
 async def test_reconfigure_keeps_options(
     hass: HomeAssistant, api: MagicMock, entry: MockConfigEntry
 ) -> None:
