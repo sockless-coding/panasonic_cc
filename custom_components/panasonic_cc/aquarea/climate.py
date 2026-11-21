@@ -27,6 +27,7 @@ from aio_panasonic_comfort_cloud.constants import (
 from aio_panasonic_comfort_cloud.models.aquarea import AquareaZoneStatus
 
 from ..const import DOMAIN, PRESET_ECO, PRESET_NONE
+from ..compat import NativeTemperatureCompat
 from .base import AquareaDataEntity
 from .coordinator import AquareaDeviceCoordinator
 from .const import AQUAREA_COORDINATORS, AQUAREA_CLIMATE_DELAY_SHORT, AQUAREA_CLIMATE_DELAY_LONG
@@ -109,7 +110,7 @@ def _get_hvac_action_from_device_direction(
     return HVACAction.IDLE
 
 
-class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
+class AquareaClimateEntity(NativeTemperatureCompat, AquareaDataEntity, ClimateEntity):
     """Representation of an Aquarea Climate Device."""
 
     entity_description: AquareaClimateEntityDescription
@@ -124,7 +125,7 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
         """Initialize the climate entity."""
         super().__init__(coordinator, description.key)
         self.entity_description = description
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         zone = self.coordinator.device.parameters.get_zone(description.zone_id)
         self._attr_name = zone.name if zone else None
         self._attr_unique_id = f"{super().unique_id}_climate_{description.zone_id}"
@@ -157,12 +158,12 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
         zone = params.get_zone(self.entity_description.zone_id)
 
         # The zone temperature is reported even when the zone is off
-        self._attr_current_temperature = zone.temperature if zone is not None else None
+        self._attr_native_current_temperature = zone.temperature if zone is not None else None
 
         if zone is None or zone.operation_status == AquareaOperationStatus.Off:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
-            self._attr_target_temperature = None
+            self._attr_native_target_temperature = None
             self._attr_min_temp = 5
             self._attr_max_temp = 65
             if zone is not None and zone_supports_special_status(zone):
@@ -183,11 +184,11 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
             AquareaOperationMode.Heat,
             AquareaOperationMode.AutoHeat,
         ):
-            self._attr_target_temperature = zone.heat_set
+            self._attr_native_target_temperature = zone.heat_set
             self._attr_min_temp = zone.heat_min if zone.heat_min is not None else 5
             self._attr_max_temp = zone.heat_max if zone.heat_max is not None else 65
         else:
-            self._attr_target_temperature = zone.cool_set
+            self._attr_native_target_temperature = zone.cool_set
             self._attr_min_temp = zone.cool_min if zone.cool_min is not None else 5
             self._attr_max_temp = zone.cool_max if zone.cool_max is not None else 65
 
@@ -281,7 +282,7 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
                 int(target_temp),
                 mode=mode,
             )
-            self._attr_target_temperature = target_temp
+            self._attr_native_target_temperature = target_temp
             state_changed = True
         if mode := kwargs.get("hvac_mode"):
             await self.async_set_hvac_mode(mode)
