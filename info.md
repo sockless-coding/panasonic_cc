@@ -32,6 +32,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **ECONAVI** — Energy-saving mode (where available)
 - **AI ECO** — Intelligent eco mode (where available)
 - **iAUTO-X** — Intelligent auto mode (where available)
+- **Inside Cleaning**, **nanoe Stand-alone** and **Clothes Drying** (where available)
 - **Zone controls** — Individual zone on/off (where available)
 - **Force DHW** — Force domestic hot water mode (Aquarea, where available)
 - **Force Heater** — Force heater mode (Aquarea)

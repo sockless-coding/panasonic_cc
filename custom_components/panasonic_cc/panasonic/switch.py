@@ -112,6 +112,45 @@ FIREPLACE_DESCRIPTION = PanasonicSwitchEntityDescription(
     is_available=lambda device: device.has_fireplace
     and device.parameters.mode == constants.OperationMode.Heat,
 )
+INSIDE_CLEANING_DESCRIPTION = PanasonicSwitchEntityDescription(
+    key="inside-cleaning",
+    translation_key="inside_cleaning",
+    name="Inside Cleaning",
+    icon="mdi:broom",
+    on_func=lambda builder: builder.set_inside_cleaning_mode(constants.InsideCleaningMode.On),
+    off_func=lambda builder: builder.set_inside_cleaning_mode(constants.InsideCleaningMode.Off),
+    get_state=lambda device: device.parameters.inside_cleaning
+    == constants.InsideCleaningMode.On.value,
+    is_available=lambda device: device.has_inside_cleaning,
+)
+# nanoe stand-alone and clothes drying are operation modes that HA's climate
+# HVAC modes can't express, so they get their own switches. Turning one off
+# turns the unit off, like stopping it in the app.
+NANOE_STAND_ALONE_DESCRIPTION = PanasonicSwitchEntityDescription(
+    key="nanoe-stand-alone",
+    translation_key="nanoe_stand_alone",
+    name="nanoe Stand-alone",
+    icon="mdi:air-purifier",
+    on_func=lambda builder: builder.set_hvac_mode(constants.OperationMode.NanoeStandAlone),
+    off_func=lambda builder: builder.set_power_mode(constants.Power.Off),
+    get_state=lambda device: device.parameters.power == constants.Power.On
+    and (
+        device.in_nanoe_stand_alone_mode
+        or device.parameters.mode == constants.OperationMode.NanoeStandAlone
+    ),
+    is_available=lambda device: device.has_nanoe_stand_alone,
+)
+CLOTHES_DRYING_DESCRIPTION = PanasonicSwitchEntityDescription(
+    key="clothes-drying",
+    translation_key="clothes_drying",
+    name="Clothes Drying",
+    icon="mdi:tshirt-crew",
+    on_func=lambda builder: builder.set_hvac_mode(constants.OperationMode.ClothesDrying),
+    off_func=lambda builder: builder.set_power_mode(constants.Power.Off),
+    get_state=lambda device: device.parameters.power == constants.Power.On
+    and device.parameters.mode == constants.OperationMode.ClothesDrying,
+    is_available=lambda device: device.has_clothes_drying,
+)
 
 
 def create_zone_mode_description(zone: PanasonicDeviceZone) -> PanasonicSwitchEntityDescription:
@@ -161,6 +200,13 @@ async def async_setup_entry(
         devices.append(PanasonicSwitchEntity(data_coordinator, IAUTOX_DESCRIPTION))
         if data_coordinator.device.has_fireplace:
             devices.append(PanasonicSwitchEntity(data_coordinator, FIREPLACE_DESCRIPTION))
+        for description in (
+            INSIDE_CLEANING_DESCRIPTION,
+            NANOE_STAND_ALONE_DESCRIPTION,
+            CLOTHES_DRYING_DESCRIPTION,
+        ):
+            if description.is_available(data_coordinator.device):
+                devices.append(PanasonicSwitchEntity(data_coordinator, description))
         if data_coordinator.device.has_zones:
             for zone in data_coordinator.device.parameters.zones:
                 devices.append(
@@ -259,7 +305,7 @@ def _pattern_to_dict(pattern: WeeklyTimerPattern) -> dict[str, Any]:
     if pattern.mode is not None:
         data["mode"] = _option_name(pattern.mode)
     elif pattern.mode_raw is not None:
-        # Modes the library doesn't model (e.g. nanoe standalone) stay raw.
+        # Modes the library doesn't model stay raw.
         data["mode"] = pattern.mode_raw
     if pattern.temperature is not None:
         data["temperature"] = pattern.temperature

@@ -40,6 +40,14 @@ AQUAREA_SPECIAL_STATUS_LOOKUP: dict[str, AquareaSpecialStatus | None] = {
 }
 AQUAREA_SPECIAL_STATUS_REVERSE_LOOKUP = {v: k for k, v in AQUAREA_SPECIAL_STATUS_LOOKUP.items()}
 
+# The reported operation mode, as the value a mode change would send.
+CURRENT_UPDATE_OPERATION_MODE: dict[AquareaOperationMode, AquareaUpdateOperationMode] = {
+    AquareaOperationMode.Heat: AquareaUpdateOperationMode.Heat,
+    AquareaOperationMode.Cool: AquareaUpdateOperationMode.Cool,
+    AquareaOperationMode.AutoHeat: AquareaUpdateOperationMode.Auto,
+    AquareaOperationMode.AutoCool: AquareaUpdateOperationMode.Auto,
+}
+
 
 def zone_supports_special_status(zone: AquareaZoneStatus) -> bool:
     """Whether this zone reports Eco/Comfort setpoint offsets at all."""
@@ -207,10 +215,10 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the climate entity's zone on."""
-        await self.coordinator.api_client.set_aquarea_operation_state(
+        await self.coordinator.api_client.set_aquarea_zone_operation_status(
             self.coordinator.device,
-            zone_id=self.entity_description.zone_id,
-            zone_status=AquareaOperationStatus.On,
+            self.entity_description.zone_id,
+            AquareaOperationStatus.On,
         )
         params = self.coordinator.device.parameters
         zone = params.get_zone(self.entity_description.zone_id)
@@ -225,10 +233,10 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn the climate entity's zone off."""
-        await self.coordinator.api_client.set_aquarea_operation_state(
+        await self.coordinator.api_client.set_aquarea_zone_operation_status(
             self.coordinator.device,
-            zone_id=self.entity_description.zone_id,
-            zone_status=AquareaOperationStatus.Off,
+            self.entity_description.zone_id,
+            AquareaOperationStatus.Off,
         )
         self._attr_hvac_mode = HVACMode.OFF
         self.async_write_ha_state()
@@ -240,12 +248,22 @@ class AquareaClimateEntity(AquareaDataEntity, ClimateEntity):
             await self.async_turn_off()
             return
         operation_mode = convert_hvac_mode_to_aquarea_operation_mode(hvac_mode)
-        await self.coordinator.api_client.set_aquarea_operation_state(
-            self.coordinator.device,
-            mode=operation_mode,
-            zone_id=self.entity_description.zone_id,
-            zone_status=AquareaOperationStatus.On,
-        )
+        device = self.coordinator.device
+        params = device.parameters
+        zone = params.get_zone(self.entity_description.zone_id)
+        # Same requests as the app: a zone switched on carries the current
+        # operation mode, and a mode change is sent on its own. Switch the
+        # zone on first so the mode change that follows is the one that sticks.
+        if zone is None or zone.operation_status != AquareaOperationStatus.On:
+            await self.coordinator.api_client.set_aquarea_zone_operation_status(
+                device,
+                self.entity_description.zone_id,
+                AquareaOperationStatus.On,
+            )
+        if CURRENT_UPDATE_OPERATION_MODE.get(params.operation_mode) != operation_mode:
+            await self.coordinator.api_client.set_aquarea_operation_mode(
+                self.coordinator.info, operation_mode
+            )
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
         self.hass.async_create_task(self._schedule_refresh(AQUAREA_CLIMATE_DELAY_LONG))

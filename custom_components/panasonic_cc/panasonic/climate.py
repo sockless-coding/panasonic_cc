@@ -53,9 +53,9 @@ def convert_operation_mode_to_hvac_mode(
             return HVACMode.COOL if iauto else HVACMode.HEAT_COOL
         case constants.OperationMode.Cool:
             return HVACMode.COOL
-        case constants.OperationMode.Dry:
+        case constants.OperationMode.Dry | constants.OperationMode.ClothesDrying:
             return HVACMode.DRY
-        case constants.OperationMode.Fan:
+        case constants.OperationMode.Fan | constants.OperationMode.NanoeStandAlone:
             return HVACMode.FAN_ONLY
         case constants.OperationMode.Heat:
             return HVACMode.HEAT
@@ -82,6 +82,13 @@ def convert_state_to_hvac_action(state: PanasonicDeviceParameters) -> HVACAction
     """Convert state to HVAC action."""
     if state.power == constants.Power.Off:
         return HVACAction.OFF
+
+    # These modes don't regulate towards the target temperature.
+    match state.mode:
+        case constants.OperationMode.ClothesDrying:
+            return HVACAction.DRYING
+        case constants.OperationMode.NanoeStandAlone:
+            return HVACAction.FAN
 
     target_temp = state.target_temperature
     inside_temp = state.inside_temperature
@@ -211,7 +218,12 @@ class PanasonicClimateEntity(PanasonicDataEntity, ClimateEntity):
 
         self._set_temp_range()
         self._attr_current_temperature = state.inside_temperature
-        self._attr_target_temperature = state.target_temperature
+        # Clothes drying runs with temperatureSet 0, which isn't a real setpoint.
+        self._attr_target_temperature = (
+            None
+            if state.mode == constants.OperationMode.ClothesDrying
+            else state.target_temperature
+        )
         # Auto fan speed can depend on the current mode (CAC units in Fan mode).
         if self._attr_fan_modes:
             self._attr_fan_modes = [f.name for f in self.coordinator.device.supported_fan_speeds]

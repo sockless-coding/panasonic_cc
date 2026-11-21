@@ -34,7 +34,8 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - Preset modes (Quiet, Powerful, +8/15°C heat), where the unit supports them
 
 ### Water Heater
-- **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off)
+- **Aquarea Hot Water Tank** — Water heater entity with target temperature control (40–65°C), operation modes (Heat Pump, Off). Turning the tank or a zone on/off sends the same requests as the Comfort Cloud app
+- **Aquarea DHW / EcoFlex** — Standalone domestic hot water units are supported through the same water heater entity, with the setpoint range following the unit's current DHW operation mode (untested against a real unit)
 - **HWS Hot Water Tank** — Water heater entity for standalone HWS heat pump hot water tanks (e.g. HE-UM40CR) with the current tank temperature, operation modes (Schedule, PV Timer, Holiday — as supported by the unit), away mode (Holiday) and the weekly schedule as the `weekly_schedule` attribute
 
 ### Swing Control
@@ -48,6 +49,9 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **ECONAVI** — Toggle ECONAVI energy-saving mode (where available)
 - **AI ECO** — Toggle AI ECO mode (where available)
 - **iAUTO-X** — Toggle iAUTO-X intelligent auto mode (where available)
+- **Inside Cleaning** — Toggle inside cleaning (where available)
+- **nanoe Stand-alone** — Run nanoe air purification without heating or cooling; turning it off turns the unit off (where available)
+- **Clothes Drying** — Run the clothes drying mode; turning it off turns the unit off (where available)
 - **Zone controls** — Toggle individual zone on/off (where available)
 - **Force DHW** — Force domestic hot water mode (Aquarea, where available)
 - **Force Heater** — Force heater mode (Aquarea)
@@ -55,7 +59,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Boost Mode** — Toggle boost mode (HWS)
 - **Holiday Timer** — Switch between Holiday and Schedule mode (HWS)
 - **Weekly Timer** — Turn the weekly schedule of an air conditioner on/off; the schedule is in the `schedule` attribute (where available)
-- **Weekly Timer** — Turn the weekly schedule of an Aquarea heat pump on/off; the schedule is in the `schedule` attribute and the allowed setpoint ranges in `zone1_limits`, `zone2_limits` and `tank_limits` (where available)
+- **Weekly Timer** — Turn the weekly schedule of an Aquarea heat pump on/off; the schedule is in the `schedule` attribute and the allowed setpoint ranges in `zone1_limits`, `zone2_limits` and `tank_limits`, and the names of the favorite schedules saved in the app in `favorites` (where available)
 
 ### Sensors
 - **Inside Temperature** — Indoor temperature reading
@@ -85,6 +89,7 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 - **Tank Cost Today** — Tank cost for today (HWS, optional, disabled by default)
 - **Boost Mode Status** — Whether boost mode is active (HWS, diagnostic)
 - **Operation Mode** — Schedule, PV Timer or Holiday (HWS, diagnostic, disabled by default)
+- **Schedule Mode Today / Set 1 Today / Set 2 Today / Inhibit Time Today** — Today's entry of the weekly schedule: the day's mode (timer or continuous) and its time windows; Set 2 also has its start/end temperatures as attributes (HWS, diagnostic)
 
 ### Zone Controls
 - **Zone Damper Position** — Slider control for zone damper (0–100%, in steps of 10)
@@ -92,7 +97,8 @@ This is a custom integration to control Panasonic Comfort Cloud devices in [Home
 
 ### Select
 - **Quiet Mode** — Select quiet mode level: level1, level2, level3, or off (Aquarea)
-- **Powerful Time** — Select powerful mode duration: on-30m, on-60m, on-90m, or off (Aquarea)
+- **Powerful Time** — Select powerful mode duration: on-30m, on-60m, on-90m, or off (Aquarea heat pumps)
+- **DHW Operation Mode** — Select heat_pump, heater_only or auto (Aquarea DHW / EcoFlex units)
 
 ### Binary Sensors
 - **Error Status** — Indicates if the Aquarea device is in an error state, with a raw fault status attribute (Aquarea)
@@ -187,7 +193,7 @@ The `panasonic_cc.set_weekly_timer_day` service replaces the patterns of one or 
 | Field | Description | Required |
 |-------|-------------|----------|
 | `weekdays` | Days to replace: `monday` … `sunday` | Yes |
-| `patterns` | Up to 6 patterns. Each has `start_time` (`HH:MM`) and optionally `power` (`on`/`off`), `mode` (`auto`, `dry`, `cool`, `heat`, `fan`), `temperature` (°C) and `fan_speed` (`auto`, `low`, `low_mid`, `mid`, `high_mid`, `high`). An empty list clears the days. | Yes |
+| `patterns` | Up to 6 patterns. Each has `start_time` (`HH:MM`) and optionally `power` (`on`/`off`), `mode` (`auto`, `dry`, `cool`, `heat`, `fan`, plus `nanoe_stand_alone` and `clothes_drying` on units that have them), `temperature` (°C) and `fan_speed` (`auto`, `low`, `low_mid`, `mid`, `high_mid`, `high`). An empty list clears the days. | Yes |
 | `enabled` | Whether the weekly timer is on after saving (default `true`) | No |
 
 The switch's `schedule` attribute uses the same format, so a day can be copied from it.
@@ -237,6 +243,23 @@ data:
       mode: heat
       zone1: "on"
       zone1_heat: 18
+```
+
+### Apply Aquarea Favorite Schedule
+
+The `panasonic_cc.apply_aquarea_favorite_schedule` service replaces an Aquarea unit's whole weekly timer with one of the favorite schedules saved in the Comfort Cloud app (app 5.x). Target the Aquarea device's **Weekly Timer** switch; the saved names are in its `favorites` attribute. Like the app, saving turns the weekly timer on unless `enabled` is `false`.
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| `name` | Name of the favorite schedule | Yes |
+| `enabled` | Whether the weekly timer is on after saving (default `true`) | No |
+
+```yaml
+service: panasonic_cc.apply_aquarea_favorite_schedule
+target:
+  entity_id: switch.aquarea_weekly_timer
+data:
+  name: Winter
 ```
 
 ### Set Hot Water Weekly Schedule

@@ -5,6 +5,7 @@ AQUAREA_ENERGY_COORDINATORS = "aquarea_energy_coordinators"
 AQUAREA_WEEKLY_TIMER_COORDINATORS = "aquarea_weekly_timer_coordinators"
 
 SERVICE_SET_AQUAREA_WEEKLY_TIMER_DAY = "set_aquarea_weekly_timer_day"
+SERVICE_APPLY_AQUAREA_FAVORITE_SCHEDULE = "apply_aquarea_favorite_schedule"
 
 AQUAREA_SWITCH_DELAY = 10.0
 AQUAREA_SELECT_DELAY = 10.0
