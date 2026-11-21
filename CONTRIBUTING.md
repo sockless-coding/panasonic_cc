@@ -60,6 +60,16 @@ pip install -r requirements_test.txt
 pytest
 ```
 
+On Windows, or without Python 3.14, run them in Docker instead:
+
+```bash
+docker build -f Dockerfile.test -t panasonic-cc-test .
+docker run --rm -v "$PWD:/src:ro" panasonic-cc-test
+```
+
+Extra arguments are passed to pytest, e.g. `docker run --rm -v "$PWD:/src:ro" panasonic-cc-test -k reconfigure`.
+In PowerShell use `${PWD}` instead of `$PWD`.
+
 The same tests run on every push and pull request in GitHub Actions.
 
 ### Running Home Assistant
