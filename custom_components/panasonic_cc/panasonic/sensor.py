@@ -175,6 +175,16 @@ HEATING_POWER_DESCRIPTION = PanasonicEnergySensorEntityDescription(
     native_unit_of_measurement="W",
     get_state=lambda energy: energy.heating_power
 )
+AIR_QUALITY_DESCRIPTION = PanasonicSensorEntityDescription(
+    key="air_quality",
+    name="Air Quality",
+    icon="mdi:air-filter",
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=None,
+    get_state=lambda device: getattr(device.parameters, "air_quality", None),
+    # Only units with an air quality sensor report a non-zero value.
+    is_available=lambda device: (getattr(device.parameters, "air_quality", 0) or 0) > 0,
+)
 
 
 def create_zone_temperature_description(zone: PanasonicDeviceZone):
@@ -204,6 +214,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(PanasonicSensorEntity(coordinator, LAST_UPDATE_TIME_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, DATA_AGE_DESCRIPTION))
         entities.append(PanasonicSensorEntity(coordinator, DATA_MODE_DESCRIPTION))
+        entities.append(PanasonicSensorEntity(coordinator, AIR_QUALITY_DESCRIPTION))
         entities.append(PanasonicConnectionStatusSensor(coordinator))
         if coordinator.device.has_zones:
             for zone in coordinator.device.parameters.zones:
